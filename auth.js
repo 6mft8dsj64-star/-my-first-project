@@ -1,4 +1,4 @@
-/* 트립메이트 — 로그인(구글·애플·이메일)과 계정별 데이터 동기화 (Firebase) */
+/* 트립노트 — 로그인(구글·애플·이메일)과 계정별 데이터 동기화 (Firebase) */
 (() => {
   "use strict";
   const $ = (s) => document.querySelector(s);
