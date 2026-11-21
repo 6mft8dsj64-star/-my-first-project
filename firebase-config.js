@@ -10,6 +10,12 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "1070109113364",
   appId: "1:1070109113364:web:26d968e88878e1e6cdbb01",
 };
+
+// Google 로그인용 "웹 클라이언트 ID" (아이폰 사파리에서도 되는 Google 로그인에 필요)
+// Firebase 콘솔 → Authentication → 로그인 방법 → Google → "웹 SDK 구성" → 웹 클라이언트 ID
+// 이 값도 공개되어도 괜찮은 값입니다. 비워 두면 예전 팝업 방식을 써요.
+window.GOOGLE_CLIENT_ID = "";
+
 /* 예시:
 window.FIREBASE_CONFIG = {
   apiKey: "AIza...",

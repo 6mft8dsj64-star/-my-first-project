@@ -5,6 +5,8 @@
   const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
   const SYNC_KEYS = { tm_plan: "plan", tm_saved: "saved", tm_price_log: "priceLog" };
   const cfg = window.FIREBASE_CONFIG;
+  const GID = (window.GOOGLE_CLIENT_ID || "").trim();
+  let gisReady = null, gisMode = "login", reauthed = false;
 
   let auth = null, db = null, user = null, pushTimer = null, mode = "login", deleting = false;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -173,6 +175,7 @@
   }
   function closeAccount() {
     if (deleting) return;
+    gisMode = "login";
     modal.hidden = true;
     document.body.classList.remove("locked");
   }
@@ -181,8 +184,13 @@
     $("#deleteForm").hidden = !v;
     if (v) {
       const isPw = providerOf(user) === "password";
+      const useGis = providerOf(user) === "google.com" && GID;
+      reauthed = false;
       $("#delPwRow").hidden = !isPw;
-      $("#delSocialHint").hidden = isPw;
+      $("#delSocialHint").hidden = isPw || useGis;
+      $("#delGoogleRow").hidden = !useGis;
+      $("#delGoogleOk").hidden = true;
+      if (useGis) { gisMode = "reauth"; loadGis().then((ok) => ok && renderGis($("#delGisBtn"))); }
       $("#delPw").value = ""; $("#delConfirm").value = ""; delMsg("");
       (isPw ? $("#delPw") : $("#delConfirm")).focus();
     }
@@ -190,6 +198,10 @@
 
   async function reauth() {
     const p = providerOf(user);
+    if (p === "google.com" && GID) {
+      if (!reauthed) throw { code: "x", text: "먼저 Google 버튼으로 본인 확인을 해 주세요." };
+      return;
+    }
     if (p === "password") {
       const cred = firebase.auth.EmailAuthProvider.credential(user.email, $("#delPw").value);
       await user.reauthenticateWithCredential(cred);
@@ -222,6 +234,7 @@
     } catch (e) {
       deleting = false;
       const code = e?.code || "";
+      if (e?.text) { delMsg(e.text); btns.forEach((b) => (b.disabled = false)); return; }
       delMsg(
         code === "auth/wrong-password" || code === "auth/invalid-credential" ? "비밀번호가 맞지 않아요." :
         code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? "본인 확인 창이 닫혔어요. 다시 시도해 주세요." :
@@ -243,6 +256,43 @@
     $("#toDelete").onclick = () => showDelete(true);
     $("#delCancel").onclick = () => showDelete(false);
     $("#deleteForm").addEventListener("submit", deleteAccount);
+  }
+
+  // ---------- Google 공식 버튼 (아이폰 사파리 대응) ----------
+  // 사파리는 다른 사이트(firebaseapp.com)를 거치는 로그인 결과를 막아요.
+  // Google Identity Services 버튼으로 받은 토큰을 Firebase에 넘기면 사파리에서도 로그인돼요.
+  function loadGis() {
+    if (!GID) return Promise.resolve(false);
+    if (!gisReady) {
+      gisReady = loadScript("https://accounts.google.com/gsi/client").then(() => {
+        google.accounts.id.initialize({ client_id: GID, callback: onGoogleCredential, ux_mode: "popup", auto_select: false, cancel_on_tap_outside: true });
+        return true;
+      }).catch(() => false);
+    }
+    return gisReady;
+  }
+  function renderGis(el) {
+    const w = Math.min(Math.max(el.parentElement.clientWidth || 320, 220), 400);
+    el.innerHTML = "";
+    google.accounts.id.renderButton(el, { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: w, locale: "ko", logo_alignment: "center" });
+  }
+  async function onGoogleCredential(resp) {
+    const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
+    if (gisMode === "reauth") {
+      try {
+        await user.reauthenticateWithCredential(cred);
+        reauthed = true;
+        $("#delGoogleOk").hidden = false;
+        delMsg("");
+      } catch (e) {
+        delMsg(e.code === "auth/user-mismatch" ? "지금 로그인한 계정과 다른 Google 계정을 골랐어요." : `본인 확인에 실패했어요. (${e.code || e.message})`);
+      }
+      return;
+    }
+    msg(""); busy(true);
+    try { await auth.signInWithCredential(cred); }
+    catch (e) { msg(errText(e)); }
+    busy(false);
   }
 
   // ---------- 시작 ----------
@@ -283,6 +333,11 @@
       return;
     }
     firebase.initializeApp(cfg);
+    if (await loadGis()) {
+      $("#googleBtn").hidden = true;
+      $("#gisBtn").hidden = false;
+      renderGis($("#gisBtn"));
+    }
     auth = firebase.auth();
     auth.languageCode = "ko";
     db = firebase.firestore();

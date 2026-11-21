@@ -341,3 +341,6 @@ button.user-chip:hover { background: var(--surface-2); }
 .policy th { background: var(--surface-2); white-space: nowrap; }
 .policy-back { margin-top: 36px; }
 .policy-back .btn { text-decoration: none; display: inline-block; }
+
+/* Google 공식 로그인 버튼 */
+.gis-wrap { display: flex; justify-content: center; min-height: 44px; }
