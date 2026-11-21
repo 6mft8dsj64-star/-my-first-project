@@ -1,4 +1,4 @@
-// 지역 → 나라 → 도시 데이터, 출발 공항/항구, 항공사 노선
+// 지역 → 나라 → 도시 데이터, 출발 공항, 항공사 노선
 // ※ 가격·노선·비자 정보는 2026년 기준 추정치입니다. 노선은 시즌별로 자주 바뀌므로 예약 전 꼭 확인하세요.
 
 // ---------- 통화: [이름, 기호, 대략 환율(1단위 = ?원, 실시간 환율 실패 시 사용)] ----------
@@ -38,8 +38,6 @@ const DEPARTURES = [
   { code: "CJJ", name: "청주국제공항", city: "청주·충청", type: "intl", add: 4, toICN: "공항버스 약 2시간" },
   { code: "MWX", name: "무안국제공항", city: "광주·전남", type: "intl", add: 9, toICN: "KTX+공항철도 약 3시간", note: "2024년 12월 사고 이후 운항이 중단됐던 공항이에요. 재개 여부를 꼭 확인하세요." },
   { code: "YNY", name: "양양국제공항", city: "강원", type: "intl", add: 5, toICN: "공항버스 약 3시간", note: "국제선 편수가 적고 부정기편 위주라 자주 바뀌어요." },
-  { code: "PUSP", name: "부산항 국제여객터미널", city: "부산", type: "sea", add: 8, toICN: "KTX+공항철도 약 3시간" },
-  { code: "ICNP", name: "인천항 국제여객터미널", city: "인천", type: "sea", add: 1, toICN: "버스·택시 약 40분" },
   // 국내선 전용 공항: 김포/제주/김해 국내선으로 이동 후 국제선 이용
   { code: "KWJ", name: "광주공항", city: "광주", type: "dom", add: 10, toICN: "국내선 김포 도착 후 공항철도 (또는 KTX 약 3시간)" },
   { code: "USN", name: "울산공항", city: "울산", type: "dom", add: 10, toICN: "국내선 김포 도착 후 공항철도" },
@@ -127,7 +125,6 @@ const COUNTRIES = [
     ["okinawa", "오키나와", 30, "2시간 20분", 1.0, "4,5,6,10", "7,8", "추라우미 수족관|국제거리|만좌모", 1, "ICN:KE,OZ,7C,LJ,TW|PUS:BX,LJ"],
     ["kyoto", "교토 (간사이공항)", 30, "1시간 50분", 1.1, "3,4,11", "4,11", "후시미 이나리|기요미즈데라|아라시야마", 0, "ICN:KE,OZ,7C,LJ,TW,ZE,RS,BX,MM|GMP:KE,OZ,7C|PUS:KE,BX,7C,LJ,MM|TAE:TW,7C|CJU:KE,7C|CJJ:RF,ZE"],
     ["nagoya", "나고야", 30, "1시간 50분", 1.0, "3,4,5,10,11", "8", "나고야성|지브리 파크|시라카와고 투어", 0, "ICN:KE,OZ,7C,LJ,TW|PUS:BX,7C"],
-    ["tsushima", "대마도", 15, "배 1시간 10분~2시간", 0.9, "4,5,6,9,10,11", "8", "이즈하라 거리|에보시다케 전망대|미우다 해변", 1, ""],
   ]},
   { id: "cn", name: "중국", flag: "🇨🇳", cur: "CNY", region: "ea", visa: "무비자 30일 (한시 시행 — 출국 전 연장 여부 확인)", cities: [
     ["shanghai", "상하이", 30, "2시간", 0.9, "3,4,5,10,11", "10", "와이탄|예원|상하이 디즈니랜드", 0, "ICN:KE,OZ,7C,TW,MU,CA|GMP:KE,OZ,MU,FM|PUS:KE,BX,MU|CJU:MU"],
@@ -460,15 +457,6 @@ const DETAILED_ROUTES = {
   newyork: "ICN:KE,OZ,YP",
 };
 
-// 배편 (항구 출발)
-const SEA_ROUTES = {
-  tsushima: { PUSP: { ops: "팬스타 쓰시마링크, 니나호 등", price: 150000, hours: "쾌속선 1시간 10분~2시간 10분" } },
-  fukuoka: { PUSP: { ops: "뉴카멜리아(고려훼리), 퀸비틀(JR큐슈)", price: 200000, hours: "쾌속선 약 3시간 40분 / 야간페리 약 11시간" } },
-  osaka: { PUSP: { ops: "팬스타드림(팬스타라인)", price: 300000, hours: "야간 크루즈 약 19시간" } },
-  kyoto: { PUSP: { ops: "팬스타드림 (오사카 도착)", price: 300000, hours: "야간 크루즈 약 19시간 + 교토 이동" } },
-  qingdao: { ICNP: { ops: "위동항운", price: 300000, hours: "야간페리 약 16시간" } },
-};
-
 // ---------- 빌드 ----------
 const DESTINATIONS = (() => {
   const krwToLocal = (krw, cur) => {
@@ -489,7 +477,7 @@ const DESTINATIONS = (() => {
     c.cities.forEach((city) => {
       if (typeof city === "string") {
         const d = DETAILED_CITIES.find((x) => x.id === city);
-        out.push({ ...d, ...base, detailed: true, routes: parseRoutes(DETAILED_ROUTES[city]), sea: SEA_ROUTES[city] || {} });
+        out.push({ ...d, ...base, detailed: true, routes: parseRoutes(DETAILED_ROUTES[city]) });
         return;
       }
       const [id, name, avgMan, hours, ci, best, peak, highlights, beach, routes] = city;
@@ -518,7 +506,7 @@ const DESTINATIONS = (() => {
         daily: { food: L(40000), transport: L(10000), misc: L(20000) },
         attractions: highlights.split("|").map((n, i) => ({ name: n, cost: L(tierCost[i] ?? 20000) })),
         tips: [`${c.name} 비자: ${c.visa}`, ...(REGION_TIPS[c.region] || [])],
-        routes: parseRoutes(routes), sea: SEA_ROUTES[id] || {},
+        routes: parseRoutes(routes),
       });
     });
   });

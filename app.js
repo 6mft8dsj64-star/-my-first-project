@@ -148,16 +148,7 @@
     const dep = DEP(depCode);
     const addKrw = dep.add * 10000;
     const air = Object.keys(d.routes).length > 0;
-    if (d.sea[depCode]) {
-      const s = d.sea[depCode];
-      return { mode: "sea", label: "배편", ops: s.ops, price: s.price, hours: s.hours };
-    }
     if (d.routes[depCode]) return { mode: "direct", label: "직항", airlines: d.routes[depCode], price: d.flight.avg, hours: d.flight.hours };
-    if (!air && Object.keys(d.sea).length) {
-      const [port, s] = Object.entries(d.sea)[0];
-      const p = DEP(port);
-      return { mode: "toPort", label: "항구 이동 후 배편", ops: s.ops, port: p, price: s.price + (depCode.startsWith("PUS") ? 10000 : 50000), hours: s.hours };
-    }
     if (depCode !== "ICN" && d.routes.ICN) {
       return { mode: "transfer", label: "인천 출발 직항", airlines: d.routes.ICN, price: d.flight.avg + addKrw, hours: d.flight.hours, toICN: dep.toICN };
     }
@@ -175,7 +166,7 @@
   }
 
   let plan = store.get("tm_plan", null) || defaultPlan();
-  if (!plan.dep) plan.dep = "ICN";
+  if (!DEPARTURES.some((x) => x.code === plan.dep)) plan.dep = "ICN";
   if (!DESTINATIONS.some((d) => d.id === plan.destId)) plan = defaultPlan();
   // 여행지 고르기 화면 상태 (지역 → 나라 → 도시)
   const ui = { region: destById(plan.destId).region, country: destById(plan.destId).countryId, query: "", allRates: false };
@@ -197,7 +188,7 @@
     const dailyLocal = (d.daily.food + d.daily.transport + d.daily.misc) * p.level * days * p.people;
 
     const items = [
-      { label: d.sea[p.dep] || routeInfo(d, p.dep).mode === "toPort" ? "교통(배편)" : "항공권", krw: p.flightPrice * p.people, note: `${won(p.flightPrice)} × ${p.people}명` },
+      { label: "항공권", krw: p.flightPrice * p.people, note: `${won(p.flightPrice)} × ${p.people}명` },
       { label: "숙소", localAmt: hotel.price * nights * p.rooms, cur, note: `${nights}박 × ${p.rooms}실` },
       { label: "관광·입장료", localAmt: attrLocal, cur, note: `${p.days.flat().length}곳 × ${p.people}명` },
       { label: "현지 생활비", localAmt: dailyLocal, cur, note: `${days}일 × ${p.people}명` },
@@ -251,7 +242,7 @@
     $("#countryGrid").innerHTML = countries.map((c) => {
       const cities = DESTINATIONS.filter((d) => d.countryId === c.id);
       const minP = Math.min(...cities.map((d) => routeInfo(d, plan.dep).price));
-      const direct = cities.some((d) => d.routes[plan.dep] || d.sea[plan.dep]);
+      const direct = cities.some((d) => d.routes[plan.dep]);
       return `<button class="country ${c.id === ui.country ? "on" : ""}" data-country="${c.id}">
         <span class="flag">${c.flag}</span><span><span class="nm">${c.name}</span>
         <span class="ct">${cities.length}개 도시 · ${man(minP)}~${direct ? ` · <i class="dot"></i>${DEP(plan.dep).city} 출발` : ""}</span></span>
@@ -293,7 +284,7 @@
     $("#startDate").min = iso(TODAY);
     $("#endDate").min = plan.start;
     $("#people").value = plan.people;
-    const groups = [["intl", "국제선 공항"], ["sea", "국제 여객선 항구"], ["dom", "국내선 공항 (환승 필요)"]];
+    const groups = [["intl", "국제선 공항"], ["dom", "국내선 공항 (환승 필요)"]];
     $("#dep").innerHTML = groups.map(([t, label]) => `<optgroup label="${label}">${DEPARTURES.filter((x) => x.type === t)
       .map((x) => `<option value="${x.code}" ${x.code === plan.dep ? "selected" : ""}>${x.name} (${x.city})</option>`).join("")}</optgroup>`).join("");
     const dp = DEP(plan.dep);
@@ -317,10 +308,8 @@
 
   function renderRoute() {
     const d = destById(plan.destId), dep = DEP(plan.dep), r = routeInfo(d, plan.dep);
-    let html = `<div class="route-head"><b>${dep.name}</b> → <b>${d.flag} ${d.name}</b> <span class="badge ${r.mode === "direct" || r.mode === "sea" ? "good" : ""}">${r.label}</span></div>`;
-    if (r.mode === "sea") html += `<div class="route-row">⛴️ ${r.ops}<br/><span class="hint" style="margin:0">${r.hours}</span></div>`;
-    else if (r.mode === "toPort") html += `<div class="route-row">항공 노선이 없어요. <b>${r.port.name}</b>에서 배로 가요.<br/>⛴️ ${r.ops} · ${r.hours}</div>`;
-    else if (r.mode === "direct") html += `<div class="route-row">${airlineChips(r.airlines)}</div>`;
+    let html = `<div class="route-head"><b>${dep.name}</b> → <b>${d.flag} ${d.name}</b> <span class="badge ${r.mode === "direct" ? "good" : ""}">${r.label}</span></div>`;
+    if (r.mode === "direct") html += `<div class="route-row">${airlineChips(r.airlines)}</div>`;
     else if (r.mode === "transfer") html += `<div class="route-row">${dep.name}에서는 직항이 없어요. <b>인천</b>으로 이동(${r.toICN}) 후 직항 이용:<br/>${airlineChips(r.airlines)}</div>`;
     else {
       html += `<div class="route-row">한국에서 직항이 없어요.${r.toICN ? ` 인천까지 이동(${r.toICN}) 후` : ""} 아래 항공사로 경유하는 게 일반적이에요:<br/>${airlineChips(r.airlines)}</div>`;
@@ -332,9 +321,9 @@
     }
 
     // 다른 출발지 직항 현황
-    const others = DEPARTURES.filter((x) => x.code !== plan.dep && (d.routes[x.code] || d.sea[x.code]));
+    const others = DEPARTURES.filter((x) => x.code !== plan.dep && d.routes[x.code]);
     if (others.length) html += `<div class="route-other">다른 곳에서 바로 가기: ${others.map((x) =>
-      `<button class="chip-btn" data-dep="${x.code}">${x.type === "sea" ? "⛴️" : "✈️"} ${x.name.replace("국제공항", "").replace(" 국제여객터미널", "")} ${d.routes[x.code] ? `(${d.routes[x.code].length})` : ""}</button>`).join("")}</div>`;
+      `<button class="chip-btn" data-dep="${x.code}">✈️ ${x.name.replace("국제공항", "")} (${d.routes[x.code].length})</button>`).join("")}</div>`;
     html += `<p class="hint">🟦 국내 대형항공사 🟩 국내 저비용항공사 ⬜ 외국 항공사 · 노선은 시즌별로 바뀌니 예약 전 확인하세요.</p>`;
     $("#routeInfo").innerHTML = html;
 
@@ -347,7 +336,7 @@
     renderRoute();
     const f = { ...destById(plan.destId).flight };
     const rp = routeInfo(destById(plan.destId), plan.dep).price;
-    const shift = rp - f.avg; // 출발지·배편에 따른 가격 차이
+    const shift = rp - f.avg; // 출발지에 따른 가격 차이
     f.low = Math.max(0, f.low + shift); f.avg = rp; f.high += shift;
     const lo = f.low * 0.8, hi = f.high * 1.1;
     const pos = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
@@ -711,7 +700,7 @@
       const load = e.target.closest("[data-load]"), del = e.target.closest("[data-del]");
       if (load) {
         const s = list.find((x) => String(x.id) === load.dataset.load);
-        if (s) { plan = JSON.parse(JSON.stringify(s.plan)); if (!plan.dep) plan.dep = "ICN"; ui.region = destById(plan.destId).region; ui.country = destById(plan.destId).countryId; renderAll(); document.getElementById("planner").scrollIntoView(); toast("계획을 불러왔어요"); }
+        if (s) { plan = JSON.parse(JSON.stringify(s.plan)); if (!DEPARTURES.some((x) => x.code === plan.dep)) plan.dep = "ICN"; ui.region = destById(plan.destId).region; ui.country = destById(plan.destId).countryId; renderAll(); document.getElementById("planner").scrollIntoView(); toast("계획을 불러왔어요"); }
       } else if (del) {
         store.set("tm_saved", list.filter((x) => String(x.id) !== del.dataset.del)); renderSaved();
       }
