@@ -152,4 +152,5 @@ I18N.add("es", {
   "contact.wait": "Acabas de enviar uno. Espera 30 segundos para volver a enviar.",
   "contact.fail": "No se pudo enviar. Inténtalo de nuevo en un momento. ({c})",
   "contact.offline": "El contacto aún no está conectado.",
+  "rates.checked": "comprobado a las {d}",
 });

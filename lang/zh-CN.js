@@ -152,4 +152,5 @@ I18N.add("zh-CN", {
   "contact.wait": "你刚刚发送过，请 30 秒后再试。",
   "contact.fail": "发送失败，请稍后再试。（{c}）",
   "contact.offline": "联系功能尚未连接。",
+  "rates.checked": "{d} 已检查",
 });

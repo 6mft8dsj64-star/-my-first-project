@@ -152,4 +152,5 @@ I18N.add("tr", {
   "contact.wait": "Az önce gönderdin. Tekrar göndermeden önce 30 saniye bekle.",
   "contact.fail": "Gönderilemedi. Biraz sonra tekrar dene. ({c})",
   "contact.offline": "İletişim formu henüz bağlanmadı.",
+  "rates.checked": "{d} kontrol edildi",
 });

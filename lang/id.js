@@ -152,4 +152,5 @@ I18N.add("id", {
   "contact.wait": "Kamu baru saja mengirim. Tunggu 30 detik sebelum mengirim lagi.",
   "contact.fail": "Gagal mengirim. Coba lagi sebentar lagi. ({c})",
   "contact.offline": "Fitur kontak belum terhubung.",
+  "rates.checked": "dicek {d}",
 });

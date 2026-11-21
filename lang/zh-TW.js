@@ -152,4 +152,5 @@ I18N.add("zh-TW", {
   "contact.wait": "你剛剛送出過，請 30 秒後再試。",
   "contact.fail": "送出失敗，請稍後再試。（{c}）",
   "contact.offline": "聯絡功能尚未連接。",
+  "rates.checked": "{d} 已確認",
 });

@@ -87,7 +87,7 @@
       "rates.fewer": "주요 통화만 보기", "rates.all": "전체 {n}개 통화 보기", "rates.noY": "어제 데이터 없음", "rates.vsY": "어제 대비",
       "rates.collect": "추이 데이터 수집 중", "rates.low": "🟢 최근 한 달 중 저렴한 편", "rates.high": "🔴 최근 한 달 중 비싼 편", "rates.mid": "⚪ 최근 한 달 평균 수준",
       "rates.krwNote": "원화로 결제하는 항공권 가격에 영향을 줘요",
-      "rates.updated": "{d} 기준", "rates.offline": "실시간 환율을 불러오지 못해 기본값 표시 중",
+      "rates.updated": "{d} 기준", "rates.checked": "{d} 확인", "rates.offline": "실시간 환율을 불러오지 못해 기본값 표시 중",
       // 4. 저장
       "sec.saved": "4. 저장한 계획 <small>저장한 날 vs 오늘 환율 가격 비교</small>",
       "saved.empty": "아직 저장한 계획이 없어요. 계획을 짜고 <b>이 계획 저장하기</b>를 눌러보세요.",
@@ -262,7 +262,7 @@
       "rates.fewer": "Show main currencies", "rates.all": "Show all {n} currencies", "rates.noY": "No data from yesterday", "rates.vsY": "vs. yesterday",
       "rates.collect": "Collecting trend data", "rates.low": "🟢 Cheap vs. last month", "rates.high": "🔴 Expensive vs. last month", "rates.mid": "⚪ Around last month's average",
       "rates.krwNote": "Affects flights priced in Korean won",
-      "rates.updated": "as of {d}", "rates.offline": "Couldn't load live rates — showing defaults",
+      "rates.updated": "as of {d}", "rates.checked": "checked {d}", "rates.offline": "Couldn't load live rates — showing defaults",
       "sec.saved": "4. Saved plans <small>price when saved vs. at today's rates</small>",
       "saved.empty": "No saved plans yet. Build a plan and tap <b>Save this plan</b>.",
       "saved.meta": "Saved {d} ({n} days ago) · {p} people", "saved.then": "When saved", "saved.now": "Today's rates", "saved.load": "Open", "saved.del": "Delete",
@@ -366,7 +366,7 @@
     { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
   ];
-  const VERSION = "20261122c";
+  const VERSION = "20261122d";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------

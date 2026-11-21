@@ -34,17 +34,13 @@
 
   function renderUser() {
     const area = $("#userArea");
-    // 설정 창 안의 내 계정 · 로그아웃
-    $("#setAccountRow").hidden = !user;
-    if (user) $("#setWho").textContent = `${user.displayName || t("auth.traveler")}${user.email ? ` · ${user.email}` : ""}`;
+    $("#setAccountRow").hidden = !user; // 설정 창의 로그아웃 버튼은 로그인했을 때만
     if (user) {
       const name = user.displayName || (user.email || "").split("@")[0] || t("auth.traveler");
       const avatar = user.photoURL
         ? `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer" />`
         : `<span class="avatar-txt">${name.slice(0, 1).toUpperCase()}</span>`;
-      area.innerHTML = `<button class="user-chip" id="accountBtn" type="button" title="${t("auth.myAccount")}">${avatar}<span class="user-name">${esc(name)}</span></button>
-        <button class="btn ghost sm" id="logoutBtn">${t("auth.logout")}</button>`;
-      $("#logoutBtn").onclick = () => auth.signOut();
+      area.innerHTML = `<button class="user-chip" id="accountBtn" type="button" title="${t("auth.myAccount")}">${avatar}<span class="user-name">${esc(name)}</span></button>`;
       $("#accountBtn").onclick = openAccount;
     } else {
       area.innerHTML = `<button class="btn sm" id="loginBtn">${t("auth.login")}</button>`;
@@ -134,6 +130,7 @@
       // 그래서 팝업 방식만 써요. 팝업이 막히면 안내 문구를 보여 줘요.
       await auth.signInWithPopup(provider);
       showAuth(false);
+      watchSignIn();
     } catch (e) { msg(errText(e)); }
     busy(false);
   }
@@ -294,7 +291,7 @@
       return;
     }
     msg(""); busy(true);
-    try { await auth.signInWithCredential(cred); showAuth(false); }
+    try { await auth.signInWithCredential(cred); showAuth(false); watchSignIn(); }
     catch (e) { msg(errText(e)); }
     busy(false);
   }
@@ -318,15 +315,62 @@
 
   const loadScript = (src) => new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
 
+  // ---------- 로그인 상태를 화면에 반영 ----------
+  const HAD = "tm_had_login"; // 이 기기에서 로그인한 적이 있으면 처음부터 로그인 화면을 띄우지 않아요
+  const had = { get() { try { return localStorage.getItem(HAD) === "1"; } catch { return false; } },
+    set(v) { try { v ? localStorage.setItem(HAD, "1") : localStorage.removeItem(HAD); } catch { /* 무시 */ } } };
+  let applying = null, firstState = true;
+
+  async function applyUser(u) {
+    if (u === user && !firstState) return;           // 이미 반영됨
+    const wasUser = !!user;
+    const initial = firstState; firstState = false;
+    if (!u && !modal.hidden) { deleting = false; closeAccount(); }
+    user = u;
+    renderUser();
+    if (u) {
+      had.set(true);
+      // 로그인되면 바로 로그인 화면을 닫고 맨 위(여행지 고르기)부터 보여줘요. 내 데이터는 뒤에서 불러와요.
+      const wasShown = !screen.hidden;
+      showAuth(false);
+      if (wasShown) window.scrollTo(0, 0);
+      $("#syncState").textContent = t("sync.loading");
+      await pullUserData(u);
+      if (user !== u) return;
+      window.TripApp?.reload();
+      $("#syncState").textContent = t("sync.saved");
+      window.TMContact?.onUser?.(u);
+    } else {
+      window.TMContact?.onUser?.(null);
+      // 로그아웃했거나, 로그인했던 기기인데 로그인이 풀려 있으면 로그인 화면을 보여줘요
+      if (wasUser || (initial && had.get() && !guestMode())) { showAuth(true); setMode("login"); }
+      if (wasUser) had.set(false);
+      window.TM_USER_PREFIX = "";
+      $("#syncState").textContent = "";
+      window.TripApp?.reload();
+    }
+  }
+  const syncNow = () => { if (auth && auth.currentUser !== user) applyUser(auth.currentUser); };
+
+  // 로그인 시도 뒤 15초 동안 로그인 상태를 계속 확인 (새 탭 로그인 후 결과를 놓쳐도 화면이 바뀌게)
+  let watchTimer = null;
+  function watchSignIn() {
+    clearInterval(watchTimer);
+    const until = Date.now() + 15000;
+    watchTimer = setInterval(() => { syncNow(); if (user || Date.now() > until) clearInterval(watchTimer); }, 500);
+  }
+  const guestMode = () => { try { return sessionStorage.getItem("tm_guest") === "1"; } catch { return false; } };
+
   async function init() {
     bindUI();
     renderUser();
-    let guest = false;
-    try { guest = sessionStorage.getItem("tm_guest") === "1"; } catch { /* 무시 */ }
-    showAuth(!guest);
+    // 로그인한 적 있는 기기는 로그인 확인이 끝날 때까지 로그인 화면 대신 사이트를 바로 보여줘요
+    showAuth(!guestMode() && !had.get());
+    if (had.get()) $("#syncState").textContent = t("sync.loading");
 
     if (!cfg) {
       $("#authNotice").hidden = false;
+      showAuth(!guestMode());
       busy(false);
       return;
     }
@@ -334,43 +378,28 @@
       await loadScript(SDK + "firebase-app-compat.js");
       await Promise.all([loadScript(SDK + "firebase-auth-compat.js"), loadScript(SDK + "firebase-firestore-compat.js")]);
     } catch {
+      showAuth(true);
       msg(t("auth.sdkFail"));
       return;
     }
     firebase.initializeApp(cfg);
+    auth = firebase.auth();
+    auth.languageCode = I18N.lang;
+    try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch { /* 기본값 사용 */ }
+    db = firebase.firestore();
+    try { db.settings({ experimentalAutoDetectLongPolling: true }); } catch { /* 이미 설정됨 */ }
+
+    // 로그인 상태 감시를 먼저 시작하고, 구글 버튼은 그 다음에 불러와요 (버튼이 늦게 떠도 로그인 확인은 바로)
+    auth.onAuthStateChanged((u) => { applying = applyUser(u); });
+    auth.getRedirectResult().then((r) => { if (r?.user) watchSignIn(); }).catch((e) => msg(errText(e)));
+    ["visibilitychange", "focus", "pageshow"].forEach((ev) => window.addEventListener(ev, () => { if (document.visibilityState !== "hidden") syncNow(); }));
+    window.addEventListener("storage", (e) => { if (e.key && e.key.startsWith("firebase:authUser")) setTimeout(syncNow, 300); });
+
     if (await loadGis()) {
       $("#googleBtn").hidden = true;
       $("#gisBtn").hidden = false;
       renderGis($("#gisBtn"));
     }
-    auth = firebase.auth();
-    auth.languageCode = I18N.lang;
-    db = firebase.firestore();
-    try { db.settings({ experimentalAutoDetectLongPolling: true }); } catch { /* 이미 설정됨 */ }
-    auth.getRedirectResult().catch((e) => msg(errText(e)));
-
-    let hadUser = false;
-    auth.onAuthStateChanged(async (u) => {
-      if (!u) { hadUser = !!user; if (!modal.hidden) { deleting = false; closeAccount(); } }
-      user = u;
-      renderUser();
-      if (u) {
-        // 로그인되면 바로 화면을 넘기고, 내 데이터는 뒤에서 불러와 다시 그려요
-        showAuth(false);
-        $("#syncState").textContent = t("sync.loading");
-        await pullUserData(u);
-        if (user !== u) return; // 그 사이 로그아웃한 경우
-        window.TripApp?.reload();
-        $("#syncState").textContent = t("sync.saved");
-        window.TMContact?.onUser?.(u);
-      } else {
-        window.TMContact?.onUser?.(null);
-        if (hadUser) { showAuth(true); setMode("login"); }
-        window.TM_USER_PREFIX = "";
-        $("#syncState").textContent = "";
-        window.TripApp?.reload();
-      }
-    });
   }
 
   I18N.ready.then(init);

@@ -152,4 +152,5 @@ I18N.add("vi", {
   "contact.wait": "Bạn vừa gửi xong. Hãy đợi 30 giây rồi gửi lại.",
   "contact.fail": "Không gửi được. Hãy thử lại sau ít phút. ({c})",
   "contact.offline": "Chức năng liên hệ chưa được kết nối.",
+  "rates.checked": "kiểm tra lúc {d}",
 });

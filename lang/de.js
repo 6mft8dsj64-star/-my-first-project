@@ -152,4 +152,5 @@ I18N.add("de", {
   "contact.wait": "Du hast gerade erst gesendet. Warte 30 Sekunden, bevor du erneut sendest.",
   "contact.fail": "Senden fehlgeschlagen. Versuche es gleich noch einmal. ({c})",
   "contact.offline": "Das Kontaktformular ist noch nicht verbunden.",
+  "rates.checked": "geprüft {d}",
 });

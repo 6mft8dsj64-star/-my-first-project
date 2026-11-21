@@ -120,42 +120,74 @@
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), ms);
     try {
-      const r = await fetch(url, { signal: ctl.signal });
+      const r = await fetch(url, { signal: ctl.signal, cache: "no-store" }); // 브라우저 캐시 말고 항상 새로 받기
       if (!r.ok) throw new Error(r.status);
       return await r.json();
     } finally { clearTimeout(timer); }
   }
+  const firstOk = async (urls) => { for (const u of urls) { try { return await fetchJSON(u); } catch { /* 다음 주소 */ } } return null; };
+
+  // 환율 출처 3곳에서 받아 가장 최신 값을 써요. (1 통화 = ? 원)
+  async function srcErApi() {
+    const r = await firstOk(["https://open.er-api.com/v6/latest/KRW"]);
+    if (r?.result !== "success") return null;
+    const rates = {}; CODES.forEach((c) => { if (r.rates[c]) rates[c] = 1 / r.rates[c]; });
+    return { name: "open.er-api.com", time: new Date(r.time_last_update_unix * 1000), rates };
+  }
+  // fawazahmed0 currency-api: 매일 갱신, 날짜별 과거 값도 있어 '어제 대비'를 모든 통화로 계산할 수 있어요
+  const caUrls = (tag) => [
+    `https://${tag}.currency-api.pages.dev/v1/currencies/krw.min.json`,
+    `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${tag}/v1/currencies/krw.min.json`,
+  ];
+  const caRates = (r) => { const rates = {}; CODES.forEach((c) => { const v = r?.krw?.[c.toLowerCase()]; if (v) rates[c] = 1 / v; }); return rates; };
+  async function srcCurrencyApi() {
+    const r = await firstOk(caUrls("latest"));
+    if (!r?.date) return null;
+    return { name: "currency-api", time: new Date(`${r.date}T00:00:00Z`), date: r.date, rates: caRates(r) };
+  }
+  async function srcFrankfurter(start) {
+    const sym = FRANKFURTER_CODES.join(",");
+    const r = await firstOk([
+      `https://api.frankfurter.dev/v1/${start}..?base=KRW&symbols=${sym}`,
+      `https://api.frankfurter.app/${start}..?from=KRW&to=${sym}`,
+    ]);
+    if (!r?.rates) return null;
+    const dates = Object.keys(r.rates).sort();
+    const series = {};
+    FRANKFURTER_CODES.forEach((c) => { series[c] = dates.map((d) => 1 / r.rates[d][c]).filter(Number.isFinite); });
+    const last = dates[dates.length - 1];
+    const rates = {}; FRANKFURTER_CODES.forEach((c) => { if (r.rates[last]?.[c]) rates[c] = 1 / r.rates[last][c]; });
+    return { name: "frankfurter", time: new Date(`${last}T15:00:00Z`), rates, dates, raw: r.rates, series };
+  }
 
   async function loadRates() {
     const todayIso = iso(TODAY);
+    const [er, ca, fr] = await Promise.all([srcErApi(), srcCurrencyApi(), srcFrankfurter(iso(addDays(TODAY, -35)))]);
+    const srcs = [er, ca, fr].filter((x) => x && Object.keys(x.rates).length).sort((a, b) => b.time - a.time);
     let current = null;
-    try {
-      const r = await fetchJSON("https://open.er-api.com/v6/latest/KRW");
-      if (r.result === "success") {
-        current = {};
-        CODES.forEach((c) => { if (r.rates[c]) current[c] = 1 / r.rates[c]; });
-        Rates.updated = new Date(r.time_last_update_unix * 1000);
-        Rates.source = "open.er-api.com";
-      }
-    } catch { /* 다음 소스로 */ }
+    if (srcs.length) {
+      // 가장 최신 출처를 기준으로, 빠진 통화는 다른 출처로 채워요
+      current = {};
+      [...srcs].reverse().forEach((x) => Object.assign(current, x.rates));
+      Object.assign(current, srcs[0].rates);
+      Rates.updated = srcs[0].time;
+      Rates.source = srcs.map((x) => x.name).join(" · ");
+    }
 
-    try {
-      const start = iso(addDays(TODAY, -35));
-      const s = await fetchJSON(`https://api.frankfurter.app/${start}..?from=KRW&to=${FRANKFURTER_CODES.join(",")}`);
-      const fxDates = Object.keys(s.rates).sort();
-      FRANKFURTER_CODES.forEach((c) => { Rates.series[c] = fxDates.map((d) => 1 / s.rates[d][c]).filter(Number.isFinite); });
-      const prev = fxDates.filter((d) => d < todayIso).pop();
-      if (prev) FRANKFURTER_CODES.forEach((c) => { Rates.yesterday[c] = 1 / s.rates[prev][c]; });
-      if (!current) {
-        current = {};
-        const last = fxDates[fxDates.length - 1];
-        FRANKFURTER_CODES.forEach((c) => { current[c] = 1 / s.rates[last][c]; });
-        Rates.updated = parse(last);
-        Rates.source = "frankfurter.app";
-      }
-    } catch { /* 시계열 없음 */ }
+    Rates.yesterday = {}; Rates.series = {};
+    if (fr) {
+      Object.assign(Rates.series, fr.series);
+      const prev = fr.dates.filter((d) => d < todayIso).pop();
+      if (prev) FRANKFURTER_CODES.forEach((c) => { if (fr.raw[prev]?.[c]) Rates.yesterday[c] = 1 / fr.raw[prev][c]; });
+    }
+    // 어제 값: currency-api의 하루 전 날짜 파일 (모든 통화)
+    if (ca) {
+      const d = new Date(`${ca.date}T00:00:00Z`); d.setUTCDate(d.getUTCDate() - 1);
+      const y = await firstOk(caUrls(d.toISOString().slice(0, 10)));
+      if (y?.krw) Object.assign(Rates.yesterday, caRates(y));
+    }
 
-    // 브라우저에 매일 환율 기록 → ECB 미제공 통화의 어제 대비/추이 계산
+    // 브라우저에 매일 기록해서 추이가 없는 통화도 점점 그래프가 생겨요
     const hist = store.get("tm_rate_hist", {});
     if (current) hist[todayIso] = current;
     const keep = Object.keys(hist).sort().slice(-40);
@@ -169,7 +201,7 @@
       }
       if (!Rates.series[c] || Rates.series[c].length < 2) Rates.series[c] = keep.map((k) => trimmed[k][c]).filter(Number.isFinite);
     });
-    if (current) { Rates.today = { ...FALLBACK_RATES, ...current }; Rates.live = true; }
+    if (current) { Rates.today = { ...FALLBACK_RATES, ...current }; Rates.live = true; Rates.checked = new Date(); }
   }
 
   const rate = (c, set = Rates.today) => (c === "KRW" ? 1 : set?.[c] ?? Rates.today[c] ?? FALLBACK_RATES[c]);
@@ -597,6 +629,7 @@
     }).join("");
     $("#rateUpdated").textContent = Rates.live
       ? t("rates.updated", { d: Rates.updated ? Rates.updated.toLocaleString(LOC(), { dateStyle: "medium", timeStyle: "short" }) : "" })
+        + (Rates.checked ? ` · ${t("rates.checked", { d: Rates.checked.toLocaleTimeString(LOC(), { hour: "2-digit", minute: "2-digit" }) })}` : "")
       : t("rates.offline");
 
     const tick = [dCur, ...MAJOR, ...(base !== "KRW" ? ["KRW"] : [])].filter((c, i, a) => a.indexOf(c) === i && c !== base).map((c) => {
@@ -792,6 +825,10 @@
   I18N.ready.then(() => {
     renderAll();
     loadRates().then(() => { renderAll(); if (Rates.live) toast(t("toast.rates")); });
-    setInterval(() => loadRates().then(renderAll), 60 * 60 * 1000);
+    setInterval(() => loadRates().then(renderAll), 30 * 60 * 1000);
+    // 앱을 다시 열었을 때(다른 탭에서 돌아올 때) 10분이 지났으면 환율을 새로 받아요
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && (!Rates.checked || Date.now() - Rates.checked > 10 * 60 * 1000)) loadRates().then(renderAll);
+    });
   });
 })();
