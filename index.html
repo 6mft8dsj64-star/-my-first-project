@@ -8,123 +8,146 @@
   <meta name="description" content="여행지 정보, 실시간 환율, 총 경비 계산과 절약 팁까지 한 번에 짜는 여행 플래너" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20261121b" />
+  <link rel="stylesheet" href="style.css?v=20261122a" />
+  <script src="i18n.js?v=20261122a"></script>
 </head>
 <body>
   <!-- 로그인 화면 -->
   <div class="auth-screen" id="authScreen" hidden>
     <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-      <div class="auth-brand">✈️ 트립노트</div>
-      <p class="auth-lead">로그인하면 내 여행 계획과 저장한 가격 기록이<br />어느 기기에서든 그대로 따라와요.</p>
+      <div class="auth-top"><div class="auth-brand" data-i18n="brand">✈️ 트립노트</div>
+        <select class="lang-select" id="authLang" aria-label="Language / 언어"><option value="ko">한국어</option><option value="en">English</option></select></div>
+      <p class="auth-lead" data-i18n-html="auth.lead"></p>
 
-      <div class="auth-notice" id="authNotice" hidden>
-        아직 로그인 서버가 연결되지 않았어요. 관리자가 Firebase 설정을 마치면 로그인할 수 있어요.
-        지금은 <b>로그인 없이 둘러보기</b>로 이용해 주세요.
-      </div>
+      <div class="auth-notice" id="authNotice" hidden data-i18n-html="auth.notice"></div>
 
       <div class="gis-wrap" id="gisBtn" hidden></div>
       <button class="social google" id="googleBtn" type="button">
         <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-        Google로 계속하기
+        <span data-i18n="auth.google">Google로 계속하기</span>
       </button>
       <button class="social apple" id="appleBtn" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.6-1-2.6-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg>
-        Apple로 계속하기
+        <span data-i18n="auth.apple">Apple로 계속하기</span>
       </button>
 
-      <div class="auth-or"><span>또는 이메일</span></div>
+      <div class="auth-or"><span data-i18n="auth.or">또는 이메일</span></div>
 
       <form id="emailForm" class="auth-form" novalidate>
         <h3 id="authTitle">로그인</h3>
-        <label id="nameRow" hidden>이름<input id="authName" type="text" autocomplete="name" placeholder="홍길동" /></label>
-        <label>이메일<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-        <label id="pwRow">비밀번호<input id="authPw" type="password" autocomplete="current-password" placeholder="6자 이상" /></label>
-        <label id="pw2Row" hidden>비밀번호 확인<input id="authPw2" type="password" autocomplete="new-password" /></label>
+        <label id="nameRow" hidden><span data-i18n="auth.name">이름</span><input id="authName" type="text" autocomplete="name" data-i18n-ph="auth.namePh" /></label>
+        <label><span data-i18n="auth.email">이메일</span><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+        <label id="pwRow"><span data-i18n="auth.pw">비밀번호</span><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="auth.pwPh" /></label>
+        <label id="pw2Row" hidden><span data-i18n="auth.pw2">비밀번호 확인</span><input id="authPw2" type="password" autocomplete="new-password" /></label>
         <p class="auth-msg" id="authMsg" role="status"></p>
         <button class="btn block" id="emailSubmit" type="submit">이메일로 로그인</button>
         <div class="auth-links">
-          <button type="button" class="link" id="toSignup" data-guest="1">처음이신가요? 회원가입</button>
-          <button type="button" class="link" id="toLogin" data-guest="1" hidden>이미 계정이 있어요 · 로그인</button>
-          <button type="button" class="link" id="toReset" data-guest="1">비밀번호를 잊었어요</button>
+          <button type="button" class="link" id="toSignup" data-guest="1" data-i18n="auth.toSignup">처음이신가요? 회원가입</button>
+          <button type="button" class="link" id="toLogin" data-guest="1" hidden data-i18n="auth.toLogin">이미 계정이 있어요 · 로그인</button>
+          <button type="button" class="link" id="toReset" data-guest="1" data-i18n="auth.toReset">비밀번호를 잊었어요</button>
         </div>
       </form>
 
-      <button class="guest" id="guestBtn" type="button" data-guest="1">로그인 없이 둘러보기 →</button>
-      <p class="auth-fine">둘러보기 중 만든 계획은 이 브라우저에만 저장되고, 나중에 로그인하면 내 계정으로 옮겨져요.</p>
-      <p class="auth-fine">로그인·가입하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 정보가 처리돼요. 만 14세 미만은 가입할 수 없어요.</p>
+      <button class="guest" id="guestBtn" type="button" data-guest="1" data-i18n="auth.guest">로그인 없이 둘러보기 →</button>
+      <p class="auth-fine" data-i18n="auth.fine1"></p>
+      <p class="auth-fine" data-i18n-html="auth.fine2"></p>
     </div>
   </div>
 
   <!-- 내 계정 -->
   <div class="modal" id="accountModal" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
-      <button class="modal-x" type="button" data-close aria-label="닫기">✕</button>
+      <button class="modal-x" type="button" data-close data-i18n-aria="close" aria-label="닫기">✕</button>
 
       <div id="accountMain">
-        <h3 id="accountTitle">내 계정</h3>
+        <h3 id="accountTitle" data-i18n="acc.title">내 계정</h3>
         <p class="account-who" id="accountWho"></p>
-        <button class="btn block" type="button" id="accountLogout">로그아웃</button>
-        <a class="account-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
-        <button class="link danger" type="button" id="toDelete">회원 탈퇴</button>
+        <button class="btn block" type="button" id="accountLogout" data-i18n="auth.logout">로그아웃</button>
+        <a class="account-link" href="privacy.html" target="_blank" rel="noopener" data-i18n="acc.privacy">개인정보처리방침</a>
+        <button class="link danger" type="button" id="toDelete" data-i18n="acc.delete">회원 탈퇴</button>
       </div>
 
       <form id="deleteForm" hidden novalidate>
-        <h3>회원 탈퇴</h3>
-        <p class="delete-warn">탈퇴하면 계정과 저장한 여행 계획, 가격 기록이 <b>모두 바로 삭제</b>되고 되돌릴 수 없어요.</p>
-        <label id="delPwRow" hidden>본인 확인을 위해 비밀번호를 입력해 주세요
+        <h3 data-i18n="del.title">회원 탈퇴</h3>
+        <p class="delete-warn" data-i18n-html="del.warn"></p>
+        <label id="delPwRow" hidden><span data-i18n="del.pw">본인 확인을 위해 비밀번호를 입력해 주세요</span>
           <input id="delPw" type="password" autocomplete="current-password" />
         </label>
-        <p class="hint" id="delSocialHint" hidden>본인 확인을 위해 로그인 창이 한 번 더 열려요.</p>
+        <p class="hint" id="delSocialHint" hidden data-i18n="del.socialHint"></p>
         <div id="delGoogleRow" hidden>
-          <p class="hint">본인 확인을 위해 아래 버튼으로 같은 Google 계정을 한 번 더 골라 주세요.</p>
+          <p class="hint" data-i18n="del.googleHint"></p>
           <div class="gis-wrap" id="delGisBtn"></div>
-          <p class="auth-msg ok" id="delGoogleOk" hidden>✓ 본인 확인이 끝났어요.</p>
+          <p class="auth-msg ok" id="delGoogleOk" hidden data-i18n="del.googleOk"></p>
         </div>
-        <label><span>확인을 위해 <b>탈퇴</b>라고 입력해 주세요</span>
-          <input id="delConfirm" type="text" autocomplete="off" placeholder="탈퇴" />
+        <label><span data-i18n-html="del.confirm"></span>
+          <input id="delConfirm" type="text" autocomplete="off" data-i18n-ph="del.word" />
         </label>
         <p class="auth-msg" id="delMsg" role="status"></p>
-        <button class="btn block danger" type="submit" id="delSubmit">계정 영구 삭제</button>
-        <button class="link" type="button" id="delCancel">취소</button>
+        <button class="btn block danger" type="submit" id="delSubmit" data-i18n="del.submit">계정 영구 삭제</button>
+        <button class="link" type="button" id="delCancel" data-i18n="del.cancel">취소</button>
       </form>
+    </div>
+  </div>
+
+  <!-- 설정 -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <button class="modal-x" type="button" data-close data-i18n-aria="close" aria-label="닫기">✕</button>
+      <h3 id="settingsTitle" data-i18n="set.title">설정</h3>
+      <div class="set-row">
+        <div class="set-label" data-i18n="set.theme">화면 테마</div>
+        <div class="seg seg-full">
+          <button type="button" data-theme-set="system">🖥️ <span data-i18n="theme.system">시스템</span></button>
+          <button type="button" data-theme-set="light">☀️ <span data-i18n="theme.light">라이트</span></button>
+          <button type="button" data-theme-set="dark">🌙 <span data-i18n="theme.dark">다크</span></button>
+        </div>
+      </div>
+      <label class="set-row"><span class="set-label" data-i18n="set.lang">언어</span>
+        <select class="lang-select" id="langSelect"><option value="ko">한국어</option><option value="en">English</option></select>
+      </label>
+      <label class="set-row"><span class="set-label" data-i18n="set.cur">가격 표시 통화</span>
+        <select id="curSelect"></select>
+        <span class="hint" data-i18n="set.curNote"></span>
+      </label>
     </div>
   </div>
 
   <header class="topbar">
     <div class="wrap topbar-inner">
-      <a class="brand" href="#">✈️ 트립노트</a>
+      <a class="brand" href="#" data-i18n="brand">✈️ 트립노트</a>
       <nav class="nav">
-        <a href="#destinations">여행지</a>
-        <a href="#planner">계획짜기</a>
-        <a href="#rates">환율</a>
-        <a href="#saved">저장한 계획</a>
-        <a href="#tips">여행 팁</a>
+        <a href="#destinations" data-i18n="nav.dest">여행지</a>
+        <a href="#planner" data-i18n="nav.plan">계획짜기</a>
+        <a href="#rates" data-i18n="nav.rates">환율</a>
+        <a href="#saved" data-i18n="nav.saved">저장한 계획</a>
+        <a href="#tips" data-i18n="nav.tips">여행 팁</a>
       </nav>
-      <div class="user-area"><span class="sync" id="syncState"></span><span id="userArea"></span></div>
+      <div class="user-area"><span class="sync" id="syncState"></span>
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="설정 / Settings">⚙️</button>
+        <span id="userArea"></span></div>
     </div>
-    <div class="ticker"><div class="wrap" id="ticker">환율 불러오는 중…</div></div>
+    <div class="ticker"><div class="wrap" id="ticker" data-i18n="ticker.loading">환율 불러오는 중…</div></div>
   </header>
 
   <main>
     <section class="hero">
       <div class="wrap">
-        <h1>여행 계획, <span class="accent">가격까지 한 번에</span></h1>
-        <p>여행지를 고르면 항공권 시세·인기 숙소·관광지 비용이 바로 보이고,<br class="hide-sm" />
-          일정을 짜는 동안 <b>오늘 환율</b>로 총 경비가 실시간 계산됩니다.</p>
+        <h1 data-i18n-html="hero.title"></h1>
+        <p data-i18n-html="hero.sub"></p>
       </div>
     </section>
 
     <!-- 1. 여행지 -->
     <section id="destinations" class="wrap section">
-      <h2>1. 어디로 갈까요? <small>지역 → 나라 → 도시 순서로 골라주세요</small></h2>
+      <h2 data-i18n-html="sec.dest"></h2>
       <div class="picker">
-        <input type="search" id="destSearch" class="search" placeholder="🔍 도시·나라 이름으로 바로 찾기 (예: 다낭, 스위스)" />
+        <input type="search" id="destSearch" class="search" data-i18n-ph="pick.search" />
         <div class="crumb" id="crumb"></div>
-        <div class="step-label">① 지역</div>
+        <div class="step-label" data-i18n="step.region"></div>
         <div class="tabs" id="regionTabs"></div>
-        <div class="step-label">② 나라</div>
+        <div class="step-label" data-i18n="step.country"></div>
         <div class="country-grid" id="countryGrid"></div>
-        <div class="step-label">③ 도시</div>
+        <div class="step-label" data-i18n="step.city"></div>
         <h3 id="cityHead" class="city-head"></h3>
         <div class="dest-grid" id="cityGrid"></div>
       </div>
@@ -132,64 +155,64 @@
 
     <!-- 2. 플래너 -->
     <section id="planner" class="wrap section">
-      <h2>2. 계획 짜기 <small id="plannerTitle"></small></h2>
+      <h2><span data-i18n="sec.plan">2. 계획 짜기</span> <small id="plannerTitle"></small></h2>
       <div class="planner">
         <div class="planner-main">
 
           <div class="card" id="destInfo"></div>
 
           <div class="card">
-            <h3>📅 기본 정보</h3>
-            <label class="dep-label">출발 공항<select id="dep"></select></label>
+            <h3 data-i18n="card.basic"></h3>
+            <label class="dep-label"><span data-i18n="dep.label">출발 공항</span><select id="dep"></select></label>
             <p class="hint warn" id="depHint"></p>
             <div class="row3">
-              <label>출발일<input type="date" id="startDate" /></label>
-              <label>귀국일<input type="date" id="endDate" /></label>
-              <label>인원<input type="number" id="people" min="1" max="20" value="2" /></label>
+              <label><span data-i18n="date.start">출발일</span><input type="date" id="startDate" /></label>
+              <label><span data-i18n="date.end">귀국일</span><input type="date" id="endDate" /></label>
+              <label><span data-i18n="people">인원</span><input type="number" id="people" min="1" max="20" value="2" /></label>
             </div>
             <p class="hint" id="dateHint"></p>
           </div>
 
           <div class="card">
-            <h3>✈️ 가는 방법 · 항공사 <span class="sub">1인 왕복</span></h3>
+            <h3 data-i18n-html="card.route"></h3>
             <div id="routeInfo" class="route"></div>
             <div class="flight-bar" id="flightBar"></div>
-            <label class="inline">내가 찾은 가격(1인)
-              <input type="number" id="flightPrice" step="10000" min="0" /> 원
+            <label class="inline"><span data-i18n="fare.my">내가 찾은 가격(1인)</span>
+              <input type="number" id="flightPrice" step="10000" min="0" /> <span id="flightUnit">원</span>
             </label>
             <p class="hint" id="flightHint"></p>
             <p class="hint" id="priceLog"></p>
           </div>
 
           <div class="card">
-            <h3>🏨 숙소 <span class="sub">여행자들이 많이 고른 순 · 1박 1실</span></h3>
+            <h3 data-i18n-html="card.hotel"></h3>
             <div id="hotelList" class="hotel-list"></div>
-            <label class="inline">객실 수 <input type="number" id="rooms" min="1" max="10" value="1" /></label>
+            <label class="inline"><span data-i18n="rooms">객실 수</span> <input type="number" id="rooms" min="1" max="10" value="1" /></label>
           </div>
 
           <div class="card">
-            <h3>🗺️ 일자별 일정</h3>
+            <h3 data-i18n="card.days"></h3>
             <div id="dayList" class="day-list"></div>
           </div>
 
           <div class="card">
-            <h3>🍜 현지 생활비 <span class="sub">식비·교통·기타, 1인 1일</span></h3>
+            <h3 data-i18n-html="card.daily"></h3>
             <div class="seg" id="levelSeg">
-              <button data-level="0.7">절약</button>
-              <button data-level="1" class="on">보통</button>
-              <button data-level="1.5">여유</button>
+              <button data-level="0.7" data-i18n="level.save">절약</button>
+              <button data-level="1" class="on" data-i18n="level.normal">보통</button>
+              <button data-level="1.5" data-i18n="level.comfort">여유</button>
             </div>
             <p class="hint" id="dailyHint"></p>
           </div>
 
           <div class="card">
-            <h3>🧾 기타 비용</h3>
+            <h3 data-i18n="card.extra"></h3>
             <div id="extraList" class="extra-list"></div>
             <div class="add-extra">
-              <input type="text" id="extraName" placeholder="예: 여행자보험, eSIM, 쇼핑" />
-              <input type="number" id="extraAmount" placeholder="금액" min="0" />
+              <input type="text" id="extraName" data-i18n-ph="extra.ph" />
+              <input type="number" id="extraAmount" data-i18n-ph="extra.amount" min="0" />
               <select id="extraCur"></select>
-              <button class="btn ghost" id="addExtra">추가</button>
+              <button class="btn ghost" id="addExtra" data-i18n="add">추가</button>
             </div>
           </div>
         </div>
@@ -197,7 +220,7 @@
         <aside class="planner-side">
           <div class="card summary" id="summary"></div>
           <div class="card">
-            <h3>💡 이렇게 하면 더 효율적이에요</h3>
+            <h3 data-i18n="card.suggest"></h3>
             <ul class="suggest" id="suggestions"></ul>
           </div>
         </aside>
@@ -206,21 +229,22 @@
 
     <!-- 3. 환율 -->
     <section id="rates" class="wrap section">
-      <h2>3. 실시간 환율 <small id="rateUpdated"></small></h2>
+      <h2><span data-i18n="sec.rates">3. 실시간 환율</span> <small id="rateUpdated"></small></h2>
+      <p class="hint rate-base" id="rateBase"></p>
       <div class="rate-grid" id="rateGrid"></div>
       <button class="btn ghost" id="toggleRates" style="margin-top:12px"></button>
-      <p class="hint">환율은 브라우저에서 공개 환율 API로 매번 새로 불러옵니다. 어제 대비 변동은 최근 영업일 기준 환율과 비교한 값입니다.</p>
+      <p class="hint" data-i18n="rates.note"></p>
     </section>
 
     <!-- 4. 저장한 계획 -->
     <section id="saved" class="wrap section">
-      <h2>4. 저장한 계획 <small>저장한 날 vs 오늘 환율 가격 비교</small></h2>
+      <h2 data-i18n-html="sec.saved"></h2>
       <div id="savedList" class="saved-list"></div>
     </section>
 
     <!-- 5. 팁 -->
     <section id="tips" class="wrap section">
-      <h2>5. 효율적인 여행 팁</h2>
+      <h2 data-i18n="sec.tips"></h2>
       <div id="destTips"></div>
       <div class="tip-grid" id="generalTips"></div>
     </section>
@@ -228,18 +252,18 @@
 
   <footer class="footer">
     <div class="wrap">
-      항공권·숙소·관광지 가격과 선호도, 항공 노선, 비자 정보는 공개 정보 기반의 <b>참고용 추정치</b>이며 실제 예약가와 다를 수 있습니다.
-      환율 제공: open.er-api.com, frankfurter.app
-      <div class="footer-links"><a href="privacy.html"><b>개인정보처리방침</b></a></div>
+      <span data-i18n-html="footer.note"></span>
+      <div class="footer-links"><a href="privacy.html"><b data-i18n="footer.privacy">개인정보처리방침</b></a></div>
     </div>
   </footer>
 
   <div class="toast" id="toast"></div>
 
-  <script src="data.js?v=20261121b"></script>
-  <script src="world.js?v=20261121b"></script>
-  <script src="app.js?v=20261121b"></script>
-  <script src="firebase-config.js?v=20261121b"></script>
-  <script src="auth.js?v=20261121b"></script>
+  <script src="data.js?v=20261122a"></script>
+  <script src="world.js?v=20261122a"></script>
+  <script src="i18n-data.js?v=20261122a"></script>
+  <script src="app.js?v=20261122a"></script>
+  <script src="firebase-config.js?v=20261122a"></script>
+  <script src="auth.js?v=20261122a"></script>
 </body>
 </html>

@@ -1,0 +1,343 @@
+// 영어 데이터 번역 (도시·명소·숙소·팁·비자·항공사·공항)
+// 나라 이름과 통화 이름은 브라우저 내장 번역(Intl.DisplayNames)을 사용합니다.
+
+// 도시: [이름, "명소1|명소2|…" (world.js / data.js의 순서와 같음)]
+const CITY_EN = {
+  tokyo: ["Tokyo", "Shibuya Sky observatory|teamLab Planets|Disneyland / DisneySea|Senso-ji, Asakusa|Hakone day trip (Free Pass)"],
+  osaka: ["Osaka", "Universal Studios Japan|Osaka Castle keep|Kyoto day-trip transport|Umeda Sky Building|Nara Deer Park"],
+  fukuoka: ["Fukuoka", "Dazaifu Tenmangu|Yufuin round-trip bus|Fukuoka Tower|Nakasu yatai food tour"],
+  sapporo: ["Sapporo", "Odori Park|Otaru Canal|Biei & Furano tour"],
+  okinawa: ["Okinawa", "Churaumi Aquarium|Kokusai Street|Cape Manzamo"],
+  kyoto: ["Kyoto (Kansai Airport)", "Fushimi Inari|Kiyomizu-dera|Arashiyama"],
+  nagoya: ["Nagoya", "Nagoya Castle|Ghibli Park|Shirakawa-go tour"],
+  shanghai: ["Shanghai", "The Bund|Yu Garden|Shanghai Disneyland"],
+  beijing: ["Beijing", "Forbidden City|Great Wall|Summer Palace"],
+  qingdao: ["Qingdao", "Zhanqiao Pier|Tsingtao Beer Museum|Mount Lao"],
+  zhangjiajie: ["Zhangjiajie", "Tianmen Mountain|Yuanjiajie|Glass Bridge"],
+  taipei: ["Taipei", "Taipei 101 observatory|Yehliu–Shifen–Jiufen bus tour|National Palace Museum|Beitou hot springs"],
+  kaohsiung: ["Kaohsiung", "Pier-2 Art Center|Cijin Island|Dragon and Tiger Pagodas"],
+  hongkong: ["Hong Kong", "Victoria Peak|Tsim Sha Tsui night view|Hong Kong Disneyland"],
+  macau: ["Macau", "Senado Square|Ruins of St. Paul's|The Venetian"],
+  ulaanbaatar: ["Ulaanbaatar", "Terelj National Park|Genghis Khan Equestrian Statue|Gobi Desert tour"],
+  danang: ["Da Nang", "Ba Na Hills & Golden Bridge|Hoi An Old Town entry|Marble Mountains|Spa & massage (90 min)"],
+  hanoi: ["Hanoi", "Ha Long Bay tour|Hoan Kiem Lake|Hanoi Old Quarter"],
+  hochiminh: ["Ho Chi Minh City", "Ben Thanh Market|Mekong Delta tour|Cu Chi Tunnels"],
+  nhatrang: ["Nha Trang", "VinWonders|Hon Tre island hopping|Mud bath spa"],
+  phuquoc: ["Phu Quoc", "Hon Thom cable car|Sao Beach|VinWonders"],
+  dalat: ["Da Lat", "Langbiang Mountain|Datanla Falls|Da Lat night market"],
+  bangkok: ["Bangkok", "Grand Palace & Wat Phra Kaew|Wat Arun|Mahanakhon SkyWalk|Thai massage (2 h)|Damnoen Saduak floating market tour"],
+  phuket: ["Phuket", "Phi Phi Islands tour|Patong Beach|Big Buddha"],
+  chiangmai: ["Chiang Mai", "Doi Suthep|Nimmanhaemin|Elephant sanctuary"],
+  kohsamui: ["Koh Samui", "Ang Thong Marine Park|Chaweng Beach|Big Buddha Temple"],
+  cebu: ["Cebu", "Island hopping tour|Oslob whale sharks|Mactan resorts"],
+  boracay: ["Boracay", "White Beach|Sunset sailing|Puka Beach"],
+  manila: ["Manila", "Intramuros|Manila Ocean Park|Tagaytay"],
+  bohol: ["Bohol", "Chocolate Hills|Tarsier Sanctuary|Balicasag island hopping"],
+  kualalumpur: ["Kuala Lumpur", "Petronas Twin Towers|Batu Caves|Bukit Bintang"],
+  kotakinabalu: ["Kota Kinabalu", "Sunset tour|Firefly tour|Mount Kinabalu"],
+  penang: ["Penang", "George Town street art|Penang Hill|Gurney Drive"],
+  singapore: ["Singapore", "Gardens by the Bay|Universal Studios Singapore|Night Safari|Marina Bay Sands SkyPark"],
+  bali: ["Bali", "Ubud Monkey Forest|Tegallalang rice terraces|Uluwatu Temple & Kecak dance|Nusa Penida day tour"],
+  jakarta: ["Jakarta", "Monas|Kota Tua|Thousand Islands"],
+  siemreap: ["Siem Reap", "Angkor Wat|Tonle Sap Lake|Pub Street"],
+  phnompenh: ["Phnom Penh", "Royal Palace|Killing Fields|Mekong River cruise"],
+  vientiane: ["Vientiane & Vang Vieng", "Patuxai|Pha That Luang|Blue Lagoon (Vang Vieng)"],
+  luangprabang: ["Luang Prabang", "Kuang Si Falls|Morning alms giving|Mount Phousi sunset"],
+  bandar: ["Bandar Seri Begawan", "Omar Ali Saifuddien Mosque|Kampong Ayer water village|The Empire Hotel"],
+  delhi: ["Delhi & Agra", "Taj Mahal|Red Fort|Qutub Minar"],
+  mumbai: ["Mumbai", "Gateway of India|Elephanta Caves|Marine Drive"],
+  goa: ["Goa", "Baga Beach|Old Goa churches|Anjuna night market"],
+  kathmandu: ["Kathmandu", "Durbar Square|Swayambhunath|Boudhanath"],
+  pokhara: ["Pokhara", "Phewa Lake|Sarangkot sunrise|Annapurna Base Camp trek"],
+  colombo: ["Colombo", "Galle Face|Galle Fort|Sigiriya"],
+  kandy: ["Kandy & Ella", "Temple of the Tooth|Peradeniya Botanical Gardens|Ella mountain train"],
+  male: ["Maldives (Malé)", "Overwater villa resort|Snorkeling|Dolphin cruise"],
+  thimphu: ["Thimphu & Paro", "Tiger's Nest Monastery|Punakha Dzong|Buddha Dordenma"],
+  almaty: ["Almaty", "Big Almaty Lake|Shymbulak|Charyn Canyon"],
+  astana: ["Astana", "Baiterek Tower|Khan Shatyr|National Museum"],
+  tashkent: ["Tashkent", "Chorsu Bazaar|Amir Timur Square|Tashkent Metro"],
+  samarkand: ["Samarkand", "Registan Square|Shah-i-Zinda|Gur-e-Amir"],
+  bishkek: ["Bishkek", "Issyk-Kul Lake|Ala Archa National Park|Song-Kul Lake"],
+  dubai: ["Dubai", "Burj Khalifa|Desert safari|The Dubai Mall"],
+  abudhabi: ["Abu Dhabi", "Sheikh Zayed Grand Mosque|Louvre Abu Dhabi|Ferrari World"],
+  doha: ["Doha", "Souq Waqif|Museum of Islamic Art|Desert tour"],
+  istanbul: ["Istanbul", "Hagia Sophia|Blue Mosque|Bosphorus cruise"],
+  cappadocia: ["Cappadocia", "Hot-air balloon ride|Göreme Open-Air Museum|Derinkuyu"],
+  antalya: ["Antalya", "Kaleiçi old town|Düden Waterfalls|Konyaaltı Beach"],
+  amman: ["Amman & Petra", "Petra|Wadi Rum desert|Dead Sea"],
+  riyadh: ["Riyadh & AlUla", "AlUla|Diriyah|Kingdom Centre"],
+  muscat: ["Muscat", "Sultan Qaboos Grand Mosque|Wadi Shab|Wahiba Sands"],
+  paris: ["Paris", "Louvre Museum|Eiffel Tower summit|Palace of Versailles|Seine river cruise|Musée d'Orsay"],
+  nice: ["Nice", "Nice beaches|Èze village|Monaco day trip"],
+  london: ["London", "British Museum|London Eye|West End musical"],
+  edinburgh: ["Edinburgh", "Edinburgh Castle|Royal Mile|Highlands tour"],
+  frankfurt: ["Frankfurt", "Römerberg|Heidelberg day trip|Rhine river cruise"],
+  munich: ["Munich", "Neuschwanstein Castle|Marienplatz|Oktoberfest"],
+  berlin: ["Berlin", "Brandenburg Gate|Museum Island|East Side Gallery"],
+  amsterdam: ["Amsterdam", "Canal cruise|Van Gogh Museum|Zaanse Schans"],
+  brussels: ["Brussels & Bruges", "Grand-Place|Bruges canals|Waffle & chocolate tour"],
+  zurich: ["Zurich & Lucerne", "Limmat riverside|Chapel Bridge, Lucerne|Mount Rigi"],
+  interlaken: ["Interlaken", "Jungfraujoch|Harder Kulm|Lake Thun cruise"],
+  vienna: ["Vienna", "Schönbrunn Palace|Belvedere|Opera performance"],
+  salzburg: ["Salzburg & Hallstatt", "Hallstatt|Mirabell Gardens|Hohensalzburg Fortress"],
+  dublin: ["Dublin", "Trinity College|Guinness Storehouse|Cliffs of Moher"],
+  rome: ["Rome", "Colosseum|Vatican Museums|Trevi Fountain"],
+  milan: ["Milan", "Duomo|The Last Supper|Lake Como"],
+  venice: ["Venice", "St. Mark's Square|Gondola ride|Burano island"],
+  florence: ["Florence", "Duomo dome climb|Uffizi Gallery|Tuscany tour"],
+  barcelona: ["Barcelona", "Sagrada Família|Park Güell|Montserrat"],
+  madrid: ["Madrid", "Prado Museum|Toledo day trip|Retiro Park"],
+  seville: ["Seville", "Seville Cathedral|Real Alcázar|Flamenco show"],
+  lisbon: ["Lisbon", "Belém Tower|Tram 28|Sintra day trip"],
+  porto: ["Porto", "Dom Luís I Bridge|Port wine cellars|Livraria Lello"],
+  athens: ["Athens", "Acropolis|Plaka|Cape Sounion"],
+  santorini: ["Santorini", "Oia sunset|Fira|Volcano island tour"],
+  dubrovnik: ["Dubrovnik", "City walls walk|Mount Srđ cable car|Lokrum Island"],
+  zagreb: ["Zagreb & Plitvice", "Plitvice Lakes National Park|St. Mark's Church|Ban Jelačić Square"],
+  valletta: ["Valletta", "Valletta old town|Blue Lagoon|Mdina"],
+  copenhagen: ["Copenhagen", "Nyhavn|Tivoli Gardens|The Little Mermaid"],
+  stockholm: ["Stockholm", "Gamla Stan|Vasa Museum|Stockholm City Hall"],
+  oslo: ["Oslo & Bergen", "Fjord tour|Opera House|Vigeland Park"],
+  tromso: ["Tromsø", "Northern lights tour|Dog sledding|Fjord cruise"],
+  helsinki: ["Helsinki", "Helsinki Cathedral|Suomenlinna|Santa Claus Village, Rovaniemi"],
+  reykjavik: ["Reykjavík", "Golden Circle|Blue Lagoon|Northern lights tour"],
+  prague: ["Prague", "Charles Bridge|Prague Castle|Český Krumlov"],
+  budapest: ["Budapest", "Parliament at night|Széchenyi Baths|Fisherman's Bastion"],
+  warsaw: ["Warsaw", "Old Town|Warsaw Rising Museum|Łazienki Park"],
+  krakow: ["Kraków", "Auschwitz-Birkenau|Wieliczka Salt Mine|Main Square"],
+  bucharest: ["Bucharest & Brașov", "Palace of the Parliament|Brașov old town|Bran Castle"],
+  sofia: ["Sofia", "Alexander Nevsky Cathedral|Rila Monastery|Vitosha Mountain"],
+  ljubljana: ["Ljubljana & Bled", "Lake Bled|Postojna Cave|Ljubljana Castle"],
+  belgrade: ["Belgrade", "Kalemegdan Fortress|Knez Mihailova Street|Church of Saint Sava"],
+  tallinn: ["Tallinn", "Tallinn Old Town|Toompea Hill|Kadriorg Palace"],
+  tbilisi: ["Tbilisi", "Narikala Fortress|Kazbegi|Sighnaghi wineries"],
+  newyork: ["New York", "Empire State Building|SUMMIT One Vanderbilt|Broadway musical|Statue of Liberty ferry|MoMA"],
+  la: ["Los Angeles", "Universal Studios Hollywood|Griffith Observatory|Santa Monica"],
+  sanfrancisco: ["San Francisco", "Golden Gate Bridge|Alcatraz|Yosemite tour"],
+  lasvegas: ["Las Vegas", "Grand Canyon tour|Strip shows|Fremont Street"],
+  hawaii: ["Hawaii (Honolulu)", "Waikiki|Diamond Head|Hanauma Bay"],
+  seattle: ["Seattle", "Space Needle|Pike Place Market|Mount Rainier"],
+  chicago: ["Chicago", "Millennium Park|Architecture cruise|Art Institute of Chicago"],
+  vancouver: ["Vancouver", "Stanley Park|Granville Island|Whistler"],
+  toronto: ["Toronto", "Niagara Falls|CN Tower|Distillery District"],
+  banff: ["Banff (Calgary)", "Lake Louise|Moraine Lake|Banff Gondola"],
+  cancun: ["Cancún", "All-inclusive resort|Chichén Itzá|Cenote tour"],
+  mexicocity: ["Mexico City", "Teotihuacan|Frida Kahlo Museum|Zócalo"],
+  rio: ["Rio de Janeiro", "Christ the Redeemer|Copacabana|Sugarloaf Mountain"],
+  buenosaires: ["Buenos Aires", "Tango show|La Boca|Iguazú Falls"],
+  cusco: ["Cusco & Machu Picchu", "Machu Picchu|Sacred Valley|Rainbow Mountain"],
+  lima: ["Lima", "Miraflores|Historic Centre of Lima|Food tour"],
+  santiago: ["Santiago", "Cerro San Cristóbal|Valparaíso|Winery tour"],
+  uyuni: ["Uyuni", "Salar de Uyuni|Sunrise tour|Train cemetery"],
+  sydney: ["Sydney", "Sydney Opera House|Blue Mountains|Bondi Beach"],
+  melbourne: ["Melbourne", "Great Ocean Road|Puffing Billy steam train|Hosier Lane"],
+  brisbane: ["Brisbane & Gold Coast", "Surfers Paradise|Lone Pine Koala Sanctuary|South Bank"],
+  cairns: ["Cairns", "Great Barrier Reef|Kuranda|Daintree Rainforest"],
+  auckland: ["Auckland", "Hobbiton Movie Set|Waitomo Caves|Sky Tower"],
+  queenstown: ["Queenstown", "Milford Sound|Bungee jumping|Skyline Gondola"],
+  guam: ["Guam", "Tumon Beach|Two Lovers Point|Dolphin cruise"],
+  saipan: ["Saipan", "Managaha Island|Bird Island|The Grotto"],
+  palau: ["Palau", "Jellyfish Lake|Milky Way lagoon|Rock Islands tour"],
+  nadi: ["Nadi", "Mamanuca Islands|Cloud 9|Garden of the Sleeping Giant"],
+  noumea: ["Nouméa", "Isle of Pines|Amédée Lighthouse Island|Ouvéa lagoon"],
+  borabora: ["Tahiti & Bora Bora", "Bora Bora overwater villa|Lagoon tour|Moorea"],
+  cairo: ["Cairo & Luxor", "Giza Pyramids|Grand Egyptian Museum|Luxor Temple"],
+  marrakech: ["Marrakech", "Jemaa el-Fnaa|Sahara desert tour|Jardin Majorelle"],
+  capetown: ["Cape Town", "Table Mountain|Cape of Good Hope|Winelands"],
+  nairobi: ["Nairobi & Maasai Mara", "Maasai Mara safari|Giraffe Centre|Elephant orphanage"],
+  zanzibar: ["Zanzibar & Serengeti", "Stone Town|Nungwi Beach|Serengeti safari"],
+  mauritius: ["Mauritius", "Le Morne Brabant|Île aux Cerfs|Seven Coloured Earths"],
+};
+
+const REGION_EN = {
+  ea: "East Asia", sea: "Southeast Asia", sa: "South Asia", ca: "Central Asia", me: "Middle East",
+  weu: "Western Europe", seu: "Southern Europe", neu: "Northern Europe", eeu: "Eastern Europe & Caucasus",
+  na: "North America", latam: "Latin America", oc: "Oceania & Pacific", af: "Africa",
+};
+
+// 한국 여권 기준 비자 안내
+const VISA_EN = {
+  "무비자 90일 (Visit Japan Web 등록 권장)": "Visa-free 90 days (Visit Japan Web registration recommended)",
+  "무비자 30일 (한시 시행 — 출국 전 연장 여부 확인)": "Visa-free 30 days (temporary policy — check whether it has been extended)",
+  "무비자 90일": "Visa-free 90 days",
+  "비자 정책 변동 잦음 — 출국 전 확인": "Visa policy changes often — check before you go",
+  "무비자 45일": "Visa-free 45 days",
+  "무비자 90일 (입국 전 TDAC 전자입국신고)": "Visa-free 90 days (submit TDAC digital arrival card before entry)",
+  "무비자 30일 (eTravel 등록)": "Visa-free 30 days (eTravel registration)",
+  "무비자 90일 (MDAC 전자입국신고)": "Visa-free 90 days (MDAC digital arrival card)",
+  "무비자 90일 (SG Arrival Card)": "Visa-free 90 days (SG Arrival Card)",
+  "도착비자 30일 (e-VoA 사전 신청 가능)": "Visa on arrival, 30 days (e-VoA available in advance)",
+  "e-Visa 또는 도착비자": "e-Visa or visa on arrival",
+  "무비자 (체류 기간 출국 전 확인)": "Visa-free (check the allowed stay before you go)",
+  "전자비자(e-Visa) 필요": "e-Visa required",
+  "도착비자 (온라인 사전 신청)": "Visa on arrival (apply online in advance)",
+  "ETA(전자여행허가) 필요": "ETA (electronic travel authorization) required",
+  "도착 시 무비자 30일 (IMUGA 신고)": "Visa-free 30 days on arrival (IMUGA declaration)",
+  "비자 + 지속가능개발비(1일 $100) 필요": "Visa + Sustainable Development Fee ($100/day) required",
+  "무비자 30일": "Visa-free 30 days",
+  "무비자 60일": "Visa-free 60 days",
+  "도착비자 (요르단패스로 면제)": "Visa on arrival (waived with the Jordan Pass)",
+  "관광 e-Visa 필요": "Tourist e-Visa required",
+  "무비자 단기체류 (기간 출국 전 확인)": "Visa-free short stay (check the allowed period before you go)",
+  "쉥겐 무비자 90일": "Schengen visa-free 90 days",
+  "전자여행허가(ETA) 필요, 6개월 체류": "ETA required, stays up to 6 months",
+  "무비자 90일 (쉥겐 미가입)": "Visa-free 90 days (not in Schengen)",
+  "무비자 1년": "Visa-free 1 year",
+  "ESTA(전자여행허가) 필요, 90일": "ESTA required, 90 days",
+  "eTA(전자여행허가) 필요, 6개월": "eTA required, 6 months",
+  "무비자 (입국 시 체류기간 부여)": "Visa-free (stay length granted on entry)",
+  "전자비자 필요 (출국 전 최신 정책 확인)": "e-Visa required (check the latest policy before you go)",
+  "비자 필요 (출국 전 확인)": "Visa required (check before you go)",
+  "NZeTA 필요": "NZeTA required",
+  "괌-CNMI 비자면제 45일 또는 ESTA": "Guam–CNMI visa waiver 45 days, or ESTA",
+  "무비자 4개월": "Visa-free 4 months",
+  "도착비자 또는 e-Visa": "Visa on arrival or e-Visa",
+  "eTA(전자여행허가) 필요": "eTA required",
+};
+
+const REGION_TIPS_EN = {
+  ea: ["In Japan, Taiwan and Hong Kong you can usually add the transit card to your phone wallet.", "In China, link your card to Alipay or WeChat Pay before you go — paying gets much easier."],
+  sea: ["In many countries the Grab app covers taxis, food delivery and payments.", "In the rainy season (roughly May–October), plan mornings outdoors and expect afternoon showers."],
+  sa: ["India, Sri Lanka and Nepal require an e-Visa/ETA in advance.", "Drink only bottled water and stick to freshly cooked street food."],
+  ca: ["Kazakhstan, Uzbekistan and Kyrgyzstan are visa-free for Korean passport holders.", "Cash (US dollars) is widely used — bring plenty of small bills."],
+  me: ["During Ramadan, eating in public during daytime may be restricted.", "Gulf airlines (Emirates, Qatar) let you add a stopover city on trips to Europe or Africa."],
+  weu: ["Schengen allows 90 days in any 180-day period. Check when ETIAS pre-authorization starts.", "The UK is not in Schengen and requires an ETA."],
+  seu: ["Southern Europe is very hot and crowded in July–August; May–June and September–October are better.", "Pickpockets are common at sights — wear your bag in front."],
+  neu: ["Nordic prices are very high — breakfast-included or kitchen-equipped stays save a lot.", "Northern lights: September–March. Midnight sun: June–July."],
+  eeu: ["Eastern Europe is 30–50% cheaper than Western Europe, so the same budget goes further.", "For multi-country trips, night buses and trains save both time and a hotel night."],
+  na: ["The US requires an ESTA and Canada an eTA — apply online before departure.", "Tips (15–20%) and sales tax are often not included in listed prices."],
+  latam: ["There are almost no direct flights from Korea; connect via the US, Canada or the Middle East (ESTA needed via the US).", "At high altitude (Cusco, Uyuni), keep day one light to avoid altitude sickness."],
+  oc: ["Australia requires an ETA and New Zealand an NZeTA. Guam/Saipan use a visa waiver program or ESTA.", "It's the Southern Hemisphere — seasons are opposite to Korea."],
+  af: ["Some countries require a yellow fever vaccination certificate — check before you go.", "The dry season (roughly June–October) is best for safaris."],
+};
+
+const GENERAL_TIPS_EN = [
+  { title: "Fly Tue–Thu for cheaper fares", body: "Weekday departures are often 10–20% cheaper than weekends. Try the flexible-dates option on fare comparison sites." },
+  { title: "When to book", body: "Short-haul (Japan, Southeast Asia) is usually cheapest 1–2 months ahead; long-haul (Europe, Americas) 3–5 months ahead." },
+  { title: "Travel cards beat cash exchange", body: "Travel debit cards often waive exchange fees. Exchange only a little cash and pay by card for the rest." },
+  { title: "Book refundable hotels first", body: "Lock in a free-cancellation rate, then rebook if the price drops — you never lose." },
+  { title: "Set price alerts", body: "Fare alerts help you catch deals. Check exchange-rate changes in Saved plans on this site." },
+  { title: "Get an eSIM in advance", body: "eSIMs are far cheaper than roaming and work the moment you land." },
+];
+
+// 상세 데이터 도시: 숙소 [이름, 설명] (data.js 순서와 같음), 현지 팁
+const DETAILED_EN = {
+  tokyo: {
+    hotels: [["Shinjuku station business hotel", "Best transport links, top pick for first-timers"], ["Asakusa/Ueno budget hotel", "Easy access to Narita Airport"], ["Shibuya design hotel", "Popular for shopping and night views"], ["Ginza/Tokyo Station 4-star hotel", "Great if you plan Shinkansen trips"], ["Guesthouse / capsule hotel", "Popular with solo travelers"]],
+    tips: ["Add Suica/PASMO to your iPhone (or some Android) wallet for easy top-ups and transfers.", "Haneda arrivals reach the city 30–40 minutes faster than Narita — better for short trips.", "Withdrawing with a travel card at convenience-store ATMs (Seven Bank) has almost no fees.", "Popular restaurants and teamLab usually need online booking 2–4 weeks ahead."],
+  },
+  osaka: {
+    hotels: [["Namba/Dotonbori business hotel", "Food and shopping on foot — the clear favorite"], ["Umeda 4-star hotel", "Easy trips to Kyoto and Kobe"], ["Shinsaibashi boutique hotel", "Popular with couples"], ["USJ official partner hotel", "Good for early park entry"], ["Tennoji budget stay", "Easy Rapi:t access to Kansai Airport"]],
+    tips: ["USJ Express Passes sell out — buy as soon as your dates are set.", "Rapi:t round-trip discount tickets between Kansai Airport and Namba are cheaper bought in advance.", "If you add Kyoto and Nara, Umeda is a more efficient base than Namba."],
+  },
+  fukuoka: {
+    hotels: [["Hakata station business hotel", "Two subway stops from the airport — most chosen"], ["Tenjin boutique hotel", "Close to shopping and yatai stalls"], ["Nakasu riverside hotel", "Night-view rooms"], ["Yufuin ryokan (1 night)", "A popular onsen night to add"]],
+    tips: ["The airport is so close to the city that a Friday-evening 2-night trip works well.", "For Yufuin or Beppu, the SUNQ Pass cuts bus costs a lot."],
+  },
+  bangkok: {
+    hotels: [["Sukhumvit 4-star hotel", "On the BTS line, rooftop pool"], ["Chao Phraya riverside 5-star", "Popular affordable luxury"], ["Silom business hotel", "Near night markets and massages"], ["Khao San guesthouse", "Favored by backpackers"], ["Siam shopping-area residence", "Family trips"]],
+    tips: ["Use Grab/Bolt instead of street taxis to avoid overcharging.", "The Grand Palace doesn't allow sleeveless tops or shorts — go early to beat heat and crowds.", "Bring US dollars and exchange to baht at SuperRich in the city for better rates."],
+  },
+  danang: {
+    hotels: [["My Khe Beach ocean-view hotel", "On the beach — most chosen"], ["Pool villa resort", "Popular for families and honeymoons"], ["Han Market area city hotel", "Easy sightseeing and massages"], ["Hoi An Old Town boutique", "Many split 1–2 nights here"]],
+    tips: ["A Grab to Hoi An costs about 300,000–400,000 VND one way, often cheaper than a tour.", "September–December is the rainy season — mix in indoor activities.", "Small US dollar bills are the easiest cash to bring."],
+  },
+  taipei: {
+    hotels: [["Ximending business hotel", "Food and shopping hub — most chosen"], ["Taipei Main Station 4-star", "Easy airport MRT and Jiufen buses"], ["Xinyi luxury hotel", "Taipei 101 views"], ["Zhongshan boutique hotel", "Favored for café hopping"]],
+    tips: ["One EasyCard covers the MRT, buses and convenience-store payments.", "For Yehliu–Shifen–Jiufen, a tour saves time over going on your own."],
+  },
+  bali: {
+    hotels: [["Seminyak pool villa", "Private pool — top honeymoon pick"], ["Ubud jungle-view resort", "Popular to split 2–3 nights"], ["Nusa Dua 5-star resort", "Families and quiet beaches"], ["Kuta budget hotel", "Near the airport, surfing"]],
+    tips: ["Pay the tourist levy (150,000 IDR) and visa on arrival online in advance for shorter lines.", "Travel between areas is slow — hiring a driver for the day is the most efficient."],
+  },
+  singapore: {
+    hotels: [["Marina Bay luxury hotel", "The iconic infinity pool"], ["Bugis business hotel", "Easy MRT, most chosen for value"], ["Sentosa resort", "Family trips"], ["Chinatown boutique", "Close to hawker centres"]],
+    tips: ["You can tap a contactless credit/debit card to ride the MRT — no transit card needed.", "Eating at hawker centres cuts food costs to about a third."],
+  },
+  paris: {
+    hotels: [["Le Marais boutique hotel", "The heart of walking sightseeing"], ["Eiffel Tower view 4-star", "Honeymoon favorite"], ["Opéra/Louvre area hotel", "Airport bus and shopping"], ["Airbnb apartment", "Long stays and families"]],
+    tips: ["Visiting 3+ museums? The Paris Museum Pass saves money and queue time.", "Book timed entry for the Louvre and Eiffel Tower on the official sites.", "One-stop flights are often ₩200,000–400,000 cheaper than nonstop."],
+  },
+  newyork: {
+    hotels: [["Midtown Manhattan 4-star", "Walk to Times Square — most chosen"], ["Lower Manhattan boutique", "SoHo and Wall Street"], ["Long Island City hotel", "1–2 subway stops away, ~30% cheaper"], ["Central Park luxury", "A special trip"]],
+    tips: ["On the subway, tap with OMNY — after 12 rides a week the rest are free automatically.", "Visiting several attractions? Compare CityPASS and Go City passes.", "Check whether resort fees and taxes (~15%) are added to hotel rates."],
+  },
+};
+
+// 일반 도시 숙소 템플릿 (world.js의 tpl 키)
+const HOTEL_TPL_EN = {
+  beach: ["{c} beach resort", "Right on the beach — most chosen"],
+  city4b: ["{c} downtown 4-star hotel", "Close to restaurants and shopping"],
+  budgetb: ["{c} budget hotel", "If you just need a bed"],
+  villa: ["{c} pool villa / 5-star", "Honeymoons and special trips"],
+  aptb: ["Local apartment / guesthouse", "Families and long stays"],
+  center4: ["{c} central 4-star hotel", "Walk to the sights — most chosen"],
+  biz: ["{c} station business hotel", "Good transport, good value"],
+  hostel: ["{c} guesthouse / hostel", "Popular with solo travelers"],
+  lux5: ["{c} 5-star hotel", "For a special occasion"],
+  apt: ["Local apartment / Airbnb", "Families and long stays"],
+};
+const HOTEL_TYPE_EN = {
+  "비즈니스": "Business", "가성비": "Value", "부티크": "Boutique", "4성급": "4-star", "5성급": "5-star", "저예산": "Budget",
+  "테마": "Theme", "료칸": "Ryokan", "리조트": "Resort", "레지던스": "Residence", "풀빌라": "Pool villa",
+};
+
+const AIRLINE_EN = {
+  KE: "Korean Air", OZ: "Asiana Airlines", YP: "Air Premia", "7C": "Jeju Air", LJ: "Jin Air", TW: "T'way Air", BX: "Air Busan",
+  ZE: "Eastar Jet", RS: "Air Seoul", RF: "Aero K", WE: "Parata Air", JL: "Japan Airlines", NH: "ANA", MM: "Peach",
+  CI: "China Airlines", BR: "EVA Air", IT: "Tigerair Taiwan", JX: "STARLUX", CX: "Cathay Pacific", UO: "HK Express",
+  NX: "Air Macau", MU: "China Eastern", FM: "Shanghai Airlines", CA: "Air China", CZ: "China Southern", SC: "Shandong Airlines",
+  OM: "MIAT Mongolian", TG: "Thai Airways", XJ: "Thai AirAsia X", PG: "Bangkok Airways", VN: "Vietnam Airlines", VJ: "Vietjet",
+  QH: "Bamboo Airways", PR: "Philippine Airlines", "5J": "Cebu Pacific", Z2: "Philippines AirAsia", MH: "Malaysia Airlines",
+  D7: "AirAsia X", AK: "AirAsia", SQ: "Singapore Airlines", TR: "Scoot", GA: "Garuda Indonesia", QV: "Lao Airlines",
+  BI: "Royal Brunei", AI: "Air India", UL: "SriLankan Airlines", KB: "Drukair", KC: "Air Astana", HY: "Uzbekistan Airways",
+  EK: "Emirates", EY: "Etihad", QR: "Qatar Airways", TK: "Turkish Airlines", RJ: "Royal Jordanian", SV: "Saudia",
+  WY: "Oman Air", AY: "Finnair", LH: "Lufthansa", AF: "Air France", KL: "KLM", BA: "British Airways", LO: "LOT Polish",
+  AZ: "ITA Airways", SK: "SAS", OS: "Austrian Airlines", DL: "Delta", UA: "United", AA: "American Airlines", AC: "Air Canada",
+  HA: "Hawaiian Airlines", AM: "Aeroméxico", LA: "LATAM", QF: "Qantas", NZ: "Air New Zealand", FJ: "Fiji Airways",
+  SB: "Aircalin", TN: "Air Tahiti Nui", ET: "Ethiopian Airlines", MS: "EgyptAir", KQ: "Kenya Airways", MK: "Air Mauritius",
+};
+
+// 공항: [이름, 도시, 인천 이동 방법, 안내]
+const DEP_EN = {
+  ICN: ["Incheon International Airport", "Seoul/Incheon"],
+  GMP: ["Gimpo International Airport", "Seoul", "AREX train ~35 min"],
+  PUS: ["Gimhae International Airport", "Busan", "Domestic connecting flight, or KTX + AREX ~3 h"],
+  CJU: ["Jeju International Airport", "Jeju", "Domestic connecting flight ~1 h 10 min"],
+  TAE: ["Daegu International Airport", "Daegu", "KTX + AREX ~2 h 40 min"],
+  CJJ: ["Cheongju International Airport", "Cheongju", "Airport bus ~2 h"],
+  MWX: ["Muan International Airport", "Gwangju/Jeonnam", "KTX + AREX ~3 h", "Operations were suspended after the December 2024 accident. Check whether flights have resumed."],
+  YNY: ["Yangyang International Airport", "Gangwon", "Airport bus ~3 h", "Few international flights, mostly charters, and schedules change often."],
+  KWJ: ["Gwangju Airport", "Gwangju", "Domestic flight to Gimpo, then AREX (or KTX ~3 h)"],
+  USN: ["Ulsan Airport", "Ulsan", "Domestic flight to Gimpo, then AREX"],
+  RSU: ["Yeosu Airport", "Yeosu/Suncheon", "Domestic flight to Gimpo, then AREX"],
+  HIN: ["Sacheon Airport", "Jinju/Sacheon", "Domestic flight to Gimpo, then AREX"],
+  KPO: ["Pohang Gyeongju Airport", "Pohang/Gyeongju", "Domestic flight to Gimpo, then AREX"],
+  WJU: ["Wonju Airport", "Wonju", "Domestic flight or airport bus ~2 h 30 min"],
+  KUV: ["Gunsan Airport", "Gunsan/Jeonbuk", "Domestic flight via Jeju, or airport bus ~3 h"],
+};
+
+// 비행시간 문구 번역
+function hoursEN(s) {
+  const places = { "방콕/싱가포르": "Bangkok/Singapore", "방콕": "Bangkok", "카트만두": "Kathmandu", "콜롬보": "Colombo", "타슈켄트": "Tashkent",
+    "이스탄불": "Istanbul", "파리 등": "Paris etc.", "취리히": "Zurich", "아테네": "Athens", "헬싱키": "Helsinki", "밴쿠버": "Vancouver",
+    "미국": "the US", "리마": "Lima", "오클랜드": "Auckland", "간사이": "Kansai" };
+  let t = s
+    .replace("직항(시즌) 또는 경유", "Direct (seasonal) or connecting")
+    .replace("직항 또는 경유", "Direct or connecting")
+    .replace(/^경유 약 /, "Connecting, ~")
+    .replace(/^경유 /, "Connecting, ")
+    .replace(/^경유$/, "Connecting")
+    .replace(/(\S+(?: 등)?) 경유 약 /, "via $1, ~")
+    .replace(/(\S+(?: 등)?) 경유/, "via $1")
+    .replace(/\+ 이동 /, "+ transfer ")
+    .replace(/\+ 기차 /, "+ train ")
+    .replace(/\+ 고속열차/, "+ high-speed train")
+    .replace(/\(시즌\)/, "(seasonal)")
+    .replace(/\(부정기\)/, "(charter)")
+    .replace(/약 /g, "~")
+    .replace(/(\d+)시간/g, "$1 h")
+    .replace(/(\d+)분/g, "$1 min");
+  Object.entries(places).forEach(([k, v]) => { t = t.replace(k, v); });
+  return t;
+}

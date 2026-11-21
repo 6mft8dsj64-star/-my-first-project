@@ -485,18 +485,18 @@ const DESTINATIONS = (() => {
       const L = (krw) => krwToLocal(krw * ci, c.cur);
       const hotels = beach
         ? [
-          { name: `${name} 해변 리조트`, type: "리조트", price: L(180000), share: 36, rating: 4.5, note: "해변 바로 앞, 가장 많이 선택" },
-          { name: `${name} 시내 4성급 호텔`, type: "4성급", price: L(110000), share: 26, rating: 4.3, note: "식당·쇼핑 접근성" },
-          { name: `${name} 가성비 호텔`, type: "가성비", price: L(55000), share: 18, rating: 4.0, note: "잠만 잘 거라면" },
-          { name: `${name} 풀빌라·5성급`, type: "5성급", price: L(350000), share: 12, rating: 4.7, note: "신혼·특별한 여행" },
-          { name: "현지 아파트·민박", type: "레지던스", price: L(90000), share: 8, rating: 4.2, note: "가족·장기 여행" },
+          { name: `${name} 해변 리조트`, tpl: "beach", type: "리조트", price: L(180000), share: 36, rating: 4.5, note: "해변 바로 앞, 가장 많이 선택" },
+          { name: `${name} 시내 4성급 호텔`, tpl: "city4b", type: "4성급", price: L(110000), share: 26, rating: 4.3, note: "식당·쇼핑 접근성" },
+          { name: `${name} 가성비 호텔`, tpl: "budgetb", type: "가성비", price: L(55000), share: 18, rating: 4.0, note: "잠만 잘 거라면" },
+          { name: `${name} 풀빌라·5성급`, tpl: "villa", type: "5성급", price: L(350000), share: 12, rating: 4.7, note: "신혼·특별한 여행" },
+          { name: "현지 아파트·민박", tpl: "aptb", type: "레지던스", price: L(90000), share: 8, rating: 4.2, note: "가족·장기 여행" },
         ]
         : [
-          { name: `${name} 중심가 4성급 호텔`, type: "4성급", price: L(130000), share: 35, rating: 4.4, note: "관광지 도보권, 가장 많이 선택" },
-          { name: `${name} 역 근처 비즈니스호텔`, type: "비즈니스", price: L(85000), share: 27, rating: 4.1, note: "교통 편리, 가성비" },
-          { name: `${name} 게스트하우스·호스텔`, type: "저예산", price: L(40000), share: 15, rating: 3.9, note: "1인 여행자 선호" },
-          { name: `${name} 5성급 호텔`, type: "5성급", price: L(260000), share: 13, rating: 4.7, note: "특별한 날" },
-          { name: "현지 아파트·에어비앤비", type: "레지던스", price: L(100000), share: 10, rating: 4.3, note: "가족·장기 여행" },
+          { name: `${name} 중심가 4성급 호텔`, tpl: "center4", type: "4성급", price: L(130000), share: 35, rating: 4.4, note: "관광지 도보권, 가장 많이 선택" },
+          { name: `${name} 역 근처 비즈니스호텔`, tpl: "biz", type: "비즈니스", price: L(85000), share: 27, rating: 4.1, note: "교통 편리, 가성비" },
+          { name: `${name} 게스트하우스·호스텔`, tpl: "hostel", type: "저예산", price: L(40000), share: 15, rating: 3.9, note: "1인 여행자 선호" },
+          { name: `${name} 5성급 호텔`, tpl: "lux5", type: "5성급", price: L(260000), share: 13, rating: 4.7, note: "특별한 날" },
+          { name: "현지 아파트·에어비앤비", tpl: "apt", type: "레지던스", price: L(100000), share: 10, rating: 4.3, note: "가족·장기 여행" },
         ];
       const tierCost = [25000, 18000, 70000];
       out.push({

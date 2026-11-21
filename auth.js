@@ -9,7 +9,8 @@
   let gisReady = null, gisMode = "login", reauthed = false;
 
   let auth = null, db = null, user = null, pushTimer = null, mode = "login", deleting = false;
-  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const t = (k, v) => I18N.t(k, v);
+  const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   // ---------- 화면 ----------
   const screen = $("#authScreen");
@@ -17,58 +18,41 @@
   const msg = (text, ok = false) => { const m = $("#authMsg"); m.textContent = text; m.className = "auth-msg" + (ok ? " ok" : text ? " err" : ""); };
   const busy = (v) => screen.querySelectorAll("button, input").forEach((el) => { if (!el.dataset.keep) el.disabled = v || (!cfg && !el.dataset.guest); });
 
-  function setMode(m) {
+  function setMode(m, keepMsg = false) {
     mode = m;
-    $("#authTitle").textContent = m === "signup" ? "회원가입" : m === "reset" ? "비밀번호 재설정" : "로그인";
+    $("#authTitle").textContent = t(`auth.title.${m}`);
     $("#nameRow").hidden = m !== "signup";
     $("#pwRow").hidden = m === "reset";
     $("#pw2Row").hidden = m !== "signup";
-    $("#emailSubmit").textContent = m === "signup" ? "가입하기" : m === "reset" ? "재설정 메일 보내기" : "이메일로 로그인";
+    $("#emailSubmit").textContent = t(`auth.submit.${m}`);
     $("#toSignup").hidden = m === "signup";
     $("#toLogin").hidden = m === "login";
     $("#toReset").hidden = m !== "login";
     $("#authPw").autocomplete = m === "signup" ? "new-password" : "current-password";
-    msg("");
+    if (!keepMsg) msg("");
   }
 
   function renderUser() {
     const area = $("#userArea");
     if (user) {
-      const name = user.displayName || (user.email || "").split("@")[0] || "여행자";
+      const name = user.displayName || (user.email || "").split("@")[0] || t("auth.traveler");
       const avatar = user.photoURL
         ? `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer" />`
         : `<span class="avatar-txt">${name.slice(0, 1).toUpperCase()}</span>`;
-      area.innerHTML = `<button class="user-chip" id="accountBtn" type="button" title="내 계정">${avatar}<span class="user-name">${esc(name)}</span></button>
-        <button class="btn ghost sm" id="logoutBtn">로그아웃</button>`;
+      area.innerHTML = `<button class="user-chip" id="accountBtn" type="button" title="${t("auth.myAccount")}">${avatar}<span class="user-name">${esc(name)}</span></button>
+        <button class="btn ghost sm" id="logoutBtn">${t("auth.logout")}</button>`;
       $("#logoutBtn").onclick = () => auth.signOut();
       $("#accountBtn").onclick = openAccount;
     } else {
-      area.innerHTML = `<button class="btn sm" id="loginBtn">로그인</button>`;
+      area.innerHTML = `<button class="btn sm" id="loginBtn">${t("auth.login")}</button>`;
       $("#loginBtn").onclick = () => { setMode("login"); showAuth(true); };
     }
   }
 
-  const ERR = {
-    "auth/invalid-email": "이메일 형식이 올바르지 않아요.",
-    "auth/missing-password": "비밀번호를 입력해 주세요.",
-    "auth/weak-password": "비밀번호는 6자 이상이어야 해요.",
-    "auth/email-already-in-use": "이미 가입된 이메일이에요. 로그인해 주세요.",
-    "auth/invalid-credential": "이메일 또는 비밀번호가 맞지 않아요.",
-    "auth/wrong-password": "이메일 또는 비밀번호가 맞지 않아요.",
-    "auth/user-not-found": "가입되지 않은 이메일이에요.",
-    "auth/too-many-requests": "시도가 너무 많아요. 잠시 후 다시 시도해 주세요.",
-    "auth/popup-closed-by-user": "로그인 창이 닫혔어요. 다시 시도해 주세요.",
-    "auth/cancelled-popup-request": "",
-    "auth/popup-blocked": "로그인 창(팝업)이 차단됐어요. 아이폰은 설정 → Safari → ‘팝업 차단’을 끄고 다시 눌러 주세요.",
-    "auth/operation-not-supported-in-this-environment": "이 브라우저에서는 로그인 창을 열 수 없어요. 사파리나 크롬 앱에서 열어 주세요.",
-    "auth/web-storage-unsupported": "브라우저 저장소가 막혀 있어요. 개인정보 보호(비공개) 모드를 끄고 다시 시도해 주세요.",
-    "auth/internal-error": "로그인 중 문제가 생겼어요. 사파리 설정에서 ‘크로스 사이트 추적 방지’를 잠시 끄고 다시 시도해 주세요.",
-    "auth/network-request-failed": "인터넷 연결을 확인해 주세요.",
-    "auth/operation-not-allowed": "이 로그인 방식이 아직 켜져 있지 않아요. (Firebase 콘솔에서 사용 설정 필요)",
-    "auth/unauthorized-domain": "이 주소에서는 로그인이 허용되지 않았어요. (Firebase 승인된 도메인에 추가 필요)",
-    "auth/account-exists-with-different-credential": "같은 이메일로 다른 방식(구글/애플/이메일) 가입 기록이 있어요. 그 방식으로 로그인해 주세요.",
+  const errText = (e) => {
+    const k = `err.${e?.code}`;
+    return e && I18N.dict.ko[k] !== undefined ? t(k) : t("err.generic", { c: e?.code || e?.message || "?" });
   };
-  const errText = (e) => (e && ERR[e.code] !== undefined ? ERR[e.code] : `로그인 중 문제가 생겼어요. (${e?.code || e?.message || "알 수 없음"})`);
 
   // ---------- 클라우드 동기화 ----------
   const local = {
@@ -109,14 +93,22 @@
     };
     Object.entries(SYNC_KEYS).forEach(([k, field]) => { const v = local.get(prefix + k); if (v !== undefined) data[field] = v; });
     db.collection("users").doc(user.uid).set(data, { merge: true })
-      .then(() => { $("#syncState").textContent = "☁️ 저장됨"; })
-      .catch((e) => { $("#syncState").textContent = "⚠️ 클라우드 저장 실패"; console.warn(e); });
+      .then(() => { $("#syncState").textContent = t("sync.saved"); })
+      .catch((e) => { $("#syncState").textContent = t("sync.fail"); console.warn(e); });
   }
 
   window.TMAuth = {
+    // 언어를 바꾸면 로그인 화면·헤더 문구를 다시 그려요
+    relabel() {
+      setMode(mode, true);
+      renderUser();
+      if (auth) auth.languageCode = I18N.lang;
+      if (gisReady && !$("#gisBtn").hidden) gisReady.then((ok) => ok && renderGis($("#gisBtn")));
+      if ($("#syncState").textContent) $("#syncState").textContent = t("sync.saved");
+    },
     onLocalChange() {
       if (!user || deleting) return;
-      $("#syncState").textContent = "저장 중…";
+      $("#syncState").textContent = t("sync.saving");
       clearTimeout(pushTimer);
       pushTimer = setTimeout(pushNow, 1200);
     },
@@ -127,7 +119,7 @@
     msg(""); busy(true);
     try {
       const provider = kind === "google" ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.OAuthProvider("apple.com");
-      if (kind === "apple") { provider.addScope("email"); provider.addScope("name"); provider.setCustomParameters({ locale: "ko_KR" }); }
+      if (kind === "apple") { provider.addScope("email"); provider.addScope("name"); provider.setCustomParameters({ locale: I18N.lang === "en" ? "en_US" : "ko_KR" }); }
       else provider.setCustomParameters({ prompt: "select_account" });
       // 사파리 등은 '페이지 이동(redirect)' 방식 로그인 결과를 막아서 첫 화면으로 돌아와요.
       // 그래서 팝업 방식만 써요. 팝업이 막히면 안내 문구를 보여 줘요.
@@ -143,15 +135,15 @@
     try {
       if (mode === "reset") {
         await auth.sendPasswordResetEmail(email);
-        msg("비밀번호 재설정 메일을 보냈어요. 메일함을 확인해 주세요.", true);
+        msg(t("auth.resetSent"), true);
       } else if (mode === "signup") {
-        if (pw !== $("#authPw2").value) throw { code: "x", message: "" , text: "비밀번호가 서로 달라요." };
+        if (pw !== $("#authPw2").value) throw { code: "x", message: "", text: t("auth.pwMismatch") };
         const name = $("#authName").value.trim();
         const cred = await auth.createUserWithEmailAndPassword(email, pw);
         if (name) await cred.user.updateProfile({ displayName: name });
         cred.user.sendEmailVerification().catch(() => {});
         renderUser();
-        window.TripApp?.toast("가입을 환영해요! 인증 메일을 보냈어요.");
+        window.TripApp?.toast(t("auth.welcome"));
       } else {
         await auth.signInWithEmailAndPassword(email, pw);
       }
@@ -167,8 +159,8 @@
   function openAccount() {
     if (!user) return;
     const p = providerOf(user);
-    const how = p === "google.com" ? "Google 계정" : p === "apple.com" ? "Apple 계정" : "이메일";
-    $("#accountWho").innerHTML = `<b>${esc(user.displayName || "여행자")}</b><br>${esc(user.email || "")}<br><small>${how}으로 로그인 중</small>`;
+    const how = t(p === "google.com" ? "acc.with.google" : p === "apple.com" ? "acc.with.apple" : "acc.with.email");
+    $("#accountWho").innerHTML = `<b>${esc(user.displayName || t("auth.traveler"))}</b><br>${esc(user.email || "")}<br><small>${how}</small>`;
     showDelete(false);
     modal.hidden = false;
     document.body.classList.add("locked");
@@ -199,7 +191,7 @@
   async function reauth() {
     const p = providerOf(user);
     if (p === "google.com" && GID) {
-      if (!reauthed) throw { code: "x", text: "먼저 Google 버튼으로 본인 확인을 해 주세요." };
+      if (!reauthed) throw { code: "x", text: t("del.needGoogle") };
       return;
     }
     if (p === "password") {
@@ -213,11 +205,12 @@
 
   async function deleteAccount(ev) {
     ev.preventDefault();
-    if ($("#delConfirm").value.trim() !== "탈퇴") { delMsg("확인 칸에 ‘탈퇴’라고 정확히 입력해 주세요."); return; }
-    if (providerOf(user) === "password" && !$("#delPw").value) { delMsg("비밀번호를 입력해 주세요."); return; }
+    const word = $("#delConfirm").value.trim();
+    if (word !== t("del.word") && word !== I18N.dict.ko["del.word"] && word.toUpperCase() !== I18N.dict.en["del.word"]) { delMsg(t("del.needWord")); return; }
+    if (providerOf(user) === "password" && !$("#delPw").value) { delMsg(t("del.needPw")); return; }
     const btns = $("#deleteForm").querySelectorAll("button, input");
     btns.forEach((b) => (b.disabled = true));
-    delMsg("삭제하는 중이에요…", true);
+    delMsg(t("del.deleting"), true);
     const uid = user.uid;
     try {
       await reauth();                       // 1) 본인 확인
@@ -230,19 +223,19 @@
       } catch { /* 무시 */ }
       deleting = false;
       closeAccount();
-      window.TripApp?.toast("탈퇴가 완료됐어요. 그동안 이용해 주셔서 고마워요.");
+      window.TripApp?.toast(t("del.done"));
     } catch (e) {
       deleting = false;
       const code = e?.code || "";
       if (e?.text) { delMsg(e.text); btns.forEach((b) => (b.disabled = false)); return; }
       delMsg(
-        code === "auth/wrong-password" || code === "auth/invalid-credential" ? "비밀번호가 맞지 않아요." :
-        code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? "본인 확인 창이 닫혔어요. 다시 시도해 주세요." :
-        code === "auth/popup-blocked" ? "팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 시도해 주세요." :
-        code === "auth/user-mismatch" ? "지금 로그인한 계정과 다른 계정을 골랐어요. 같은 계정으로 확인해 주세요." :
-        code === "auth/too-many-requests" ? "시도가 너무 많아요. 잠시 후 다시 시도해 주세요." :
-        code === "auth/network-request-failed" ? "인터넷 연결을 확인해 주세요." :
-        `탈퇴 중 문제가 생겼어요. (${code || e?.message || "알 수 없음"})`
+        code === "auth/wrong-password" || code === "auth/invalid-credential" ? t("del.wrongPw") :
+        code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request" ? t("del.popupClosed") :
+        code === "auth/popup-blocked" ? t("del.popupBlocked") :
+        code === "auth/user-mismatch" ? t("del.mismatch") :
+        code === "auth/too-many-requests" ? t("err.auth/too-many-requests") :
+        code === "auth/network-request-failed" ? t("err.auth/network-request-failed") :
+        t("del.generic", { c: code || e?.message || "?" })
       );
     }
     btns.forEach((b) => (b.disabled = false));
@@ -274,7 +267,7 @@
   function renderGis(el) {
     const w = Math.min(Math.max(el.parentElement.clientWidth || 320, 220), 400);
     el.innerHTML = "";
-    google.accounts.id.renderButton(el, { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: w, locale: "ko", logo_alignment: "center" });
+    google.accounts.id.renderButton(el, { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: w, locale: I18N.lang === "en" ? "en" : "ko", logo_alignment: "center" });
   }
   async function onGoogleCredential(resp) {
     const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
@@ -285,7 +278,7 @@
         $("#delGoogleOk").hidden = false;
         delMsg("");
       } catch (e) {
-        delMsg(e.code === "auth/user-mismatch" ? "지금 로그인한 계정과 다른 Google 계정을 골랐어요." : `본인 확인에 실패했어요. (${e.code || e.message})`);
+        delMsg(e.code === "auth/user-mismatch" ? t("del.gMismatch") : t("del.gFail", { c: e.code || e.message }));
       }
       return;
     }
@@ -329,7 +322,7 @@
       await loadScript(SDK + "firebase-app-compat.js");
       await Promise.all([loadScript(SDK + "firebase-auth-compat.js"), loadScript(SDK + "firebase-firestore-compat.js")]);
     } catch {
-      msg("로그인 서비스를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.");
+      msg(t("auth.sdkFail"));
       return;
     }
     firebase.initializeApp(cfg);
@@ -339,7 +332,7 @@
       renderGis($("#gisBtn"));
     }
     auth = firebase.auth();
-    auth.languageCode = "ko";
+    auth.languageCode = I18N.lang;
     db = firebase.firestore();
     auth.getRedirectResult().catch((e) => msg(errText(e)));
 
@@ -352,7 +345,7 @@
         await pullUserData(u);
         showAuth(false);
         window.TripApp?.reload();
-        $("#syncState").textContent = "☁️ 저장됨";
+        $("#syncState").textContent = t("sync.saved");
       } else {
         if (hadUser) { showAuth(true); setMode("login"); }
         window.TM_USER_PREFIX = "";
