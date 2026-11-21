@@ -25,4 +25,5 @@
 - [ ] `SETUP.md` 순서대로 Firebase 프로젝트 생성 → `firebase-config.js`에 설정값 입력
 - [ ] GitHub Pages로 사이트 공개 후 Firebase 승인된 도메인에 추가
 - [ ] Apple 로그인은 Apple 개발자 프로그램(연 $99) 가입 필요
-- [ ] 공개 전: 개인정보처리방침, 회원 탈퇴 기능
+- [x] 개인정보처리방침 페이지(`privacy.html`), 회원 탈퇴 기능 추가
+- [ ] `privacy.html` 11번의 `[운영자 이름]`, `[연락받을 이메일 주소]`를 실제 정보로 바꾸기

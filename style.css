@@ -197,7 +197,7 @@ label.inline input { width: 140px; }
 
 .footer { color: var(--muted); font-size: .8rem; padding: 30px 0 50px; border-top: 1px solid var(--line); margin-top: 20px; }
 
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; font-size: .9rem; z-index: 50; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; font-size: .9rem; z-index: 120; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @media (max-width: 920px) {
@@ -310,3 +310,34 @@ button:focus-visible, .link:focus-visible { outline: 2px solid var(--primary); o
   .nav { order: 3; width: 100%; }
   .user-name, .sync { display: none; }
 }
+
+/* 내 계정 · 회원 탈퇴 */
+button.user-chip { border: 0; background: none; color: inherit; cursor: pointer; padding: 2px 4px; border-radius: 999px; font: inherit; font-size: .85rem; font-weight: 600; }
+button.user-chip:hover { background: var(--surface-2); }
+.modal { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 16px; background: rgba(10, 15, 25, .5); }
+.modal-card { position: relative; width: 100%; max-width: 380px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 18px; padding: 24px 22px; box-shadow: var(--shadow); }
+.modal-card h3 { margin: 0 0 10px; }
+.modal-card form, #accountMain { display: flex; flex-direction: column; gap: 10px; }
+.modal-card label { display: flex; flex-direction: column; gap: 6px; font-size: .88rem; }
+.modal-x { position: absolute; top: 10px; right: 12px; border: 0; background: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 6px; }
+.account-who { margin: 0; line-height: 1.6; word-break: break-all; }
+.account-who small { color: var(--muted); }
+.account-link { color: var(--muted); font-size: .84rem; text-align: center; }
+.link.danger { color: var(--up); align-self: center; }
+.btn.danger { background: var(--up); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.delete-warn { margin: 0; font-size: .88rem; background: rgba(229, 72, 77, .1); border-radius: 10px; padding: 10px 12px; }
+.auth-fine a { color: var(--primary); }
+.footer-links { margin-top: 8px; }
+.footer-links a { color: var(--muted); }
+
+/* 개인정보처리방침 */
+.policy { max-width: 820px; line-height: 1.75; }
+.policy h1 { margin-bottom: 4px; }
+.policy h2 { font-size: 1.1rem; margin-top: 30px; }
+.policy-meta { color: var(--muted); margin-top: 0; }
+.policy table { width: 100%; border-collapse: collapse; font-size: .86rem; margin: 10px 0; display: block; overflow-x: auto; }
+.policy th, .policy td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.policy th { background: var(--surface-2); white-space: nowrap; }
+.policy-back { margin-top: 36px; }
+.policy-back .btn { text-decoration: none; display: inline-block; }

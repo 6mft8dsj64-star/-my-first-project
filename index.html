@@ -49,6 +49,37 @@
 
       <button class="guest" id="guestBtn" type="button" data-guest="1">로그인 없이 둘러보기 →</button>
       <p class="auth-fine">둘러보기 중 만든 계획은 이 브라우저에만 저장되고, 나중에 로그인하면 내 계정으로 옮겨져요.</p>
+      <p class="auth-fine">로그인·가입하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>에 따라 정보가 처리돼요. 만 14세 미만은 가입할 수 없어요.</p>
+    </div>
+  </div>
+
+  <!-- 내 계정 -->
+  <div class="modal" id="accountModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <button class="modal-x" type="button" data-close aria-label="닫기">✕</button>
+
+      <div id="accountMain">
+        <h3 id="accountTitle">내 계정</h3>
+        <p class="account-who" id="accountWho"></p>
+        <button class="btn block" type="button" id="accountLogout">로그아웃</button>
+        <a class="account-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
+        <button class="link danger" type="button" id="toDelete">회원 탈퇴</button>
+      </div>
+
+      <form id="deleteForm" hidden novalidate>
+        <h3>회원 탈퇴</h3>
+        <p class="delete-warn">탈퇴하면 계정과 저장한 여행 계획, 가격 기록이 <b>모두 바로 삭제</b>되고 되돌릴 수 없어요.</p>
+        <label id="delPwRow" hidden>본인 확인을 위해 비밀번호를 입력해 주세요
+          <input id="delPw" type="password" autocomplete="current-password" />
+        </label>
+        <p class="hint" id="delSocialHint" hidden>본인 확인을 위해 로그인 창이 한 번 더 열려요.</p>
+        <label><span>확인을 위해 <b>탈퇴</b>라고 입력해 주세요</span>
+          <input id="delConfirm" type="text" autocomplete="off" placeholder="탈퇴" />
+        </label>
+        <p class="auth-msg" id="delMsg" role="status"></p>
+        <button class="btn block danger" type="submit" id="delSubmit">계정 영구 삭제</button>
+        <button class="link" type="button" id="delCancel">취소</button>
+      </form>
     </div>
   </div>
 
@@ -192,6 +223,7 @@
     <div class="wrap">
       항공권·숙소·관광지 가격과 선호도, 항공 노선, 비자 정보는 공개 정보 기반의 <b>참고용 추정치</b>이며 실제 예약가와 다를 수 있습니다.
       환율 제공: open.er-api.com, frankfurter.app
+      <div class="footer-links"><a href="privacy.html"><b>개인정보처리방침</b></a></div>
     </div>
   </footer>
 
