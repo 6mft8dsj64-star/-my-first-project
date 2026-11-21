@@ -216,3 +216,52 @@ label.inline input { width: 140px; }
   .hotel .hp { grid-column: 2; text-align: left; }
   .dest-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* 여행지 선택 (지역 → 나라 → 도시) */
+.picker { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.search { width: 100%; padding: 12px 14px; font-size: 1rem; }
+.crumb { margin: 10px 0 4px; font-size: .88rem; color: var(--muted); }
+.crumb b { color: var(--primary); }
+.step-label { font-size: .78rem; font-weight: 700; color: var(--muted); margin: 14px 0 6px; letter-spacing: .02em; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { border: 1.5px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 99px; cursor: pointer; font-size: .88rem; }
+.tab small { color: var(--muted); margin-left: 2px; }
+.tab.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+.tab.on small { color: rgba(255,255,255,.8); }
+.country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.country { display: flex; gap: 10px; align-items: center; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 11px; padding: 9px 11px; cursor: pointer; }
+.country:hover { border-color: var(--primary); }
+.country.on { border-color: var(--primary); background: var(--primary-soft); }
+.country .flag { font-size: 1.5rem; }
+.country .nm { display: block; font-weight: 700; font-size: .93rem; }
+.country .ct { display: block; font-size: .74rem; color: var(--muted); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--down); vertical-align: 1px; margin-right: 2px; }
+.city-head { margin: 4px 0 10px; font-size: .98rem; }
+.city-head small { font-weight: 400; color: var(--muted); font-size: .8rem; margin-left: 6px; }
+.city { text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px; cursor: pointer; transition: .15s; }
+.city:hover { transform: translateY(-2px); border-color: var(--primary); }
+.city.on { border-color: var(--primary); background: var(--primary-soft); }
+.city .nm { font-weight: 700; }
+.city .ct { color: var(--muted); font-size: .76rem; margin-top: 2px; }
+.city .pr { margin-top: 6px; font-size: .85rem; }
+.city .pr b { color: var(--primary); }
+.visa { margin-top: 10px; font-size: .88rem; padding: 8px 10px; background: var(--surface-2); border-radius: 9px; }
+
+/* 출발지 · 항공사 */
+.dep-label { margin-bottom: 4px; }
+.dep-label + .hint:empty { display: none; }
+.dep-label + .hint { margin: 0 0 10px; }
+.route { margin-bottom: 8px; }
+.route-head { font-size: .92rem; margin-bottom: 8px; }
+.route-row { font-size: .88rem; line-height: 2; }
+.al { display: inline-block; font-size: .78rem; padding: 2px 9px; border-radius: 7px; margin: 0 4px 0 0; line-height: 1.7; border: 1px solid var(--line); }
+.al-K { background: var(--primary-soft); color: var(--primary); border-color: transparent; font-weight: 700; }
+.al-L { background: rgba(31,157,99,.14); color: var(--down); border-color: transparent; font-weight: 700; }
+.al-F { background: var(--surface-2); }
+.route-other { margin-top: 8px; font-size: .84rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 3px 10px; cursor: pointer; font-size: .8rem; }
+.chip-btn:hover { border-color: var(--primary); color: var(--primary); }
+#priceLog:empty { display: none; }
+@media (max-width: 600px) {
+  .country-grid { grid-template-columns: repeat(2, 1fr); }
+}

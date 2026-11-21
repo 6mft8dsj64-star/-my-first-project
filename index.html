@@ -35,8 +35,18 @@
 
     <!-- 1. 여행지 -->
     <section id="destinations" class="wrap section">
-      <h2>1. 어디로 갈까요?</h2>
-      <div class="dest-grid" id="destGrid"></div>
+      <h2>1. 어디로 갈까요? <small>지역 → 나라 → 도시 순서로 골라주세요</small></h2>
+      <div class="picker">
+        <input type="search" id="destSearch" class="search" placeholder="🔍 도시·나라 이름으로 바로 찾기 (예: 다낭, 스위스)" />
+        <div class="crumb" id="crumb"></div>
+        <div class="step-label">① 지역</div>
+        <div class="tabs" id="regionTabs"></div>
+        <div class="step-label">② 나라</div>
+        <div class="country-grid" id="countryGrid"></div>
+        <div class="step-label">③ 도시</div>
+        <h3 id="cityHead" class="city-head"></h3>
+        <div class="dest-grid" id="cityGrid"></div>
+      </div>
     </section>
 
     <!-- 2. 플래너 -->
@@ -49,6 +59,8 @@
 
           <div class="card">
             <h3>📅 기본 정보</h3>
+            <label class="dep-label">출발지 (공항·항구)<select id="dep"></select></label>
+            <p class="hint warn" id="depHint"></p>
             <div class="row3">
               <label>출발일<input type="date" id="startDate" /></label>
               <label>귀국일<input type="date" id="endDate" /></label>
@@ -58,12 +70,14 @@
           </div>
 
           <div class="card">
-            <h3>✈️ 항공권 <span class="sub">1인 왕복</span></h3>
+            <h3>✈️ 가는 방법 · 항공사 <span class="sub">1인 왕복</span></h3>
+            <div id="routeInfo" class="route"></div>
             <div class="flight-bar" id="flightBar"></div>
             <label class="inline">내가 찾은 가격(1인)
               <input type="number" id="flightPrice" step="10000" min="0" /> 원
             </label>
             <p class="hint" id="flightHint"></p>
+            <p class="hint" id="priceLog"></p>
           </div>
 
           <div class="card">
@@ -113,6 +127,7 @@
     <section id="rates" class="wrap section">
       <h2>3. 실시간 환율 <small id="rateUpdated"></small></h2>
       <div class="rate-grid" id="rateGrid"></div>
+      <button class="btn ghost" id="toggleRates" style="margin-top:12px"></button>
       <p class="hint">환율은 브라우저에서 공개 환율 API로 매번 새로 불러옵니다. 어제 대비 변동은 최근 영업일 기준 환율과 비교한 값입니다.</p>
     </section>
 
@@ -132,7 +147,7 @@
 
   <footer class="footer">
     <div class="wrap">
-      항공권·숙소·관광지 가격과 선호도는 공개 정보 기반의 <b>참고용 추정치</b>이며 실제 예약가와 다를 수 있습니다.
+      항공권·숙소·관광지 가격과 선호도, 항공 노선, 비자 정보는 공개 정보 기반의 <b>참고용 추정치</b>이며 실제 예약가와 다를 수 있습니다.
       환율 제공: open.er-api.com, frankfurter.app
     </div>
   </footer>
@@ -140,6 +155,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="data.js"></script>
+  <script src="world.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

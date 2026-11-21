@@ -2,8 +2,12 @@
 (() => {
   "use strict";
 
-  const CODES = Object.keys(CURRENCY_INFO);
-  const FRANKFURTER_CODES = ["JPY", "THB", "IDR", "SGD", "EUR", "USD"]; // ECB 제공 통화
+  const CODES = [...new Set(DESTINATIONS.map((d) => d.currency))];
+  const MAJOR = ["USD", "EUR", "JPY", "CNY", "GBP", "VND", "THB"].filter((c) => CODES.includes(c));
+  const ECB = "AUD,BRL,CAD,CHF,CNY,CZK,DKK,EUR,GBP,HKD,HUF,IDR,INR,ISK,JPY,MXN,MYR,NOK,NZD,PHP,PLN,RON,SEK,SGD,THB,TRY,USD,ZAR".split(",");
+  const FRANKFURTER_CODES = CODES.filter((c) => ECB.includes(c)); // ECB 제공 통화(30일 추이 가능)
+  const DEP = (code) => DEPARTURES.find((x) => x.code === code) || DEPARTURES[0];
+  const regionOf = (id) => REGIONS.find((r) => r.id === id);
   const COLORS = ["#2f6fed", "#ff7a45", "#1f9d63", "#a259ff", "#f2c94c", "#667085"];
   const $ = (s) => document.querySelector(s);
 
@@ -139,16 +143,42 @@
   const destById = (id) => DESTINATIONS.find((d) => d.id === id) || DESTINATIONS[0];
   const topHotelIdx = (d) => d.hotels.reduce((b, h, i, a) => (h.share > a[b].share ? i : b), 0);
 
-  function defaultPlan(destId = "tokyo") {
+  // 출발지 → 목적지 이동 방법 계산
+  function routeInfo(d, depCode) {
+    const dep = DEP(depCode);
+    const addKrw = dep.add * 10000;
+    const air = Object.keys(d.routes).length > 0;
+    if (d.sea[depCode]) {
+      const s = d.sea[depCode];
+      return { mode: "sea", label: "배편", ops: s.ops, price: s.price, hours: s.hours };
+    }
+    if (d.routes[depCode]) return { mode: "direct", label: "직항", airlines: d.routes[depCode], price: d.flight.avg, hours: d.flight.hours };
+    if (!air && Object.keys(d.sea).length) {
+      const [port, s] = Object.entries(d.sea)[0];
+      const p = DEP(port);
+      return { mode: "toPort", label: "항구 이동 후 배편", ops: s.ops, port: p, price: s.price + (depCode.startsWith("PUS") ? 10000 : 50000), hours: s.hours };
+    }
+    if (depCode !== "ICN" && d.routes.ICN) {
+      return { mode: "transfer", label: "인천 출발 직항", airlines: d.routes.ICN, price: d.flight.avg + addKrw, hours: d.flight.hours, toICN: dep.toICN };
+    }
+    const sib = DESTINATIONS.find((x) => x.countryId === d.countryId && x.id !== d.id && (x.routes[depCode] || x.routes.ICN));
+    return { mode: "via", label: "경유", airlines: VIA[d.region].split(","), price: d.flight.avg + addKrw, hours: d.flight.hours, toICN: depCode !== "ICN" ? dep.toICN : null, sib };
+  }
+
+  function defaultPlan(destId = "tokyo", dep = "ICN") {
     const d = destById(destId);
     const start = addDays(TODAY, 45);
     return {
-      destId: d.id, start: iso(start), end: iso(addDays(start, 3)), people: 2, rooms: 1,
-      flightPrice: d.flight.avg, hotelIdx: topHotelIdx(d), level: 1, days: [], extras: [],
+      destId: d.id, dep, start: iso(start), end: iso(addDays(start, 3)), people: 2, rooms: 1,
+      flightPrice: routeInfo(d, dep).price, hotelIdx: topHotelIdx(d), level: 1, days: [], extras: [],
     };
   }
 
   let plan = store.get("tm_plan", null) || defaultPlan();
+  if (!plan.dep) plan.dep = "ICN";
+  if (!DESTINATIONS.some((d) => d.id === plan.destId)) plan = defaultPlan();
+  // 여행지 고르기 화면 상태 (지역 → 나라 → 도시)
+  const ui = { region: destById(plan.destId).region, country: destById(plan.destId).countryId, query: "", allRates: false };
   const nightsOf = (p) => Math.max(0, diffDays(parse(p.start), parse(p.end)));
 
   function syncDays() {
@@ -167,7 +197,7 @@
     const dailyLocal = (d.daily.food + d.daily.transport + d.daily.misc) * p.level * days * p.people;
 
     const items = [
-      { label: "항공권", krw: p.flightPrice * p.people, note: `${won(p.flightPrice)} × ${p.people}명` },
+      { label: d.sea[p.dep] || routeInfo(d, p.dep).mode === "toPort" ? "교통(배편)" : "항공권", krw: p.flightPrice * p.people, note: `${won(p.flightPrice)} × ${p.people}명` },
       { label: "숙소", localAmt: hotel.price * nights * p.rooms, cur, note: `${nights}박 × ${p.rooms}실` },
       { label: "관광·입장료", localAmt: attrLocal, cur, note: `${p.days.flat().length}곳 × ${p.people}명` },
       { label: "현지 생활비", localAmt: dailyLocal, cur, note: `${days}일 × ${p.people}명` },
@@ -181,18 +211,56 @@
     return { items, total, localTotal, cur };
   }
 
-  // ---------- 렌더: 여행지 ----------
+  // ---------- 렌더: 여행지 (지역 → 나라 → 도시) ----------
+  function seasonBadge(d, m) {
+    return d.bestMonths.includes(m) ? `<span class="badge good">${m}월 추천</span>`
+      : d.peakMonths.includes(m) ? `<span class="badge peak">${m}월 성수기</span>` : `<span class="badge">${m}월 비수기</span>`;
+  }
+  function cityButton(d, m, withCountry) {
+    const r = routeInfo(d, plan.dep);
+    return `<button class="city ${d.id === plan.destId ? "on" : ""}" data-city="${d.id}">
+      <div class="nm">${withCountry ? `${d.flag} ` : ""}${d.name}</div>
+      <div class="ct">${withCountry ? `${d.country} · ` : ""}${r.label}${r.airlines ? ` ${r.airlines.length}개 항공사` : ""} · ${d.flight.hours}</div>
+      <div class="pr">왕복 약 <b>${man(r.price)}</b></div>${seasonBadge(d, m)}
+    </button>`;
+  }
+
   function renderDestinations() {
     const m = parse(plan.start).getMonth() + 1;
-    $("#destGrid").innerHTML = DESTINATIONS.map((d) => {
-      const season = d.bestMonths.includes(m) ? `<span class="badge good">${m}월 추천 시즌</span>`
-        : d.peakMonths.includes(m) ? `<span class="badge peak">${m}월 성수기</span>` : `<span class="badge">${m}월 비수기</span>`;
-      return `<button class="dest ${d.id === plan.destId ? "on" : ""}" data-id="${d.id}">
-        <div class="flag">${d.flag}</div>
-        <div class="nm">${d.name}</div><div class="ct">${d.country} · ${d.flight.hours}</div>
-        <div class="pr">항공권 평균 <b>${man(d.flight.avg)}</b></div>${season}
+    const cur = destById(plan.destId);
+    $("#crumb").innerHTML = `현재 선택: <b>${regionOf(cur.region).name} › ${cur.flag} ${cur.country} › ${cur.name}</b>`;
+
+    // 검색 모드
+    const q = ui.query.trim();
+    if (q) {
+      const hits = DESTINATIONS.filter((d) => (d.name + d.country + regionOf(d.region).name).includes(q));
+      $("#regionTabs").style.display = $("#countryGrid").style.display = "none";
+      $("#cityHead").textContent = `"${q}" 검색 결과 ${hits.length}곳`;
+      $("#cityGrid").innerHTML = hits.map((d) => cityButton(d, m, true)).join("") || '<div class="empty">검색 결과가 없어요</div>';
+      return;
+    }
+    $("#regionTabs").style.display = $("#countryGrid").style.display = "";
+
+    $("#regionTabs").innerHTML = REGIONS.map((r) => {
+      const n = COUNTRIES.filter((c) => c.region === r.id).length;
+      return `<button class="tab ${r.id === ui.region ? "on" : ""}" data-region="${r.id}">${r.icon} ${r.name} <small>${n}</small></button>`;
+    }).join("");
+
+    const countries = COUNTRIES.filter((c) => c.region === ui.region);
+    if (!countries.some((c) => c.id === ui.country)) ui.country = countries[0].id;
+    $("#countryGrid").innerHTML = countries.map((c) => {
+      const cities = DESTINATIONS.filter((d) => d.countryId === c.id);
+      const minP = Math.min(...cities.map((d) => routeInfo(d, plan.dep).price));
+      const direct = cities.some((d) => d.routes[plan.dep] || d.sea[plan.dep]);
+      return `<button class="country ${c.id === ui.country ? "on" : ""}" data-country="${c.id}">
+        <span class="flag">${c.flag}</span><span><span class="nm">${c.name}</span>
+        <span class="ct">${cities.length}개 도시 · ${man(minP)}~${direct ? ` · <i class="dot"></i>${DEP(plan.dep).city} 출발` : ""}</span></span>
       </button>`;
     }).join("");
+
+    const country = COUNTRIES.find((c) => c.id === ui.country);
+    $("#cityHead").innerHTML = `${country.flag} ${country.name}의 도시를 골라주세요 <small>${country.visa}</small>`;
+    $("#cityGrid").innerHTML = DESTINATIONS.filter((d) => d.countryId === ui.country).map((d) => cityButton(d, m, false)).join("");
   }
 
   function renderDestInfo() {
@@ -204,7 +272,8 @@
     $("#destInfo").innerHTML = `
       <div class="info-head"><div class="flag">${d.flag}</div>
         <div><h3 style="margin:0">${d.name}, ${d.country}</h3>
-        <div class="hint" style="margin:0">인천 출발 비행 ${d.flight.hours} · 통화 ${CURRENCY_INFO[d.currency].name}</div></div></div>
+        <div class="hint" style="margin:0">${regionOf(d.region).name} · 비행 ${d.flight.hours} · 통화 ${CURRENCY_INFO[d.currency].name}</div></div></div>
+      <div class="visa">🛂 ${d.visa}${d.detailed ? "" : ' <span class="badge">숙소·관광지 비용은 물가 기준 추정</span>'}</div>
       <div class="info-stats">
         <div class="stat"><div class="k">항공권 시세(1인 왕복)</div><div class="v">${man(d.flight.low)}~${man(d.flight.high)}</div></div>
         <div class="stat"><div class="k">가장 많이 고른 숙소</div><div class="v">${top.type} · ${top.share}%</div></div>
@@ -224,6 +293,11 @@
     $("#startDate").min = iso(TODAY);
     $("#endDate").min = plan.start;
     $("#people").value = plan.people;
+    const groups = [["intl", "국제선 공항"], ["sea", "국제 여객선 항구"], ["dom", "국내선 공항 (환승 필요)"]];
+    $("#dep").innerHTML = groups.map(([t, label]) => `<optgroup label="${label}">${DEPARTURES.filter((x) => x.type === t)
+      .map((x) => `<option value="${x.code}" ${x.code === plan.dep ? "selected" : ""}>${x.name} (${x.city})</option>`).join("")}</optgroup>`).join("");
+    const dp = DEP(plan.dep);
+    $("#depHint").textContent = dp.note || "";
     $("#rooms").value = plan.rooms;
     $("#flightPrice").value = plan.flightPrice;
     document.querySelectorAll("#levelSeg button").forEach((b) => b.classList.toggle("on", Number(b.dataset.level) === plan.level));
@@ -235,8 +309,46 @@
     renderFlight(); renderHotels(); renderDays(); renderDaily(); renderExtras();
   }
 
+  function airlineChips(codes) {
+    const order = { K: 0, L: 1, F: 2 };
+    return codes.slice().sort((a, b) => order[AIRLINES[a]?.[1] ?? "F"] - order[AIRLINES[b]?.[1] ?? "F"])
+      .map((c) => { const a = AIRLINES[c] || [c, "F"]; return `<span class="al al-${a[1]}" title="${c}">${a[0]}</span>`; }).join("");
+  }
+
+  function renderRoute() {
+    const d = destById(plan.destId), dep = DEP(plan.dep), r = routeInfo(d, plan.dep);
+    let html = `<div class="route-head"><b>${dep.name}</b> → <b>${d.flag} ${d.name}</b> <span class="badge ${r.mode === "direct" || r.mode === "sea" ? "good" : ""}">${r.label}</span></div>`;
+    if (r.mode === "sea") html += `<div class="route-row">⛴️ ${r.ops}<br/><span class="hint" style="margin:0">${r.hours}</span></div>`;
+    else if (r.mode === "toPort") html += `<div class="route-row">항공 노선이 없어요. <b>${r.port.name}</b>에서 배로 가요.<br/>⛴️ ${r.ops} · ${r.hours}</div>`;
+    else if (r.mode === "direct") html += `<div class="route-row">${airlineChips(r.airlines)}</div>`;
+    else if (r.mode === "transfer") html += `<div class="route-row">${dep.name}에서는 직항이 없어요. <b>인천</b>으로 이동(${r.toICN}) 후 직항 이용:<br/>${airlineChips(r.airlines)}</div>`;
+    else {
+      html += `<div class="route-row">한국에서 직항이 없어요.${r.toICN ? ` 인천까지 이동(${r.toICN}) 후` : ""} 아래 항공사로 경유하는 게 일반적이에요:<br/>${airlineChips(r.airlines)}</div>`;
+      if (r.sib) {
+        const sr = r.sib.routes[plan.dep] || r.sib.routes.ICN;
+        html += `<div class="route-row">💡 또는 같은 나라 <b>${r.sib.name}</b>까지 직항 후 현지 교통으로 이동: ${airlineChips(sr)}
+          <button class="chip-btn" data-city-jump="${r.sib.id}">${r.sib.name} 보기</button></div>`;
+      }
+    }
+
+    // 다른 출발지 직항 현황
+    const others = DEPARTURES.filter((x) => x.code !== plan.dep && (d.routes[x.code] || d.sea[x.code]));
+    if (others.length) html += `<div class="route-other">다른 곳에서 바로 가기: ${others.map((x) =>
+      `<button class="chip-btn" data-dep="${x.code}">${x.type === "sea" ? "⛴️" : "✈️"} ${x.name.replace("국제공항", "").replace(" 국제여객터미널", "")} ${d.routes[x.code] ? `(${d.routes[x.code].length})` : ""}</button>`).join("")}</div>`;
+    html += `<p class="hint">🟦 국내 대형항공사 🟩 국내 저비용항공사 ⬜ 외국 항공사 · 노선은 시즌별로 바뀌니 예약 전 확인하세요.</p>`;
+    $("#routeInfo").innerHTML = html;
+
+    // 내가 기록한 가격
+    const log = store.get("tm_price_log", []).filter((x) => x.dest === d.id && x.dep === plan.dep).slice(-5).reverse();
+    $("#priceLog").innerHTML = log.length ? `📒 내가 기록한 가격: ${log.map((x) => `${x.date.slice(5)} <b>${man(x.price)}</b>`).join(" · ")}` : "";
+  }
+
   function renderFlight() {
-    const f = destById(plan.destId).flight;
+    renderRoute();
+    const f = { ...destById(plan.destId).flight };
+    const rp = routeInfo(destById(plan.destId), plan.dep).price;
+    const shift = rp - f.avg; // 출발지·배편에 따른 가격 차이
+    f.low = Math.max(0, f.low + shift); f.avg = rp; f.high += shift;
     const lo = f.low * 0.8, hi = f.high * 1.1;
     const pos = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
     $("#flightBar").innerHTML = `
@@ -415,7 +527,8 @@
 
   function renderRates() {
     const dCur = destById(plan.destId).currency;
-    const order = [dCur, ...CODES.filter((c) => c !== dCur)];
+    const order = [dCur, ...(ui.allRates ? CODES : MAJOR).filter((c) => c !== dCur)];
+    $("#toggleRates").textContent = ui.allRates ? "주요 통화만 보기" : `전체 ${CODES.length}개 통화 보기`;
     $("#rateGrid").innerHTML = order.map((c) => {
       const t = Rates.today[c], y = Rates.yesterday[c];
       const { unit, text } = rateText(t, c);
@@ -436,7 +549,7 @@
       ? `${Rates.updated ? Rates.updated.toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" }) : ""} 기준`
       : "실시간 환율을 불러오지 못해 기본값 표시 중";
 
-    $("#ticker").innerHTML = CODES.map((c) => {
+    $("#ticker").innerHTML = [...new Set([dCur, ...MAJOR])].map((c) => {
       const { unit, text } = rateText(Rates.today[c], c);
       const y = Rates.yesterday[c];
       const p = y ? (Rates.today[c] / y - 1) * 100 : null;
@@ -487,7 +600,7 @@
   function renderTips() {
     const d = destById(plan.destId);
     $("#destTips").innerHTML = `<div class="card dest-tips"><h3>${d.flag} ${d.name} 현지 꿀팁</h3>
-      <ul>${d.tips.map((t) => `<li>${t}</li>`).join("")}</ul></div>`;
+      <ul>${(d.detailed ? [`비자: ${d.visa}`, ...d.tips, ...(REGION_TIPS[d.region] || [])] : d.tips).map((t) => `<li>${t}</li>`).join("")}</ul></div>`;
     $("#generalTips").innerHTML = GENERAL_TIPS.map((t) =>
       `<div class="tip"><div class="ti">${t.icon}</div><div class="tt">${t.title}</div><div class="tb">${t.body}</div></div>`).join("");
   }
@@ -503,13 +616,35 @@
 
   // ---------- 이벤트 ----------
   function bind() {
-    $("#destGrid").addEventListener("click", (e) => {
-      const b = e.target.closest(".dest"); if (!b || b.dataset.id === plan.destId) return;
+    const pickCity = (id) => {
       const keep = { start: plan.start, end: plan.end, people: plan.people, rooms: plan.rooms, level: plan.level };
-      plan = { ...defaultPlan(b.dataset.id), ...keep };
+      plan = { ...defaultPlan(id, plan.dep), ...keep };
+      const d = destById(id); ui.region = d.region; ui.country = d.countryId;
       renderAll();
       document.getElementById("planner").scrollIntoView();
+    };
+    $("#regionTabs").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-region]"); if (!b) return;
+      ui.region = b.dataset.region; ui.country = null; renderDestinations();
     });
+    $("#countryGrid").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-country]"); if (!b) return;
+      ui.country = b.dataset.country; renderDestinations();
+      $("#cityHead").scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    $("#cityGrid").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-city]"); if (b) pickCity(b.dataset.city);
+    });
+    $("#destSearch").addEventListener("input", (e) => { ui.query = e.target.value; renderDestinations(); });
+    const setDep = (code) => {
+      plan.dep = code; plan.flightPrice = routeInfo(destById(plan.destId), code).price; update();
+    };
+    $("#dep").addEventListener("change", (e) => setDep(e.target.value));
+    $("#routeInfo").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-dep]"); if (b) setDep(b.dataset.dep);
+      const j = e.target.closest("[data-city-jump]"); if (j) pickCity(j.dataset.cityJump);
+    });
+    $("#toggleRates").addEventListener("click", () => { ui.allRates = !ui.allRates; renderRates(); });
 
     $("#startDate").addEventListener("change", (e) => {
       if (!e.target.value) return;
@@ -529,7 +664,14 @@
       update();
     });
     $("#rooms").addEventListener("change", (e) => { plan.rooms = Math.max(1, Number(e.target.value) || 1); update(); });
-    $("#flightPrice").addEventListener("change", (e) => { plan.flightPrice = Math.max(0, Number(e.target.value) || 0); update(); });
+    $("#flightPrice").addEventListener("change", (e) => {
+      plan.flightPrice = Math.max(0, Number(e.target.value) || 0);
+      // 직접 찾은 가격을 기록해 두면 다음에 비교할 수 있어요
+      const log = store.get("tm_price_log", []);
+      log.push({ dest: plan.destId, dep: plan.dep, price: plan.flightPrice, date: iso(new Date()) });
+      store.set("tm_price_log", log.slice(-200));
+      update();
+    });
 
     $("#hotelList").addEventListener("change", (e) => {
       if (e.target.name === "hotel") { plan.hotelIdx = Number(e.target.value); update(); }
@@ -569,7 +711,7 @@
       const load = e.target.closest("[data-load]"), del = e.target.closest("[data-del]");
       if (load) {
         const s = list.find((x) => String(x.id) === load.dataset.load);
-        if (s) { plan = JSON.parse(JSON.stringify(s.plan)); renderAll(); document.getElementById("planner").scrollIntoView(); toast("계획을 불러왔어요"); }
+        if (s) { plan = JSON.parse(JSON.stringify(s.plan)); if (!plan.dep) plan.dep = "ICN"; ui.region = destById(plan.destId).region; ui.country = destById(plan.destId).countryId; renderAll(); document.getElementById("planner").scrollIntoView(); toast("계획을 불러왔어요"); }
       } else if (del) {
         store.set("tm_saved", list.filter((x) => String(x.id) !== del.dataset.del)); renderSaved();
       }

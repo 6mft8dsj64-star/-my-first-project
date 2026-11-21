@@ -3,24 +3,8 @@
 // 숙소/물가/관광지 비용: 현지 통화 기준 → 실시간 환율로 원화 환산
 // ※ 실제 가격은 시기·예약 시점에 따라 달라지므로 참고용입니다.
 
-const FALLBACK_RATES = {
-  // 1 현지통화 = ? KRW (API 실패 시 사용하는 대략값)
-  JPY: 9.3, THB: 41, VND: 0.055, TWD: 44, IDR: 0.087,
-  SGD: 1060, EUR: 1520, USD: 1400, KRW: 1,
-};
-
-const CURRENCY_INFO = {
-  JPY: { name: "일본 엔", symbol: "¥" },
-  THB: { name: "태국 바트", symbol: "฿" },
-  VND: { name: "베트남 동", symbol: "₫" },
-  TWD: { name: "대만 달러", symbol: "NT$" },
-  IDR: { name: "인도네시아 루피아", symbol: "Rp" },
-  SGD: { name: "싱가포르 달러", symbol: "S$" },
-  EUR: { name: "유로", symbol: "€" },
-  USD: { name: "미국 달러", symbol: "$" },
-};
-
-const DESTINATIONS = [
+// 상세 데이터가 있는 도시 (world.js에서 나라·지역 정보와 합쳐짐)
+const DETAILED_CITIES = [
   {
     id: "tokyo", name: "도쿄", country: "일본", flag: "🇯🇵", currency: "JPY",
     flight: { low: 250000, avg: 350000, high: 550000, hours: "2시간 30분" },
