@@ -12,9 +12,15 @@
   const $ = (s) => document.querySelector(s);
 
   // ---------- 저장소 ----------
+  // 계정별 데이터(계획·저장 목록·가격 기록)는 로그인한 사용자마다 따로 저장되고, auth.js가 클라우드와 동기화해요.
+  const USER_KEYS = ["tm_plan", "tm_saved", "tm_price_log"];
+  const keyOf = (k) => (USER_KEYS.includes(k) ? (window.TM_USER_PREFIX || "") + k : k);
   const store = {
-    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 저장 불가 환경 */ } },
+    get(k, d) { try { const v = localStorage.getItem(keyOf(k)); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v) {
+      try { localStorage.setItem(keyOf(k), JSON.stringify(v)); } catch { /* 저장 불가 환경 */ }
+      if (USER_KEYS.includes(k)) window.TMAuth?.onLocalChange?.(k, v);
+    },
   };
 
   // ---------- 날짜/숫자 ----------
@@ -165,9 +171,14 @@
     };
   }
 
-  let plan = store.get("tm_plan", null) || defaultPlan();
-  if (!DEPARTURES.some((x) => x.code === plan.dep)) plan.dep = "ICN";
-  if (!DESTINATIONS.some((d) => d.id === plan.destId)) plan = defaultPlan();
+  function loadPlan() {
+    let p = store.get("tm_plan", null) || defaultPlan();
+    if (!DESTINATIONS.some((d) => d.id === p.destId)) p = defaultPlan();
+    if (!DEPARTURES.some((x) => x.code === p.dep)) p.dep = "ICN";
+    if (parse(p.start) < TODAY) { const f = defaultPlan(p.destId, p.dep); p.start = f.start; p.end = f.end; }
+    return p;
+  }
+  let plan = loadPlan();
   // 여행지 고르기 화면 상태 (지역 → 나라 → 도시)
   const ui = { region: destById(plan.destId).region, country: destById(plan.destId).countryId, query: "", allRates: false };
   const nightsOf = (p) => Math.max(0, diffDays(parse(p.start), parse(p.end)));
@@ -709,7 +720,15 @@
 
   // ---------- 시작 ----------
   // 저장된 계획이 과거 날짜면 다시 기본값으로
-  if (parse(plan.start) < TODAY) plan = { ...plan, ...(({ start, end }) => ({ start, end }))(defaultPlan(plan.destId)) };
+  // 로그인/로그아웃 시 그 계정의 데이터로 다시 그리기
+  window.TripApp = {
+    reload() {
+      plan = loadPlan();
+      ui.region = destById(plan.destId).region; ui.country = destById(plan.destId).countryId;
+      renderAll();
+    },
+    toast,
+  };
   bind();
   renderAll();
   loadRates().then(() => { renderAll(); if (Rates.live) toast("오늘 환율을 반영했어요"); });
