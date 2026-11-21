@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>트립메이트 · 여행 계획</title>
+  <meta name="description" content="여행지 정보, 실시간 환율, 총 경비 계산과 절약 팁까지 한 번에 짜는 여행 플래너" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#">✈️ 트립메이트</a>
+      <nav class="nav">
+        <a href="#destinations">여행지</a>
+        <a href="#planner">계획짜기</a>
+        <a href="#rates">환율</a>
+        <a href="#saved">저장한 계획</a>
+        <a href="#tips">여행 팁</a>
+      </nav>
+    </div>
+    <div class="ticker"><div class="wrap" id="ticker">환율 불러오는 중…</div></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <h1>여행 계획, <span class="accent">가격까지 한 번에</span></h1>
+        <p>여행지를 고르면 항공권 시세·인기 숙소·관광지 비용이 바로 보이고,<br class="hide-sm" />
+          일정을 짜는 동안 <b>오늘 환율</b>로 총 경비가 실시간 계산됩니다.</p>
+      </div>
+    </section>
+
+    <!-- 1. 여행지 -->
+    <section id="destinations" class="wrap section">
+      <h2>1. 어디로 갈까요?</h2>
+      <div class="dest-grid" id="destGrid"></div>
+    </section>
+
+    <!-- 2. 플래너 -->
+    <section id="planner" class="wrap section">
+      <h2>2. 계획 짜기 <small id="plannerTitle"></small></h2>
+      <div class="planner">
+        <div class="planner-main">
+
+          <div class="card" id="destInfo"></div>
+
+          <div class="card">
+            <h3>📅 기본 정보</h3>
+            <div class="row3">
+              <label>출발일<input type="date" id="startDate" /></label>
+              <label>귀국일<input type="date" id="endDate" /></label>
+              <label>인원<input type="number" id="people" min="1" max="20" value="2" /></label>
+            </div>
+            <p class="hint" id="dateHint"></p>
+          </div>
+
+          <div class="card">
+            <h3>✈️ 항공권 <span class="sub">1인 왕복</span></h3>
+            <div class="flight-bar" id="flightBar"></div>
+            <label class="inline">내가 찾은 가격(1인)
+              <input type="number" id="flightPrice" step="10000" min="0" /> 원
+            </label>
+            <p class="hint" id="flightHint"></p>
+          </div>
+
+          <div class="card">
+            <h3>🏨 숙소 <span class="sub">여행자들이 많이 고른 순 · 1박 1실</span></h3>
+            <div id="hotelList" class="hotel-list"></div>
+            <label class="inline">객실 수 <input type="number" id="rooms" min="1" max="10" value="1" /></label>
+          </div>
+
+          <div class="card">
+            <h3>🗺️ 일자별 일정</h3>
+            <div id="dayList" class="day-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>🍜 현지 생활비 <span class="sub">식비·교통·기타, 1인 1일</span></h3>
+            <div class="seg" id="levelSeg">
+              <button data-level="0.7">절약</button>
+              <button data-level="1" class="on">보통</button>
+              <button data-level="1.5">여유</button>
+            </div>
+            <p class="hint" id="dailyHint"></p>
+          </div>
+
+          <div class="card">
+            <h3>🧾 기타 비용</h3>
+            <div id="extraList" class="extra-list"></div>
+            <div class="add-extra">
+              <input type="text" id="extraName" placeholder="예: 여행자보험, eSIM, 쇼핑" />
+              <input type="number" id="extraAmount" placeholder="금액" min="0" />
+              <select id="extraCur"></select>
+              <button class="btn ghost" id="addExtra">추가</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="planner-side">
+          <div class="card summary" id="summary"></div>
+          <div class="card">
+            <h3>💡 이렇게 하면 더 효율적이에요</h3>
+            <ul class="suggest" id="suggestions"></ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 3. 환율 -->
+    <section id="rates" class="wrap section">
+      <h2>3. 실시간 환율 <small id="rateUpdated"></small></h2>
+      <div class="rate-grid" id="rateGrid"></div>
+      <p class="hint">환율은 브라우저에서 공개 환율 API로 매번 새로 불러옵니다. 어제 대비 변동은 최근 영업일 기준 환율과 비교한 값입니다.</p>
+    </section>
+
+    <!-- 4. 저장한 계획 -->
+    <section id="saved" class="wrap section">
+      <h2>4. 저장한 계획 <small>저장한 날 vs 오늘 환율 가격 비교</small></h2>
+      <div id="savedList" class="saved-list"></div>
+    </section>
+
+    <!-- 5. 팁 -->
+    <section id="tips" class="wrap section">
+      <h2>5. 효율적인 여행 팁</h2>
+      <div id="destTips"></div>
+      <div class="tip-grid" id="generalTips"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      항공권·숙소·관광지 가격과 선호도는 공개 정보 기반의 <b>참고용 추정치</b>이며 실제 예약가와 다를 수 있습니다.
+      환율 제공: open.er-api.com, frankfurter.app
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
