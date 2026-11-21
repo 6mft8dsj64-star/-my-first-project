@@ -426,6 +426,7 @@
           <span class="amt">${won(it.krw)}</span>
           <div class="bar"><i style="width:${(it.krw / max) * 100}%;background:${COLORS[i % COLORS.length]}"></i></div></div>`).join("")}
       </div>
+      <label class="plan-name">계획 이름<input type="text" id="planName" placeholder="${d.name} ${nightsOf(plan)}박 ${nightsOf(plan) + 1}일 (${plan.start})" /></label>
       <button class="btn block" id="savePlan">이 계획 저장하기</button>
       <p class="hint">${Rates.live ? `환율 출처: ${Rates.source}` : "⚠️ 실시간 환율을 불러오지 못해 기본 환율로 계산 중"}</p>`;
     $("#savePlan").onclick = savePlan;
@@ -551,8 +552,7 @@
     const d = destById(plan.destId);
     const list = store.get("tm_saved", []);
     const c = costItems(plan);
-    const name = prompt("계획 이름을 입력하세요", `${d.name} ${nightsOf(plan)}박 ${nightsOf(plan) + 1}일 (${plan.start})`);
-    if (name === null) return;
+    const name = $("#planName").value.trim() || `${d.name} ${nightsOf(plan)}박 ${nightsOf(plan) + 1}일 (${plan.start})`;
     list.unshift({
       id: Date.now(), name: name || `${d.name} 여행`, savedAt: new Date().toISOString(),
       plan: JSON.parse(JSON.stringify(plan)), totalAtSave: c.total, rateAtSave: Rates.today[d.currency],

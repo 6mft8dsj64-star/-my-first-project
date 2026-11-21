@@ -265,3 +265,4 @@ label.inline input { width: 140px; }
 @media (max-width: 600px) {
   .country-grid { grid-template-columns: repeat(2, 1fr); }
 }
+.plan-name { margin-top: 14px; } .plan-name + .btn.block { margin-top: 8px; }
