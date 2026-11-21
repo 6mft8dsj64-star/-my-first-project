@@ -6,6 +6,7 @@
   const S = {
     ko: {
       // 공통
+      "doc.title": "트립노트 · 여행 계획",
       brand: "✈️ 트립노트", approx: "약", free: "무료", remove: "삭제", close: "닫기",
       "visa.label": "한국 여권 기준",
       // 헤더·내비
@@ -148,6 +149,7 @@
     },
 
     en: {
+      "doc.title": "TripNote · Trip planner",
       brand: "✈️ TripNote", approx: "≈", free: "Free", remove: "Remove", close: "Close",
       "visa.label": "Korean passport",
       "nav.dest": "Destinations", "nav.plan": "Plan", "nav.rates": "Rates", "nav.saved": "Saved", "nav.tips": "Tips",
@@ -278,27 +280,54 @@
     },
   };
 
+  // 지원 언어 (ko·en은 이 파일에, 나머지는 lang/코드.js에서 필요할 때 불러와요)
+  const LANGS = [
+    { code: "ko", name: "한국어", locale: "ko-KR" }, { code: "en", name: "English", locale: "en-US" },
+    { code: "ja", name: "日本語", locale: "ja-JP" }, { code: "zh-CN", name: "简体中文", locale: "zh-CN" },
+    { code: "zh-TW", name: "繁體中文", locale: "zh-TW" }, { code: "es", name: "Español", locale: "es-ES" },
+    { code: "fr", name: "Français", locale: "fr-FR" }, { code: "de", name: "Deutsch", locale: "de-DE" },
+    { code: "it", name: "Italiano", locale: "it-IT" }, { code: "pt", name: "Português", locale: "pt-BR" },
+    { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
+    { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
+  ];
+  const VERSION = "20261122b";
+  const isLang = (c) => LANGS.some((l) => l.code === c);
+
   // ---------- 설정 ----------
   const KEY = "tm_settings";
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
   const write = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* 무시 */ } };
-  const nav = (navigator.language || "ko").toLowerCase();
+  const navs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "ko"]).map((x) => x.toLowerCase());
+  const nav = navs[0];
+  function guessLang() {
+    for (const n of navs) {
+      if (n.startsWith("zh")) return /tw|hk|mo|hant/.test(n) ? "zh-TW" : "zh-CN";
+      const base = n.split("-")[0];
+      if (isLang(base)) return base;
+    }
+    return "en";
+  }
   function guessCur() {
     if (nav.startsWith("ko")) return "KRW";
     if (nav.startsWith("ja")) return "JPY";
     if (nav === "zh-tw") return "TWD";
     if (nav === "zh-hk") return "HKD";
     if (nav.startsWith("zh")) return "CNY";
+    if (nav.startsWith("vi")) return "VND";
+    if (nav.startsWith("th")) return "THB";
+    if (nav.startsWith("id")) return "IDR";
+    if (nav.startsWith("tr")) return "TRY";
     const region = nav.split("-")[1];
-    const byRegion = { us: "USD", gb: "GBP", au: "AUD", ca: "CAD", nz: "NZD", sg: "SGD", in: "INR", ph: "PHP", my: "MYR", th: "THB", vn: "VND", id: "IDR", ch: "CHF", se: "SEK", no: "NOK", dk: "DKK", pl: "PLN", cz: "CZK", hu: "HUF", tr: "TRY", mx: "MXN", br: "BRL", za: "ZAR", ae: "AED" };
+    const byRegion = { us: "USD", gb: "GBP", au: "AUD", ca: "CAD", nz: "NZD", sg: "SGD", in: "INR", ph: "PHP", my: "MYR", th: "THB", vn: "VND", id: "IDR", ch: "CHF", se: "SEK", no: "NOK", dk: "DKK", pl: "PLN", cz: "CZK", hu: "HUF", tr: "TRY", mx: "MXN", br: "BRL", ar: "ARS", cl: "CLP", pe: "PEN", za: "ZAR", ae: "AED" };
     if (byRegion[region]) return byRegion[region];
+    if (nav.startsWith("pt")) return "BRL";
     if (/^(de|fr|es|it|nl|pt|fi|el|sk|sl|et|lv|lt|ga|mt|hr)/.test(nav)) return "EUR";
     return "USD";
   }
   const saved = read();
   const settings = {
     theme: ["system", "light", "dark"].includes(saved.theme) ? saved.theme : "system",
-    lang: saved.lang === "en" || saved.lang === "ko" ? saved.lang : (nav.startsWith("ko") ? "ko" : "en"),
+    lang: isLang(saved.lang) ? saved.lang : guessLang(),
     cur: saved.cur || guessCur(),
   };
 
@@ -309,8 +338,24 @@
   applyTheme();
   document.documentElement.lang = settings.lang;
 
+  // 언어 파일 불러오기
+  const loading = {};
+  function loadLang(code) {
+    if (S[code]) return Promise.resolve(true);
+    if (!loading[code]) {
+      loading[code] = new Promise((ok) => {
+        const el = document.createElement("script");
+        el.src = `lang/${code}.js?v=${VERSION}`;
+        el.onload = () => ok(!!S[code]);
+        el.onerror = () => ok(false);
+        document.head.appendChild(el);
+      });
+    }
+    return loading[code];
+  }
+
   function t(k, v = {}) {
-    const s = S[settings.lang]?.[k] ?? S.ko[k] ?? k;
+    const s = S[settings.lang]?.[k] ?? S.en[k] ?? S.ko[k] ?? k;
     return s.replace(/\{(\w+)\}/g, (_, n) => (v[n] ?? ""));
   }
   function apply(root = document) {
@@ -318,14 +363,20 @@
     root.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
     root.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
     root.querySelectorAll("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
-    document.title = settings.lang === "en" ? "TripNote · Trip planner" : "트립노트 · 여행 계획";
+    document.title = t("doc.title");
   }
 
+  const ready = loadLang(settings.lang).then((ok) => { if (!ok) settings.lang = "en"; document.documentElement.lang = settings.lang; });
+
   window.I18N = {
-    t, apply, settings, dict: S,
+    t, apply, settings, dict: S, LANGS, ready,
     get lang() { return settings.lang; },
-    locale: () => (settings.lang === "en" ? "en-US" : "ko-KR"),
-    setLang(l) { settings.lang = l; document.documentElement.lang = l; write(settings); apply(); },
+    locale: () => LANGS.find((l) => l.code === settings.lang)?.locale || "en-US",
+    add(code, dict) { S[code] = dict; },
+    async setLang(l) {
+      if (!isLang(l) || !(await loadLang(l))) return false;
+      settings.lang = l; document.documentElement.lang = l; write(settings); apply(); return true;
+    },
     setTheme(th) { settings.theme = th; write(settings); applyTheme(); },
     setCur(c) { settings.cur = c; write(settings); },
   };

@@ -12,7 +12,7 @@
   const COLORS = ["#2f6fed", "#ff7a45", "#1f9d63", "#a259ff", "#f2c94c", "#667085"];
   const $ = (s) => document.querySelector(s);
   const t = (k, v) => I18N.t(k, v);
-  const EN = () => I18N.lang === "en";
+  const EN = () => I18N.lang !== "ko"; // 한국어가 아니면 영어 데이터(도시·명소·팁)를 써요
   const LOC = () => I18N.locale();
 
   // ---------- 저장소 ----------
@@ -36,10 +36,11 @@
   const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
   const dow = (d) => new Intl.DateTimeFormat(LOC(), { weekday: "short" }).format(d);
   const dayLabel = (d) => (EN()
-    ? new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(d)
+    ? new Intl.DateTimeFormat(LOC(), { weekday: "short", month: "short", day: "numeric" }).format(d)
     : `${d.getMonth() + 1}/${d.getDate()}(${dow(d)})`);
-  const monthName = (m) => (EN() ? new Intl.DateTimeFormat("en-US", { month: "short" }).format(new Date(2026, m - 1, 1)) : `${m}월`);
+  const monthName = (m) => (EN() ? new Intl.DateTimeFormat(LOC(), { month: "short" }).format(new Date(2026, m - 1, 1)) : `${m}월`);
   const monthList = (ms) => (EN() ? ms.map(monthName).join(", ") : `${ms.join("·")}월`);
+  const intlName = (type, code) => { try { return new Intl.DisplayNames([LOC()], { type }).of(code); } catch { return null; } };
 
   // ---------- 이름 번역 ----------
   const regionNames = {};
@@ -50,11 +51,11 @@
       const c = COUNTRIES.find((x) => x.id === id);
       if (!EN()) return c.name;
       const code = countryCode(id);
-      if (code === "HK") return "Hong Kong";
-      if (code === "MO") return "Macau";
-      try { regionNames.en ||= new Intl.DisplayNames(["en"], { type: "region" }); return regionNames.en.of(code) || c.name; } catch { return c.name; }
+      if (I18N.lang === "en" && code === "HK") return "Hong Kong";
+      if (I18N.lang === "en" && code === "MO") return "Macau";
+      return intlName("region", code) || c.name;
     },
-    region: (r) => (EN() ? REGION_EN[r.id] : r.name),
+    region: (r) => (EN() ? (I18N.dict[I18N.lang]?.[`region.${r.id}`] || REGION_EN[r.id]) : r.name),
     attr: (d, i) => (EN() ? CITY_EN[d.id]?.[1].split("|")[i] ?? d.attractions[i].name : d.attractions[i].name),
     visa: (v) => (EN() ? VISA_EN[v] ?? v : v),
     hotel(d, i) {
@@ -74,7 +75,7 @@
     hours: (s) => (EN() ? hoursEN(s) : s),
     cur(c) {
       if (!EN()) return c === "KRW" ? "대한민국 원" : CURRENCY_INFO[c]?.name || c;
-      try { return new Intl.DisplayNames(["en"], { type: "currency" }).of(c); } catch { return c; }
+      return intlName("currency", c) || c;
     },
     tips(d) {
       const visa = `${t("visa.label")}: ${N.visa(d.visa)}`;
@@ -282,7 +283,7 @@
 
     const q = ui.query.trim().toLowerCase();
     if (q) {
-      const hits = DESTINATIONS.filter((d) => [d.name, d.country, regionOf(d.region).name, CITY_EN[d.id]?.[0] || "", REGION_EN[d.region], (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode(d.countryId)); } catch { return ""; } })()]
+      const hits = DESTINATIONS.filter((d) => [d.name, d.country, regionOf(d.region).name, CITY_EN[d.id]?.[0] || "", REGION_EN[d.region], N.region(regionOf(d.region)), N.country(d.countryId), (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode(d.countryId)); } catch { return ""; } })()]
         .join(" ").toLowerCase().includes(q));
       $("#regionTabs").hidden = $("#countryGrid").hidden = true;
       $("#cityHead").textContent = t("pick.results", { q: ui.query.trim(), n: hits.length });
@@ -504,8 +505,9 @@
     const add = (type, html) => out.push(`<li class="${type}">${html}</li>`);
 
     const wd = s.getDay();
-    if ([5, 6, 0].includes(wd)) add("warn", t("sg.weekend", { d: dow(s), p: short(plan.flightPrice * 0.12 * plan.people) }));
-    else if ([2, 3, 4].includes(wd)) add("good", t("sg.weekday", { d: dow(s) }));
+    const dayName = EN() ? new Intl.DateTimeFormat(LOC(), { weekday: "long" }).format(s) : dow(s);
+    if ([5, 6, 0].includes(wd)) add("warn", t("sg.weekend", { d: dayName, p: short(plan.flightPrice * 0.12 * plan.people) }));
+    else if ([2, 3, 4].includes(wd)) add("good", t("sg.weekday", { d: dayName }));
 
     if (d.peakMonths.includes(m)) add("warn", t("sg.peak", { m: monthName(m), c: city, alt: monthList(d.bestMonths.filter((x) => !d.peakMonths.includes(x)).slice(0, 3)) }));
     else if (d.bestMonths.includes(m)) add("good", t("sg.best", { m: monthName(m), c: city }));
@@ -653,6 +655,9 @@
   // ---------- 설정 (테마 · 언어 · 표시 통화) ----------
   function renderSettings() {
     const s = I18N.settings;
+    document.querySelectorAll(".lang-select").forEach((el) => {
+      if (el.options.length !== I18N.LANGS.length) el.innerHTML = I18N.LANGS.map((l) => `<option value="${l.code}">${l.name}</option>`).join("");
+    });
     document.querySelectorAll("[data-theme-set]").forEach((b) => b.classList.toggle("on", b.dataset.themeSet === s.theme));
     document.querySelectorAll(".lang-select").forEach((el) => { el.value = s.lang; });
     $("#curSelect").innerHTML = DISPLAY_CODES.map((c) => `<option value="${c}" ${c === s.cur ? "selected" : ""}>${c} · ${esc(N.cur(c))}</option>`).join("");
@@ -766,8 +771,9 @@
     modal.addEventListener("click", (e) => { if (e.target === modal) open(false); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) open(false); });
     document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => { I18N.setTheme(b.dataset.themeSet); renderSettings(); }));
-    document.querySelectorAll(".lang-select").forEach((el) => el.addEventListener("change", () => {
-      I18N.setLang(el.value); renderAll(); window.TMAuth?.relabel?.();
+    document.querySelectorAll(".lang-select").forEach((el) => el.addEventListener("change", async () => {
+      if (!(await I18N.setLang(el.value))) { toast("Language file could not be loaded."); renderSettings(); return; }
+      renderAll(); window.TMAuth?.relabel?.();
     }));
     $("#curSelect").addEventListener("change", (e) => { I18N.setCur(e.target.value); renderAll(); toast(t("toast.cur", { c: e.target.value })); });
   }
@@ -782,7 +788,9 @@
     toast,
   };
   bind();
-  renderAll();
-  loadRates().then(() => { renderAll(); if (Rates.live) toast(t("toast.rates")); });
-  setInterval(() => loadRates().then(renderAll), 60 * 60 * 1000);
+  I18N.ready.then(() => {
+    renderAll();
+    loadRates().then(() => { renderAll(); if (Rates.live) toast(t("toast.rates")); });
+    setInterval(() => loadRates().then(renderAll), 60 * 60 * 1000);
+  });
 })();

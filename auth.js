@@ -119,7 +119,7 @@
     msg(""); busy(true);
     try {
       const provider = kind === "google" ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.OAuthProvider("apple.com");
-      if (kind === "apple") { provider.addScope("email"); provider.addScope("name"); provider.setCustomParameters({ locale: I18N.lang === "en" ? "en_US" : "ko_KR" }); }
+      if (kind === "apple") { provider.addScope("email"); provider.addScope("name"); provider.setCustomParameters({ locale: I18N.locale().replace("-", "_") }); }
       else provider.setCustomParameters({ prompt: "select_account" });
       // 사파리 등은 '페이지 이동(redirect)' 방식 로그인 결과를 막아서 첫 화면으로 돌아와요.
       // 그래서 팝업 방식만 써요. 팝업이 막히면 안내 문구를 보여 줘요.
@@ -206,7 +206,8 @@
   async function deleteAccount(ev) {
     ev.preventDefault();
     const word = $("#delConfirm").value.trim();
-    if (word !== t("del.word") && word !== I18N.dict.ko["del.word"] && word.toUpperCase() !== I18N.dict.en["del.word"]) { delMsg(t("del.needWord")); return; }
+    const okWords = [t("del.word"), I18N.dict.ko["del.word"], I18N.dict.en["del.word"]].map((w) => w.toUpperCase());
+    if (!okWords.includes(word.toUpperCase())) { delMsg(t("del.needWord")); return; }
     if (providerOf(user) === "password" && !$("#delPw").value) { delMsg(t("del.needPw")); return; }
     const btns = $("#deleteForm").querySelectorAll("button, input");
     btns.forEach((b) => (b.disabled = true));
@@ -267,7 +268,7 @@
   function renderGis(el) {
     const w = Math.min(Math.max(el.parentElement.clientWidth || 320, 220), 400);
     el.innerHTML = "";
-    google.accounts.id.renderButton(el, { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: w, locale: I18N.lang === "en" ? "en" : "ko", logo_alignment: "center" });
+    google.accounts.id.renderButton(el, { theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: w, locale: I18N.lang, logo_alignment: "center" });
   }
   async function onGoogleCredential(resp) {
     const cred = firebase.auth.GoogleAuthProvider.credential(resp.credential);
@@ -355,5 +356,5 @@
     });
   }
 
-  init();
+  I18N.ready.then(init);
 })();
