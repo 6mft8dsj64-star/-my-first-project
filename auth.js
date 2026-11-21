@@ -57,6 +57,10 @@
     "auth/too-many-requests": "시도가 너무 많아요. 잠시 후 다시 시도해 주세요.",
     "auth/popup-closed-by-user": "로그인 창이 닫혔어요. 다시 시도해 주세요.",
     "auth/cancelled-popup-request": "",
+    "auth/popup-blocked": "로그인 창(팝업)이 차단됐어요. 아이폰은 설정 → Safari → ‘팝업 차단’을 끄고 다시 눌러 주세요.",
+    "auth/operation-not-supported-in-this-environment": "이 브라우저에서는 로그인 창을 열 수 없어요. 사파리나 크롬 앱에서 열어 주세요.",
+    "auth/web-storage-unsupported": "브라우저 저장소가 막혀 있어요. 개인정보 보호(비공개) 모드를 끄고 다시 시도해 주세요.",
+    "auth/internal-error": "로그인 중 문제가 생겼어요. 사파리 설정에서 ‘크로스 사이트 추적 방지’를 잠시 끄고 다시 시도해 주세요.",
     "auth/network-request-failed": "인터넷 연결을 확인해 주세요.",
     "auth/operation-not-allowed": "이 로그인 방식이 아직 켜져 있지 않아요. (Firebase 콘솔에서 사용 설정 필요)",
     "auth/unauthorized-domain": "이 주소에서는 로그인이 허용되지 않았어요. (Firebase 승인된 도메인에 추가 필요)",
@@ -123,11 +127,9 @@
       const provider = kind === "google" ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.OAuthProvider("apple.com");
       if (kind === "apple") { provider.addScope("email"); provider.addScope("name"); provider.setCustomParameters({ locale: "ko_KR" }); }
       else provider.setCustomParameters({ prompt: "select_account" });
-      try { await auth.signInWithPopup(provider); }
-      catch (e) {
-        if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") await auth.signInWithRedirect(provider);
-        else throw e;
-      }
+      // 사파리 등은 '페이지 이동(redirect)' 방식 로그인 결과를 막아서 첫 화면으로 돌아와요.
+      // 그래서 팝업 방식만 써요. 팝업이 막히면 안내 문구를 보여 줘요.
+      await auth.signInWithPopup(provider);
     } catch (e) { msg(errText(e)); }
     busy(false);
   }
