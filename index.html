@@ -8,8 +8,8 @@
   <meta name="description" content="여행지 정보, 실시간 환율, 총 경비 계산과 절약 팁까지 한 번에 짜는 여행 플래너" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20261122b" />
-  <script src="i18n.js?v=20261122b"></script>
+  <link rel="stylesheet" href="style.css?v=20261122c" />
+  <script src="i18n.js?v=20261122c"></script>
 </head>
 <body>
   <!-- 로그인 화면 -->
@@ -97,7 +97,6 @@
       <div class="set-row">
         <div class="set-label" data-i18n="set.theme">화면 테마</div>
         <div class="seg seg-full">
-          <button type="button" data-theme-set="system">🖥️ <span data-i18n="theme.system">시스템</span></button>
           <button type="button" data-theme-set="light">☀️ <span data-i18n="theme.light">라이트</span></button>
           <button type="button" data-theme-set="dark">🌙 <span data-i18n="theme.dark">다크</span></button>
         </div>
@@ -109,6 +108,40 @@
         <select id="curSelect"></select>
         <span class="hint" data-i18n="set.curNote"></span>
       </label>
+      <div class="set-row" id="setAccountRow" hidden>
+        <div class="set-label" data-i18n="acc.title">내 계정</div>
+        <div class="hint" id="setWho"></div>
+        <button class="btn ghost block" type="button" id="settingsLogout" data-i18n="auth.logout">로그아웃</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 문의하기 -->
+  <div class="modal" id="contactModal" hidden>
+    <div class="modal-card contact-card" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+      <button class="modal-x" type="button" data-close data-i18n-aria="close" aria-label="닫기">✕</button>
+      <form id="contactForm" novalidate>
+        <h3 id="contactTitle" data-i18n="contact.title">문의하기</h3>
+        <p class="hint" data-i18n="contact.lead"></p>
+        <label><span data-i18n="contact.cat">종류</span><select id="ctCat"></select></label>
+        <label><span data-i18n="contact.msg">내용</span>
+          <textarea id="ctMsg" rows="6" maxlength="2000" dir="auto" spellcheck="true" data-i18n-ph="contact.msgPh"></textarea>
+          <span class="hint ct-count" id="ctCount"></span></label>
+        <label><span data-i18n="contact.email">답변받을 이메일 (선택)</span><input id="ctEmail" type="email" autocomplete="email" placeholder="you@example.com" /></label>
+        <p class="auth-fine" data-i18n-html="contact.privacy"></p>
+        <p class="auth-msg" id="ctStatus" role="status"></p>
+        <button class="btn block" type="submit" id="ctSend" data-i18n="contact.send">보내기</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 관리자 문의함 -->
+  <div class="modal" id="inboxModal" hidden>
+    <div class="modal-card inbox-card" role="dialog" aria-modal="true" aria-labelledby="inboxTitle">
+      <button class="modal-x" type="button" data-close data-i18n-aria="close" aria-label="닫기">✕</button>
+      <h3 id="inboxTitle" data-i18n="inbox.title">문의함</h3>
+      <p class="hint" id="inboxCount"></p>
+      <div id="inboxList" class="inbox-list"></div>
     </div>
   </div>
 
@@ -121,8 +154,10 @@
         <a href="#rates" data-i18n="nav.rates">환율</a>
         <a href="#saved" data-i18n="nav.saved">저장한 계획</a>
         <a href="#tips" data-i18n="nav.tips">여행 팁</a>
+        <a href="#" data-open-contact data-i18n="nav.contact">문의</a>
       </nav>
       <div class="user-area"><span class="sync" id="syncState"></span>
+        <button class="btn ghost sm" id="inboxBtn" type="button" hidden data-i18n="inbox.btn">📥 문의함</button>
         <button class="icon-btn" id="settingsBtn" type="button" aria-label="설정 / Settings">⚙️</button>
         <span id="userArea"></span></div>
     </div>
@@ -253,17 +288,18 @@
   <footer class="footer">
     <div class="wrap">
       <span data-i18n-html="footer.note"></span>
-      <div class="footer-links"><a href="privacy.html"><b data-i18n="footer.privacy">개인정보처리방침</b></a></div>
+      <div class="footer-links"><a href="#" data-open-contact data-i18n="footer.contact">문의하기</a> · <a href="privacy.html"><b data-i18n="footer.privacy">개인정보처리방침</b></a></div>
     </div>
   </footer>
 
   <div class="toast" id="toast"></div>
 
-  <script src="data.js?v=20261122b"></script>
-  <script src="world.js?v=20261122b"></script>
-  <script src="i18n-data.js?v=20261122b"></script>
-  <script src="app.js?v=20261122b"></script>
-  <script src="firebase-config.js?v=20261122b"></script>
-  <script src="auth.js?v=20261122b"></script>
+  <script src="data.js?v=20261122c"></script>
+  <script src="world.js?v=20261122c"></script>
+  <script src="i18n-data.js?v=20261122c"></script>
+  <script src="app.js?v=20261122c"></script>
+  <script src="firebase-config.js?v=20261122c"></script>
+  <script src="auth.js?v=20261122c"></script>
+  <script src="contact.js?v=20261122c"></script>
 </body>
 </html>

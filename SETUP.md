@@ -49,12 +49,33 @@ users (컬렉션)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 회원 데이터: 본인만 읽고 쓰기
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // 문의: 누구나 보낼 수 있고(형식 검사), 읽기·처리·삭제는 관리자만
+    match /inquiries/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['category','message','email','uid','name','lang','page','createdAt','status'])
+        && request.resource.data.category in ['bug','inconv','idea','data','other']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
+        && request.resource.data.email is string && request.resource.data.email.size() <= 200
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && request.resource.data.lang is string && request.resource.data.lang.size() <= 10
+        && request.resource.data.page is string && request.resource.data.page.size() <= 50
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.uid == null
+            || (request.auth != null && request.resource.data.uid == request.auth.uid));
+      allow read, update, delete: if request.auth != null && request.auth.uid == '관리자_UID';
     }
   }
 }
 ```
+
+**`관리자_UID` 바꾸는 법**: 사이트에 관리자로 쓸 계정으로 한 번 로그인한 뒤,
+Firebase 콘솔 **Authentication → 사용자** 목록에서 그 계정의 **사용자 UID**를 복사해 `관리자_UID` 자리에 넣고 게시하세요.
+(관리자 정보는 이 규칙에만 들어가고 사이트 코드에는 들어가지 않아요. 문의는 Firestore 콘솔의 `inquiries`에서도 볼 수 있어요.)
 
 ### 4. 웹 앱 등록하고 설정값 넣기
 1. **프로젝트 설정(톱니바퀴) → 일반 → 내 앱 → 웹(</>)** 으로 앱 추가

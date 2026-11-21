@@ -368,3 +368,24 @@ button.user-chip:hover { background: var(--surface-2); }
 .stat .v, .hint, .route-row, .city-head small { overflow-wrap: anywhere; }
 @media (max-width: 920px) { .planner { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) { .info-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 문의하기 · 문의함 */
+.contact-card, .inbox-card { max-width: 520px; }
+.contact-card form { display: flex; flex-direction: column; gap: 10px; }
+.contact-card textarea { width: 100%; resize: vertical; min-height: 120px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; padding: 10px; font: inherit; color: inherit; }
+.contact-card textarea:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+.ct-count { align-self: flex-end; margin: 0; font-size: .75rem; }
+.inbox-card { max-height: 86vh; display: flex; flex-direction: column; }
+.inbox-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 2px; }
+.inq { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.inq.done { opacity: .65; }
+.inq-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .88rem; }
+.inq-head .badge { margin: 0; }
+.inq-when { margin-left: auto; color: var(--muted); font-size: .78rem; }
+.inq-msg { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .92rem; }
+.inq-meta { color: var(--muted); font-size: .78rem; overflow-wrap: anywhere; }
+.inq-mail { user-select: all; color: var(--text); }
+.inq-actions { display: flex; gap: 6px; }
+.danger-text { color: var(--up) !important; }
+#inboxBtn { white-space: nowrap; }
+.footer-links a { color: inherit; }

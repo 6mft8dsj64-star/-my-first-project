@@ -34,6 +34,9 @@
 
   function renderUser() {
     const area = $("#userArea");
+    // 설정 창 안의 내 계정 · 로그아웃
+    $("#setAccountRow").hidden = !user;
+    if (user) $("#setWho").textContent = `${user.displayName || t("auth.traveler")}${user.email ? ` · ${user.email}` : ""}`;
     if (user) {
       const name = user.displayName || (user.email || "").split("@")[0] || t("auth.traveler");
       const avatar = user.photoURL
@@ -65,7 +68,11 @@
     window.TM_USER_PREFIX = prefix;
     let doc = {};
     try {
-      const snap = await db.collection("users").doc(u.uid).get();
+      // 데이터베이스 첫 연결이 느릴 때 화면이 멈춰 보이지 않게 최대 8초만 기다려요
+      const snap = await Promise.race([
+        db.collection("users").doc(u.uid).get(),
+        new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 8000)),
+      ]);
       doc = snap.exists ? snap.data() : {};
     } catch (e) { console.warn("클라우드 데이터를 불러오지 못했어요", e); }
 
@@ -98,6 +105,8 @@
   }
 
   window.TMAuth = {
+    get db() { return db; },
+    get user() { return user; },
     // 언어를 바꾸면 로그인 화면·헤더 문구를 다시 그려요
     relabel() {
       setMode(mode, true);
@@ -124,6 +133,7 @@
       // 사파리 등은 '페이지 이동(redirect)' 방식 로그인 결과를 막아서 첫 화면으로 돌아와요.
       // 그래서 팝업 방식만 써요. 팝업이 막히면 안내 문구를 보여 줘요.
       await auth.signInWithPopup(provider);
+      showAuth(false);
     } catch (e) { msg(errText(e)); }
     busy(false);
   }
@@ -284,7 +294,7 @@
       return;
     }
     msg(""); busy(true);
-    try { await auth.signInWithCredential(cred); }
+    try { await auth.signInWithCredential(cred); showAuth(false); }
     catch (e) { msg(errText(e)); }
     busy(false);
   }
@@ -298,6 +308,7 @@
     $("#toLogin").onclick = () => setMode("login");
     $("#toReset").onclick = () => setMode("reset");
     bindAccountUI();
+    $("#settingsLogout").onclick = () => { $("#settingsModal").hidden = true; document.body.classList.remove("locked"); auth?.signOut(); };
     $("#guestBtn").onclick = () => {
       try { sessionStorage.setItem("tm_guest", "1"); } catch { /* 무시 */ }
       showAuth(false);
@@ -335,6 +346,7 @@
     auth = firebase.auth();
     auth.languageCode = I18N.lang;
     db = firebase.firestore();
+    try { db.settings({ experimentalAutoDetectLongPolling: true }); } catch { /* 이미 설정됨 */ }
     auth.getRedirectResult().catch((e) => msg(errText(e)));
 
     let hadUser = false;
@@ -343,11 +355,16 @@
       user = u;
       renderUser();
       if (u) {
-        await pullUserData(u);
+        // 로그인되면 바로 화면을 넘기고, 내 데이터는 뒤에서 불러와 다시 그려요
         showAuth(false);
+        $("#syncState").textContent = t("sync.loading");
+        await pullUserData(u);
+        if (user !== u) return; // 그 사이 로그아웃한 경우
         window.TripApp?.reload();
         $("#syncState").textContent = t("sync.saved");
+        window.TMContact?.onUser?.(u);
       } else {
+        window.TMContact?.onUser?.(null);
         if (hadUser) { showAuth(true); setMode("login"); }
         window.TM_USER_PREFIX = "";
         $("#syncState").textContent = "";

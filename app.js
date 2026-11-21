@@ -773,7 +773,7 @@
     document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => { I18N.setTheme(b.dataset.themeSet); renderSettings(); }));
     document.querySelectorAll(".lang-select").forEach((el) => el.addEventListener("change", async () => {
       if (!(await I18N.setLang(el.value))) { toast("Language file could not be loaded."); renderSettings(); return; }
-      renderAll(); window.TMAuth?.relabel?.();
+      renderAll(); window.TMAuth?.relabel?.(); window.TMContact?.relabel?.();
     }));
     $("#curSelect").addEventListener("change", (e) => { I18N.setCur(e.target.value); renderAll(); toast(t("toast.cur", { c: e.target.value })); });
   }
@@ -786,6 +786,7 @@
       renderAll();
     },
     toast,
+    current: () => plan.destId,
   };
   bind();
   I18N.ready.then(() => {

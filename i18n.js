@@ -146,6 +146,44 @@
       "del.mismatch": "지금 로그인한 계정과 다른 계정을 골랐어요. 같은 계정으로 확인해 주세요.",
       "del.gMismatch": "지금 로그인한 계정과 다른 Google 계정을 골랐어요.", "del.gFail": "본인 확인에 실패했어요. ({c})",
       "del.generic": "탈퇴 중 문제가 생겼어요. ({c})",
+      "nav.contact": "문의",
+      "footer.contact": "문의하기",
+      "sync.loading": "불러오는 중…",
+      "contact.title": "문의하기",
+      "contact.lead": "불편한 점, 오류, 바라는 기능을 알려 주세요. 보낸 내용은 운영자만 볼 수 있어요.",
+      "contact.cat": "종류",
+      "contact.cat.bug": "오류 신고",
+      "contact.cat.inconv": "불편한 점",
+      "contact.cat.idea": "기능 제안",
+      "contact.cat.data": "정보 수정 (가격·노선·비자 등)",
+      "contact.cat.other": "기타",
+      "contact.msg": "내용",
+      "contact.msgPh": "어떤 화면에서 무엇을 하다가 어떤 문제가 있었는지 적어 주세요.",
+      "contact.email": "답변받을 이메일 (선택)",
+      "contact.privacy": "답변을 위해서만 이메일을 받고, 문의 처리 후 1년 안에 삭제해요. <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">개인정보처리방침</a>",
+      "contact.send": "보내기",
+      "contact.sending": "보내는 중…",
+      "contact.sent": "문의를 보냈어요. 고마워요! 확인 후 답변드릴게요.",
+      "contact.needMsg": "내용을 입력해 주세요.",
+      "contact.tooLong": "내용은 2,000자까지 쓸 수 있어요.",
+      "contact.wait": "방금 보냈어요. 30초 뒤에 다시 보내 주세요.",
+      "contact.fail": "보내지 못했어요. 잠시 후 다시 시도해 주세요. ({c})",
+      "contact.offline": "문의 기능이 아직 연결되지 않았어요.",
+      "inbox.btn": "📥 문의함",
+      "inbox.title": "문의함",
+      "inbox.empty": "아직 받은 문의가 없어요.",
+      "inbox.new": "새 문의",
+      "inbox.done": "처리 완료",
+      "inbox.markDone": "처리 완료로 표시",
+      "inbox.reopen": "다시 열기",
+      "inbox.del": "삭제",
+      "inbox.confirmDel": "한 번 더 누르면 삭제",
+      "inbox.from": "보낸 사람",
+      "inbox.guest": "비로그인 사용자",
+      "inbox.noEmail": "이메일 없음",
+      "inbox.count": "전체 {n}건 · 새 문의 {m}건",
+      "inbox.fail": "문의함을 불러오지 못했어요. ({c})",
+      "inbox.translate": "번역 보기",
     },
 
     en: {
@@ -277,6 +315,44 @@
       "del.mismatch": "You chose a different account from the one signed in. Use the same account.",
       "del.gMismatch": "You chose a different Google account from the one signed in.", "del.gFail": "Couldn't confirm your identity. ({c})",
       "del.generic": "Something went wrong while deleting. ({c})",
+      "nav.contact": "Contact",
+      "footer.contact": "Contact us",
+      "sync.loading": "Loading…",
+      "contact.title": "Contact us",
+      "contact.lead": "Tell us about anything inconvenient, errors, or features you'd like. Only the site owner can read your message.",
+      "contact.cat": "Type",
+      "contact.cat.bug": "Report a bug",
+      "contact.cat.inconv": "Something inconvenient",
+      "contact.cat.idea": "Feature idea",
+      "contact.cat.data": "Fix information (prices, routes, visas…)",
+      "contact.cat.other": "Other",
+      "contact.msg": "Message",
+      "contact.msgPh": "Tell us which screen you were on, what you were doing and what went wrong.",
+      "contact.email": "Email for a reply (optional)",
+      "contact.privacy": "We use your email only to reply and delete it within a year after handling your message. <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a> (Korean)",
+      "contact.send": "Send",
+      "contact.sending": "Sending…",
+      "contact.sent": "Message sent. Thank you! We'll get back to you after reviewing it.",
+      "contact.needMsg": "Please write a message.",
+      "contact.tooLong": "Messages can be up to 2,000 characters.",
+      "contact.wait": "You just sent one. Please wait 30 seconds before sending again.",
+      "contact.fail": "Couldn't send. Please try again shortly. ({c})",
+      "contact.offline": "Contact isn't connected yet.",
+      "inbox.btn": "📥 Inbox",
+      "inbox.title": "Inbox",
+      "inbox.empty": "No messages yet.",
+      "inbox.new": "New",
+      "inbox.done": "Done",
+      "inbox.markDone": "Mark as done",
+      "inbox.reopen": "Reopen",
+      "inbox.del": "Delete",
+      "inbox.confirmDel": "Tap again to delete",
+      "inbox.from": "From",
+      "inbox.guest": "Guest",
+      "inbox.noEmail": "No email",
+      "inbox.count": "{n} total · {m} new",
+      "inbox.fail": "Couldn't load the inbox. ({c})",
+      "inbox.translate": "Translate",
     },
   };
 
@@ -290,7 +366,7 @@
     { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
   ];
-  const VERSION = "20261122b";
+  const VERSION = "20261122c";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------
@@ -326,14 +402,14 @@
   }
   const saved = read();
   const settings = {
-    theme: ["system", "light", "dark"].includes(saved.theme) ? saved.theme : "system",
+    theme: saved.theme === "dark" ? "dark" : "light", // 라이트/다크 두 가지 (예전 "시스템" 설정은 라이트로)
     lang: isLang(saved.lang) ? saved.lang : guessLang(),
     cur: saved.cur || guessCur(),
   };
 
   function applyTheme() {
     const r = document.documentElement;
-    if (settings.theme === "system") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", settings.theme);
+    r.setAttribute("data-theme", settings.theme);
   }
   applyTheme();
   document.documentElement.lang = settings.lang;
