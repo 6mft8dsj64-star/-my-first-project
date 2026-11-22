@@ -500,7 +500,7 @@ const DESTINATIONS = (() => {
         ];
       const tierCost = [25000, 18000, 70000];
       out.push({
-        ...base, id, name, detailed: false,
+        ...base, id, name, detailed: false, ci, beach: !!beach,
         flight: { low: Math.round(avg * 0.7 / 10000) * 10000, avg, high: Math.round(avg * 1.6 / 10000) * 10000, hours },
         bestMonths: months(best), peakMonths: months(peak), hotels,
         daily: { food: L(40000), transport: L(10000), misc: L(20000) },

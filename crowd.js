@@ -125,16 +125,90 @@
     }
   }
 
-  // 탈퇴할 때 내가 공유한 가격도 지워요
+  // ---------- 여행자 하루 생활비 (spend 컬렉션) ----------
+  // 문서 ID = uid_도시 → 한 사람은 도시마다 금액 1개. 소비 스타일(절약·보통·여유)과 1인 하루 금액(원화)을 저장해요.
+  const SP_MIN = 3000, SP_MAX = 2000000;
+  const spKey = (c) => `sp:${c}`;
+  function wantSpend(countryId, onLoad) {
+    const k = spKey(countryId);
+    if (!countryId || readCache(k) || loading[k]) return;
+    loading[k] = (async () => {
+      const d = await waitDb();
+      if (!d) return;
+      try {
+        const snap = await Promise.race([
+          d.collection("spend").where("country", "==", countryId).limit(LIMIT).get(),
+          new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 8000)),
+        ]);
+        const docs = snap.docs.map((x) => { const v = x.data(); return { id: x.id, dest: v.dest, style: v.style, amount: Number(v.amount) }; })
+          .filter((v) => v.amount >= SP_MIN && v.amount <= SP_MAX);
+        writeCache(k, { at: Date.now(), docs });
+        onLoad?.(countryId);
+      } catch (e) {
+        console.warn("공유 생활비를 불러오지 못했어요", e);
+        writeCache(k, { at: Date.now() - TTL + 2 * 60 * 1000, docs: readCache(k)?.docs || [] });
+      }
+    })().finally(() => { delete loading[k]; });
+  }
+  // 가장 많은 사람이 입력한 금액대(최빈 구간). 평균이 아니라서 아주 큰 금액 몇 개에 흔들리지 않아요.
+  function modeRange(list, ref) {
+    let xs = list.map((x) => x.amount).filter((a) => !ref || (a >= ref / 5 && a <= ref * 5)).sort((a, b) => a - b);
+    if (xs.length >= 5) { const m = q(xs, 0.5); xs = xs.filter((a) => a >= m / 3 && a <= m * 3); }
+    if (!xs.length) return { n: 0 };
+    const med = q(xs, 0.5);
+    const step = [1000, 2000, 5000, 10000, 20000, 50000, 100000].filter((v) => v <= Math.max(1000, med * 0.25)).pop();
+    const cnt = {};
+    xs.forEach((a) => { const b = Math.floor(a / step); cnt[b] = (cnt[b] || 0) + 1; });
+    const best = Object.entries(cnt).sort((a, b) => b[1] - a[1] || Math.abs(a[0] * step - med) - Math.abs(b[0] * step - med))[0];
+    const lo = Number(best[0]) * step;
+    return { n: xs.length, lo, hi: lo + step, cnt: best[1], mid: lo + step / 2, med: Math.round(med / 1000) * 1000 };
+  }
+  function spendStats(dest, countryId, style, ref) {
+    const c = readCache(spKey(countryId));
+    if (!c) return null;
+    const all = c.docs.filter((x) => x.dest === dest);
+    const mine = modeRange(all.filter((x) => x.style === style), ref);
+    if (mine.n >= MIN_N) return { ...mine, scope: "style" };
+    return { ...modeRange(all, ref), scope: "all", styleN: mine.n };
+  }
+  let spPending = null, spTimer = null, spLast = 0;
+  function submitSpend(entry) {
+    const u = user(), d = db();
+    if (!u || !d || !sharing()) return Promise.resolve(false);
+    const amount = Math.round(Number(entry.amount) || 0);
+    if (amount < SP_MIN || amount > SP_MAX || !["save", "normal", "comfort"].includes(entry.style)) return Promise.resolve(false);
+    const go = async (en) => {
+      spLast = Date.now();
+      const id = `${u.uid}_${en.dest}`;
+      try {
+        await d.collection("spend").doc(id).set({ dest: en.dest, country: en.country, style: en.style, amount: en.amount, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const k = spKey(en.country), c = readCache(k);
+        if (c) writeCache(k, { at: c.at, docs: [...c.docs.filter((x) => x.id !== id), { id, dest: en.dest, style: en.style, amount: en.amount }] });
+        return true;
+      } catch (e) { console.warn("생활비 공유 실패", e); return false; }
+    };
+    const wait = 10000 - (Date.now() - spLast);
+    if (wait <= 0) return go({ ...entry, amount });
+    return new Promise((ok) => {
+      if (spPending) spPending.ok(false);
+      spPending = { entry: { ...entry, amount }, ok };
+      clearTimeout(spTimer);
+      spTimer = setTimeout(() => { const p = spPending; spPending = null; go(p.entry).then(p.ok); }, wait);
+    });
+  }
+
+  // 탈퇴할 때 내가 공유한 가격·생활비도 지워요
   async function deleteMine(uid) {
     const d = db();
     if (!d || !uid) return;
     const F = firebase.firestore.FieldPath.documentId();
-    const snap = await d.collection("fares").where(F, ">=", `${uid}_`).where(F, "<", `${uid}_`).limit(LIMIT).get();
-    await Promise.all(snap.docs.map((x) => x.ref.delete()));
+    for (const col of ["fares", "spend"]) {
+      const snap = await d.collection(col).where(F, ">=", `${uid}_`).where(F, "<", `${uid}_`).limit(LIMIT).get();
+      await Promise.all(snap.docs.map((x) => x.ref.delete()));
+    }
     Object.keys(mem).forEach((k) => delete mem[k]);
     try { Object.keys(sessionStorage).filter((k) => k.startsWith("tm_crowd:")).forEach((k) => sessionStorage.removeItem(k)); } catch { /* 무시 */ }
   }
 
-  window.TMCrowd = { want, stats, submit, sharing, setSharing, deleteMine, MIN_N, label: () => t("crowd.title") };
+  window.TMCrowd = { want, stats, submit, wantSpend, spendStats, submitSpend, sharing, setSharing, deleteMine, MIN_N, label: () => t("crowd.title") };
 })();

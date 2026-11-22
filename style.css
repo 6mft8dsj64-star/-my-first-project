@@ -461,3 +461,70 @@ label.check input:disabled + span { opacity: .8; }
 .flight-bar .pin.crowd { background: var(--primary); width: 3px; top: 14px; height: 16px; }
 .flight-bar .mark.tick.crowd.start { transform: none; }
 .flight-bar .mark.tick.crowd.end { transform: translateX(-100%); }
+
+/* 날짜 버튼 */
+.date-field { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); min-width: 0; }
+.date-btn { width: 100%; text-align: start; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 10px; padding: 10px 12px; cursor: pointer; font-size: .95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.date-btn::before { content: "📅 "; }
+@media (max-width: 400px) { .date-btn { font-size: .88rem; padding: 10px 8px; } }
+.date-btn:hover { border-color: var(--primary); }
+@media (max-width: 920px) { .row3 .date-field:nth-child(2) { grid-column: auto; } }
+
+/* 큰 달력 창 */
+.date-modal { z-index: 112; background: rgba(10, 14, 22, .62); }
+.date-card { max-width: 780px; width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; }
+.date-card h3 { margin: 0 40px 6px 0; font-size: 1.3rem; }
+[dir="rtl"] .date-card h3 { margin: 0 0 6px 40px; }
+.date-sel { margin: 0 0 10px; font-size: .9rem; color: var(--muted); }
+.date-sel b { color: var(--text); }
+.cal-nav { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.cal-nav .icon-btn { width: 40px; height: 40px; font-size: 1.3rem; }
+.cal-nav .icon-btn:disabled { opacity: .3; cursor: default; }
+.cal-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 22px; }
+.cal-mlabel { text-align: center; font-weight: 700; margin: -34px 0 12px; font-size: 1.02rem; pointer-events: none; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wk { text-align: center; font-size: .75rem; color: var(--muted); padding: 4px 0; }
+.cal-day { position: relative; aspect-ratio: 1 / 1; min-height: 40px; border: 1.5px solid transparent; border-radius: 10px; cursor: pointer; font-size: .98rem; font-weight: 600; color: var(--text); }
+.cal-day.k-peak { background: rgba(255, 122, 69, .2); }
+.cal-day.k-good { background: rgba(60, 207, 142, .18); }
+.cal-day.k-off { background: var(--surface-2); }
+.cal-day:hover:not(:disabled) { border-color: var(--primary); }
+.cal-day:disabled { opacity: .3; cursor: default; }
+.cal-day.today { text-decoration: underline; text-underline-offset: 3px; }
+.cal-day.holi::after { content: ""; position: absolute; top: 5px; inset-inline-end: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.cal-day.in-range { border-color: var(--primary); }
+.cal-day.sel-start, .cal-day.sel-end { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: .82rem; color: var(--muted); }
+.cal-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend .lg { width: 16px; height: 16px; border-radius: 4px; display: inline-block; flex-shrink: 0; }
+.cal-legend .lg.k-peak { background: rgba(255, 122, 69, .45); }
+.cal-legend .lg.k-good { background: rgba(60, 207, 142, .45); }
+.cal-legend .lg.k-off { background: var(--surface-2); border: 1px solid var(--line); }
+@media (max-width: 480px) { .date-card { padding: 22px 14px 18px; } .cal-grid { gap: 3px; } .cal-day { min-height: 38px; font-size: .92rem; } }
+
+/* 숙소 안내 */
+.stay-note { display: flex; flex-direction: column; gap: 4px; margin: 12px 0 0; font-size: .82rem; color: var(--muted); line-height: 1.55; }
+.stay-note a { color: var(--primary); }
+
+/* 일자별 일정: 시간 · 할 일 · 금액 */
+.sched-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.sched-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 140px 32px; gap: 6px; align-items: center; }
+.sched-time { display: flex; align-items: center; gap: 3px; }
+.sched-time input { width: 118px; padding: 7px 4px; font-size: .85rem; }
+.sched-time span { color: var(--muted); }
+.sched-text { min-width: 0; padding: 8px 10px; }
+.sched-amt { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.sched-amt input { min-width: 0; width: 100%; padding: 8px; }
+.sched-amt span { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.sched-del { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1rem; width: 32px; height: 32px; border-radius: 8px; }
+.sched-del:hover { background: var(--surface-2); color: var(--up); }
+.day-sum { margin-inline-start: auto; font-size: .82rem; color: var(--primary); }
+@media (max-width: 640px) {
+  .sched-row { grid-template-columns: minmax(0, 1fr) 32px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; }
+  .sched-time { grid-column: 1; }
+  .sched-del { grid-column: 2; grid-row: 1; }
+  .sched-text, .sched-amt { grid-column: 1 / -1; }
+  .sched-time input { flex: 1; width: auto; }
+}
+#styleSeg { margin: 6px 0 2px; }
+[dir="rtl"] .cal-nav .icon-btn { transform: scaleX(-1); }

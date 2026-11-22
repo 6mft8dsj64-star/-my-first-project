@@ -43,53 +43,102 @@ users (컬렉션)
 ### 3. 데이터베이스(Firestore) 만들기
 1. **빌드 → Firestore Database → 데이터베이스 만들기**
 2. 위치: `asia-northeast3 (서울)` 추천 → **프로덕션 모드**로 시작
-3. **규칙** 탭에 아래를 붙여 넣고 게시 (본인 데이터만 읽고 쓸 수 있게 하는 핵심 보안 설정):
+3. **규칙** 탭에 아래를 붙여 넣고 게시 (휴대폰에서는 사이트의 `firestore-rules.txt`를 열어 전체 복사하면 잘리지 않아요) (본인 데이터만 읽고 쓸 수 있게 하는 핵심 보안 설정):
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 회원 데이터: 본인만 읽고 쓰기
+
+    function admin() {
+      return request.auth != null
+        && request.auth.uid == '관리자_UID';
+    }
+
+    function okInq(d) {
+      return request.auth != null
+        && d.uid == request.auth.uid
+        && d.keys().hasOnly(['category','message','email',
+             'uid','name','lang','page','createdAt','status'])
+        && d.category in ['bug','inconv','idea','data','other']
+        && d.message is string
+        && d.message.size() > 0 && d.message.size() <= 2000
+        && d.email is string && d.email.size() <= 200
+        && d.name is string && d.name.size() <= 100
+        && d.lang is string && d.lang.size() <= 10
+        && d.page is string && d.page.size() <= 50
+        && d.status == 'new'
+        && d.createdAt == request.time;
+    }
+
+    function okFare(id, d) {
+      return request.auth != null
+        && id == request.auth.uid + '_' + d.dest + '_' + d.dep
+        && d.keys().hasOnly(['dest','country','dep',
+             'price','month','updatedAt'])
+        && d.keys().hasAll(['dest','country','dep',
+             'price','month','updatedAt'])
+        && d.dest is string && d.dest.size() > 0
+        && d.dest.size() <= 40
+        && d.country is string && d.country.size() > 0
+        && d.country.size() <= 10
+        && d.dep is string && d.dep.size() == 3
+        && d.price is int
+        && d.price >= 30000 && d.price <= 20000000
+        && d.month is int
+        && d.month >= 1 && d.month <= 12
+        && d.updatedAt == request.time;
+    }
+
+    function okSpend(id, d) {
+      return request.auth != null
+        && id == request.auth.uid + '_' + d.dest
+        && d.keys().hasOnly(['dest','country','style',
+             'amount','updatedAt'])
+        && d.keys().hasAll(['dest','country','style',
+             'amount','updatedAt'])
+        && d.dest is string && d.dest.size() > 0
+        && d.dest.size() <= 40
+        && d.country is string && d.country.size() > 0
+        && d.country.size() <= 10
+        && d.style in ['save','normal','comfort']
+        && d.amount is int
+        && d.amount >= 3000 && d.amount <= 2000000
+        && d.updatedAt == request.time;
+    }
+
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if request.auth != null
+        && request.auth.uid == uid;
     }
-    // 문의: 로그인한 사람만 보낼 수 있고(형식 검사), 읽기·처리·삭제는 관리자만
+
     match /inquiries/{id} {
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['category','message','email','uid','name','lang','page','createdAt','status'])
-        && request.resource.data.category in ['bug','inconv','idea','data','other']
-        && request.resource.data.message is string
-        && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
-        && request.resource.data.email is string && request.resource.data.email.size() <= 200
-        && request.resource.data.name is string && request.resource.data.name.size() <= 100
-        && request.resource.data.lang is string && request.resource.data.lang.size() <= 10
-        && request.resource.data.page is string && request.resource.data.page.size() <= 50
-        && request.resource.data.status == 'new'
-        && request.resource.data.createdAt == request.time;
-      allow read, update, delete: if request.auth != null && request.auth.uid == '관리자_UID';
+      allow create: if okInq(request.resource.data);
+      allow read, update, delete: if admin();
     }
-    // 여행자 공유 시세: 누구나 읽기(한 번에 300개까지), 로그인한 사람은 노선마다 본인 가격 1개만 쓰기
+
     match /fares/{id} {
       allow get: if true;
       allow list: if request.query.limit <= 300;
-      allow create: if validFare(id);
-      allow update: if validFare(id) && request.time > resource.data.updatedAt + duration.value(10, 's');
-      allow delete: if request.auth != null
-        && (id.matches(request.auth.uid + '_.*') || request.auth.uid == '관리자_UID');
+      allow create: if okFare(id, request.resource.data);
+      allow update: if okFare(id, request.resource.data)
+        && request.time > resource.data.updatedAt
+           + duration.value(10, 's');
+      allow delete: if admin()
+        || (request.auth != null
+            && id.matches(request.auth.uid + '_.*'));
     }
-    function validFare(id) {
-      let d = request.resource.data;
-      return request.auth != null
-        && id == request.auth.uid + '_' + d.dest + '_' + d.dep
-        && d.keys().hasOnly(['dest','country','dep','price','month','updatedAt'])
-        && d.keys().hasAll(['dest','country','dep','price','month','updatedAt'])
-        && d.dest is string && d.dest.size() > 0 && d.dest.size() <= 40
-        && d.country is string && d.country.size() > 0 && d.country.size() <= 10
-        && d.dep is string && d.dep.size() == 3
-        && d.price is int && d.price >= 30000 && d.price <= 20000000
-        && d.month is int && d.month >= 1 && d.month <= 12
-        && d.updatedAt == request.time;
+
+    match /spend/{id} {
+      allow get: if true;
+      allow list: if request.query.limit <= 300;
+      allow create: if okSpend(id, request.resource.data);
+      allow update: if okSpend(id, request.resource.data)
+        && request.time > resource.data.updatedAt
+           + duration.value(10, 's');
+      allow delete: if admin()
+        || (request.auth != null
+            && id.matches(request.auth.uid + '_.*'));
     }
   }
 }
@@ -140,6 +189,12 @@ window.FIREBASE_CONFIG = {
 - 읽기 비용: 나라를 처음 열 때 한 번(최대 300개) 읽고 30분 동안 그 탭에 저장해 둬요. 무료 한도(하루 5만 회)를 넘으면 그날은 공유 시세만 안 보이고 나머지는 정상 동작해요.
 - 잘못된 값 지우기: Firestore 콘솔 → `fares`에서 문서를 삭제하면 돼요(관리자 UID는 규칙에서 삭제 가능).
 - 회원 탈퇴하면 그 사람이 공유한 가격도 함께 지워져요.
+
+### 9. 여행자 생활비 공유 (spend)
+- 로그인한 사용자가 **내 하루 생활비(1인)**를 입력하면(공유 체크 시) `spend/{uid}_{도시}` 문서에 저장돼요. 한 사람은 도시마다 1개.
+- 저장 내용: 도시, 나라, 여행 스타일(절약·보통·여유), 1인 하루 금액(원화, 3천~200만 원), 저장 시각. 이름·이메일은 저장하지 않아요.
+- 화면에는 **평균이 아니라 가장 많은 사람이 입력한 금액대(최빈 구간)**를 보여 줘요. 추정치의 1/5 미만·5배 초과 값과 중간값의 1/3 미만·3배 초과 값은 빼요.
+- 같은 스타일 기록이 3개 미만이면 모든 스타일을 합쳐서 보여 줘요.
 
 ## 비용 (무료 요금제 기준, 정책은 바뀔 수 있음)
 - 이메일·구글·애플 로그인: 일반적인 규모에서는 무료

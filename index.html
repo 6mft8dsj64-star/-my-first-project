@@ -8,8 +8,8 @@
   <meta name="description" content="여행지 정보, 실시간 환율, 총 경비 계산과 절약 팁까지 한 번에 짜는 여행 플래너" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20261125a" />
-  <script src="i18n.js?v=20261125a"></script>
+  <link rel="stylesheet" href="style.css?v=20261126a" />
+  <script src="i18n.js?v=20261126a"></script>
 </head>
 <body>
   <!-- 로그인 화면 -->
@@ -78,6 +78,26 @@
         </div>
       </form>
       <p class="auth-fine" data-i18n-html="auth.fine2"></p>
+    </div>
+  </div>
+
+  <!-- 날짜 선택 (큰 달력) -->
+  <div class="modal date-modal" id="dateModal" hidden>
+    <div class="modal-card date-card" role="dialog" aria-modal="true" aria-labelledby="dateTitle">
+      <button class="modal-x" type="button" data-close data-i18n-aria="close" aria-label="닫기">✕</button>
+      <h3 id="dateTitle"></h3>
+      <p class="date-sel" id="dateSel"></p>
+      <div class="cal-nav">
+        <button type="button" class="icon-btn" id="calPrev" data-i18n-aria="cal.prev" aria-label="이전 달">‹</button>
+        <button type="button" class="icon-btn" id="calNext" data-i18n-aria="cal.next" aria-label="다음 달">›</button>
+      </div>
+      <div class="cal-wrap" id="calWrap"></div>
+      <div class="cal-legend">
+        <span><i class="lg k-peak"></i><span data-i18n="date.legendPeak"></span></span>
+        <span><i class="lg k-good"></i><span data-i18n="date.legendGood"></span></span>
+        <span><i class="lg k-off"></i><span data-i18n="date.legendOff"></span></span>
+      </div>
+      <p class="hint" data-i18n="date.flightNote"></p>
     </div>
   </div>
 
@@ -234,8 +254,8 @@
             <label class="dep-label"><span data-i18n="dep.label">출발 공항</span><select id="dep"></select></label>
             <p class="hint warn" id="depHint"></p>
             <div class="row3">
-              <label><span data-i18n="date.start">출발일</span><input type="date" id="startDate" /></label>
-              <label><span data-i18n="date.end">귀국일</span><input type="date" id="endDate" /></label>
+              <div class="date-field"><span data-i18n="date.start">출발일</span><button type="button" class="date-btn" id="startBtn"></button></div>
+              <div class="date-field"><span data-i18n="date.end">귀국일</span><button type="button" class="date-btn" id="endBtn"></button></div>
               <label><span data-i18n="people">인원</span><input type="number" id="people" min="1" max="20" value="2" /></label>
             </div>
             <p class="hint" id="dateHint"></p>
@@ -258,21 +278,30 @@
             <h3 data-i18n-html="card.hotel"></h3>
             <div id="hotelList" class="hotel-list"></div>
             <label class="inline"><span data-i18n="rooms">객실 수</span> <input type="number" id="rooms" min="1" max="10" value="1" /></label>
+            <p class="stay-note" id="stayNote"></p>
           </div>
 
           <div class="card">
             <h3 data-i18n="card.days"></h3>
+            <p class="hint" style="margin:0 0 10px" data-i18n="sched.hint"></p>
             <div id="dayList" class="day-list"></div>
           </div>
 
           <div class="card">
             <h3 data-i18n-html="card.daily"></h3>
-            <div class="seg" id="levelSeg">
-              <button data-level="0.7" data-i18n="level.save">절약</button>
-              <button data-level="1" class="on" data-i18n="level.normal">보통</button>
-              <button data-level="1.5" data-i18n="level.comfort">여유</button>
+            <div class="set-label" data-i18n="style.label">나의 여행 스타일</div>
+            <div class="seg" id="styleSeg">
+              <button type="button" data-style="save" data-i18n="level.save">절약</button>
+              <button type="button" data-style="normal" class="on" data-i18n="level.normal">보통</button>
+              <button type="button" data-style="comfort" data-i18n="level.comfort">여유</button>
             </div>
-            <p class="hint" id="dailyHint"></p>
+            <p class="hint" data-i18n="style.d"></p>
+            <label class="inline"><span data-i18n="daily.mine">내 하루 생활비 (1인)</span>
+              <input type="number" id="dailyMine" min="0" inputmode="decimal" /> <span id="dailyUnit">원</span>
+            </label>
+            <p class="hint" id="dailyRef"></p>
+            <p class="crowd-stat" id="dailyCrowd"></p>
+            <label class="check crowd-share"><input type="checkbox" id="spendShare" checked /> <span id="spendShareText"></span></label>
           </div>
 
           <div class="card">
@@ -329,13 +358,15 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="data.js?v=20261125a"></script>
-  <script src="world.js?v=20261125a"></script>
-  <script src="i18n-data.js?v=20261125a"></script>
-  <script src="app.js?v=20261125a"></script>
-  <script src="firebase-config.js?v=20261125a"></script>
-  <script src="auth.js?v=20261125a"></script>
-  <script src="contact.js?v=20261125a"></script>
-    <script src="crowd.js?v=20261125a"></script>
+  <script src="data.js?v=20261126a"></script>
+  <script src="world.js?v=20261126a"></script>
+    <script src="stay.js?v=20261126a"></script>
+    <script src="season.js?v=20261126a"></script>
+  <script src="i18n-data.js?v=20261126a"></script>
+  <script src="app.js?v=20261126a"></script>
+  <script src="firebase-config.js?v=20261126a"></script>
+  <script src="auth.js?v=20261126a"></script>
+  <script src="contact.js?v=20261126a"></script>
+    <script src="crowd.js?v=20261126a"></script>
 </body>
 </html>

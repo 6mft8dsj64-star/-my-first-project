@@ -266,7 +266,30 @@
 
   // ---------- 계획 상태 ----------
   const destById = (id) => DESTINATIONS.find((d) => d.id === id) || DESTINATIONS[0];
-  const topHotelIdx = (d) => d.hotels.reduce((b, h, i, a) => (h.share > a[b].share ? i : b), 0);
+  // 숙소 성급: 0=1~2성급, 1=3성급, 2=4성급, 3=5성급 (stay.js·season.js)
+  const tierOf = (p) => Math.min(3, Math.max(0, p.stayTier ?? 1));
+  // 묵는 밤마다 비수기·평소·성수기 요금을 따로 적용해요
+  function stayLocal(d, tier, p) {
+    const base = d.stay.tiers[tier].local, s = parse(p.start), n = nightsOf(p);
+    let sum = 0; const cnt = { off: 0, good: 0, peak: 0 };
+    for (let i = 0; i < n; i++) { const k = SEASON.kind(d, addDays(s, i)); cnt[k]++; sum += base * SEASON.MUL[k]; }
+    return { sum, cnt, avg: n ? sum / n : base };
+  }
+  const dailyRefLocal = (d) => d.daily.food + d.daily.transport; // 1인 1일 식비 + 교통 (현지 통화)
+  const blankRow = () => ({ from: "", to: "", text: "", amt: 0 });
+  // 예전 형식 계획(관광지 번호 일정 · 소비 수준 배수 · 숙소 번호)을 새 형식으로 바꿔요
+  function migrate(p) {
+    if (!p) return p;
+    const d = destById(p.destId) || DESTINATIONS[0];
+    if (p.stayTier == null) p.stayTier = 1;
+    if (!["save", "normal", "comfort"].includes(p.style)) p.style = p.level < 1 ? "save" : p.level > 1 ? "comfort" : "normal";
+    delete p.level; delete p.hotelIdx;
+    if (p.dailyMine === undefined || (p.dailyMine != null && !(p.dailyMine >= 0))) p.dailyMine = null;
+    p.days = (p.days || []).map((list) => (Array.isArray(list) ? list : []).map((x) => (typeof x === "number"
+      ? { from: "", to: "", text: d.attractions[x] ? N.attr(d, x) : "", amt: Math.round((d.attractions[x]?.cost || 0) * (FALLBACK_RATES[d.currency] || 1)) }
+      : { from: String(x.from || "").slice(0, 5), to: String(x.to || "").slice(0, 5), text: String(x.text || "").slice(0, 200), amt: Math.max(0, Number(x.amt) || 0) })));
+    return p;
+  }
 
   function routeInfo(d, depCode) {
     const dep = DEP(depCode);
@@ -283,13 +306,14 @@
     const start = addDays(TODAY, 45);
     return {
       destId: d.id, dep, start: iso(start), end: iso(addDays(start, 3)), people: 2, rooms: 1,
-      flightPrice: routeInfo(d, dep).price, hotelIdx: topHotelIdx(d), level: 1, days: [], extras: [],
+      flightPrice: routeInfo(d, dep).price, stayTier: 1, style: "normal", dailyMine: null, days: [], extras: [],
     };
   }
 
   function loadPlan() {
     let p = store.get("tm_plan", null) || defaultPlan();
     if (!DESTINATIONS.some((d) => d.id === p.destId)) p = defaultPlan();
+    migrate(p);
     if (!DEPARTURES.some((x) => x.code === p.dep)) p.dep = "ICN";
     if (parse(p.start) < TODAY) { const f = defaultPlan(p.destId, p.dep); p.start = f.start; p.end = f.end; }
     return p;
@@ -303,21 +327,24 @@
     const n = nightsOf(plan) + 1;
     while (plan.days.length < n) plan.days.push([]);
     plan.days.length = n;
+    plan.days.forEach((l) => { if (!l.length) l.push(blankRow()); }); // 날마다 적을 칸 1줄은 항상 보여요
   }
 
   // ---------- 비용 계산 (원화 기준으로 계산하고, 표시할 때 표시 통화로 바꿔요) ----------
-  function costItems(p, rateSet = Rates.today) {
+  function costItems(p0, rateSet = Rates.today) {
+    const p = migrate(JSON.parse(JSON.stringify(p0)));
     const d = destById(p.destId);
     const nights = nightsOf(p), days = nights + 1;
     const cur = d.currency;
-    const hotel = d.hotels[p.hotelIdx] || d.hotels[0];
-    const attrLocal = p.days.flat().reduce((s, i) => s + (d.attractions[i]?.cost || 0), 0) * p.people;
-    const dailyLocal = (d.daily.food + d.daily.transport + d.daily.misc) * p.level * days * p.people;
+    const st = stayLocal(d, tierOf(p), p);
+    const rows = p.days.flat().filter((e) => e.amt > 0);
     const items = [
       { key: "flight", krw: p.flightPrice * p.people, note: () => `${money(p.flightPrice)} × ${t("unit.people", { n: p.people })}` },
-      { key: "hotel", localAmt: hotel.price * nights * p.rooms, cur, note: () => t("note.hotel", { n: nights, r: p.rooms }) },
-      { key: "attr", localAmt: attrLocal, cur, note: () => t("note.attr", { n: p.days.flat().length, p: p.people }) },
-      { key: "daily", localAmt: dailyLocal, cur, note: () => t("note.daily", { n: days, p: p.people }) },
+      { key: "hotel", localAmt: st.sum * p.rooms, cur, note: () => t("note.hotel", { n: nights, r: p.rooms }) },
+      { key: "attr", krw: rows.reduce((s, e) => s + e.amt, 0) * p.people, note: () => t("note.sched", { n: rows.length, p: p.people }) },
+      p.dailyMine != null
+        ? { key: "daily", krw: p.dailyMine * days * p.people, note: () => t("note.dailyMine", { n: days, p: p.people }) }
+        : { key: "daily", localAmt: dailyRefLocal(d) * days * p.people, cur, note: () => t("note.daily", { n: days, p: p.people }) },
     ];
     if (p.extras.length) items.push({ key: "extra", krw: p.extras.reduce((s, e) => s + e.amount * rate(e.cur, rateSet), 0), note: () => t("note.extra", { n: p.extras.length }) });
     items.forEach((it) => { if (it.localAmt != null) it.krw = it.localAmt * rate(it.cur, rateSet); });
@@ -342,7 +369,7 @@
   let crowdTimer = null;
   function onCrowd() { // 불러오기가 끝나면 시세가 보이는 곳만 다시 그려요 (입력칸은 건드리지 않음)
     clearTimeout(crowdTimer);
-    crowdTimer = setTimeout(() => { renderDestinations(); renderDestInfo(); renderFlight(); renderSuggestions(costItems(plan)); }, 50);
+    crowdTimer = setTimeout(() => { renderDestinations(); renderDestInfo(); renderFlight(); renderDaily(); renderSuggestions(costItems(plan)); }, 50);
   }
   function cityButton(d, m, withCountry) {
     const r = routeInfo(d, plan.dep);
@@ -394,8 +421,7 @@
 
   function renderDestInfo() {
     const d = destById(plan.destId);
-    const top = d.hotels[topHotelIdx(d)];
-    const dayLocal = d.daily.food + d.daily.transport + d.daily.misc;
+    const dayLocal = dailyRefLocal(d);
     const rl = rateLabel(d.currency);
     const cs = crowd(d);
     $("#plannerTitle").textContent = `${d.flag} ${N.city(d)}`;
@@ -407,22 +433,22 @@
       <div class="info-stats">
         <div class="stat"><div class="k">${t("info.fare")}</div><div class="v">${short(d.flight.low)}~${short(d.flight.high)}</div></div>
         ${cs && !cs.few ? `<div class="stat crowd"><div class="k">👥 ${t("crowd.title")}</div><div class="v">${short(cs.med)} <small>(${t("crowd.people", { n: cs.n })})</small></div></div>` : ""}
-        <div class="stat"><div class="k">${t("info.topHotel")}</div><div class="v">${esc(N.type(top.type))} · ${top.share}%</div></div>
+        <div class="stat"><div class="k">${t("info.stay3")}</div><div class="v">${t("approx")} ${short(d.stay.tiers[1].local * rate(d.currency))}</div></div>
         <div class="stat"><div class="k">${t("info.daily")}</div><div class="v">${t("approx")} ${short(dayLocal * rate(d.currency))}</div></div>
         <div class="stat"><div class="k">${t("info.rate")}</div><div class="v">${rl.head} = ${rl.value}</div></div>
       </div>
       <div class="months">${Array.from({ length: 12 }, (_, i) => i + 1).map((mm) =>
         `<span class="${d.bestMonths.includes(mm) ? "good" : d.peakMonths.includes(mm) ? "peak" : ""}">${monthName(mm)}</span>`).join("")}</div>
-      <p class="hint">${t("info.legend")}</p>`;
+      <p class="hint">${t("info.legend")}${d.stay.cm && d.stay.em ? `<br />🏨 ${t("stay.months", { c: monthName(d.stay.cm), e: monthName(d.stay.em) })}` : ""}</p>`;
   }
 
   // ---------- 렌더: 폼 ----------
   function renderForm() {
     const d = destById(plan.destId);
-    $("#startDate").value = plan.start;
-    $("#endDate").value = plan.end;
-    $("#startDate").min = iso(TODAY);
-    $("#endDate").min = plan.start;
+    const dShort = (d) => new Intl.DateTimeFormat(LOC(), { year: "2-digit", month: "numeric", day: "numeric", weekday: "short" }).format(d);
+    $("#startBtn").textContent = dShort(parse(plan.start));
+    $("#endBtn").textContent = dShort(parse(plan.end));
+    $("#startBtn").title = dateFull(parse(plan.start)); $("#endBtn").title = dateFull(parse(plan.end));
     $("#people").value = plan.people;
     const groups = [["intl", t("dep.intl")], ["dom", t("dep.dom")]];
     $("#dep").innerHTML = groups.map(([type, label]) => `<optgroup label="${label}">${DEPARTURES.filter((x) => x.type === type)
@@ -432,7 +458,6 @@
     $("#flightPrice").value = Math.round(plan.flightPrice / rate(disp()));
     $("#flightPrice").step = disp() === "KRW" ? 10000 : "any";
     $("#flightUnit").textContent = disp() === "KRW" && !EN() ? "원" : disp();
-    document.querySelectorAll("#levelSeg button").forEach((b) => b.classList.toggle("on", Number(b.dataset.level) === plan.level));
     const curs = [...new Set([disp(), d.currency, "KRW"])];
     $("#extraCur").innerHTML = curs.map((c) => `<option value="${c}">${c === "KRW" && !EN() ? "원" : c}</option>`).join("");
 
@@ -511,47 +536,77 @@
   }
 
   function renderHotels() {
-    const d = destById(plan.destId);
-    const top = topHotelIdx(d);
-    const order = d.hotels.map((h, i) => i).sort((a, b) => d.hotels[b].share - d.hotels[a].share);
-    $("#hotelList").innerHTML = order.map((i) => {
-      const h = d.hotels[i];
-      const [name, note] = N.hotel(d, i);
-      return `<label class="hotel ${i === plan.hotelIdx ? "on" : ""}">
-        <input type="radio" name="hotel" value="${i}" ${i === plan.hotelIdx ? "checked" : ""}/>
-        <div><div class="hn">${esc(name)}${i === top ? `<span class="top-pick">${t("hotel.top")}</span>` : ""}</div>
-          <div class="hm">${esc(N.type(h.type))} · ★${h.rating} · ${esc(note)}</div>
-          <div class="share" title="${h.share}%"><i style="width:${h.share * 2}%"></i></div>
-          <div class="hm">${t("hotel.share", { n: h.share })}</div></div>
-        <div class="hp">${short(h.price * rate(d.currency))}<small>${local(h.price, d.currency)} / ${t("hotel.night")}</small></div>
+    const d = destById(plan.destId), r = rate(d.currency), tier = tierOf(plan);
+    $("#hotelList").innerHTML = d.stay.tiers.map((x, i) => {
+      const b = x.local * r, st = stayLocal(d, i, plan);
+      return `<label class="hotel ${i === tier ? "on" : ""}">
+        <input type="radio" name="hotel" value="${i}" ${i === tier ? "checked" : ""}/>
+        <div><div class="hn">${t(`stay.${x.k}`)}</div>
+          <div class="hm">${t("stay.seasons", { o: short(b * SEASON.MUL.off), a: short(b), p: short(b * SEASON.MUL.peak) })}</div></div>
+        <div class="hp">${short(st.avg * r)}<small>${t("stay.thisTrip")}</small></div>
       </label>`;
     }).join("");
+    const st = stayLocal(d, tier, plan), n = nightsOf(plan);
+    const srcName = d.stay.src === "city" ? N.city(d) : N.country(d.countryId);
+    $("#stayNote").innerHTML = [
+      n ? `🗓️ ${t("stay.nights", { n, p: st.cnt.peak, g: st.cnt.good, o: st.cnt.off })}` : "",
+      t("stay.note"),
+      `${t(`stay.src.${d.stay.src}`, { c: esc(srcName) })}${d.stay.url ? ` · <a href="${d.stay.url}" target="_blank" rel="noopener">${t("stay.srcLink")}</a>` : ""}`,
+      tier === 0 ? t("stay.t12note") : "",
+      d.stay.fix ? t("stay.fix") : "",
+    ].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
   }
 
+  const unitLabel = () => (disp() === "KRW" && !EN() ? "원" : disp());
+  function daySum(list) { return list.reduce((a, e) => a + (e.amt || 0), 0); }
   function renderDays() {
     const d = destById(plan.destId);
     const s = parse(plan.start);
+    const ex = d.attractions.length ? N.attr(d, 0) : "";
     $("#dayList").innerHTML = plan.days.map((list, di) => {
       const date = addDays(s, di);
       const tag = di === 0 ? t("day.depart") : di === plan.days.length - 1 ? t("day.return") : "";
-      const chips = list.map((ai, ci) => {
-        const a = d.attractions[ai];
-        return `<span class="chip">${esc(N.attr(d, ai))} · ${a.cost ? local(a.cost, d.currency) : t("free")}
-          <button data-day="${di}" data-chip="${ci}" aria-label="${t("remove")}">×</button></span>`;
-      }).join("");
-      const options = d.attractions.map((a, i) => `<option value="${i}">${esc(N.attr(d, i))} (${a.cost ? short(a.cost * rate(d.currency)) : t("free")})</option>`).join("");
-      return `<div class="day">
-        <div class="day-head">${t("day.n", { n: di + 1 })} <span>${dayLabel(date)} ${tag}</span></div>
-        <div class="chips">${chips || `<span class="hint" style="margin:0">${t("day.empty")}</span>`}</div>
-        <div class="day-add"><select data-day="${di}" aria-label="${t("day.add")}"><option value="">${t("day.add")}</option>${options}</select></div>
+      const rows = list.map((e, ri) => `<div class="sched-row" data-day="${di}" data-row="${ri}">
+          <div class="sched-time"><input type="time" data-f="from" value="${esc(e.from)}" aria-label="${t("sched.from")}" /><span>~</span><input type="time" data-f="to" value="${esc(e.to)}" aria-label="${t("sched.to")}" /></div>
+          <input type="text" class="sched-text" data-f="text" value="${esc(e.text)}" maxlength="200" dir="auto" placeholder="${esc(t("sched.ph", { ex }))}" aria-label="${t("sched.what")}" />
+          <div class="sched-amt"><input type="number" data-f="amt" min="0" step="any" inputmode="decimal" value="${e.amt ? Math.round(e.amt / rate(disp())) : ""}" placeholder="${t("sched.amt")}" aria-label="${t("sched.amt")}" /><span>${unitLabel()}</span></div>
+          <button type="button" class="sched-del" data-del-row aria-label="${t("remove")}">✕</button>
+        </div>`).join("");
+      const sum = daySum(list);
+      return `<div class="day" data-day-box="${di}">
+        <div class="day-head">${t("day.n", { n: di + 1 })} <span>${dayLabel(date)} ${tag}</span><b class="day-sum" data-sum="${di}">${sum ? t("sched.daySum", { p: short(sum) }) : ""}</b></div>
+        <div class="sched-list">${rows}</div>
+        <button type="button" class="chip-btn" data-add-row="${di}">${t("sched.add")}</button>
       </div>`;
     }).join("");
   }
 
   function renderDaily() {
-    const d = destById(plan.destId);
-    const x = d.daily, l = plan.level, r = rate(d.currency);
-    $("#dailyHint").textContent = t("daily.hint", { f: short(x.food * l * r), t: short(x.transport * l * r), m: short(x.misc * l * r) });
+    const d = destById(plan.destId), r = rate(d.currency);
+    document.querySelectorAll("#styleSeg button").forEach((b) => b.classList.toggle("on", b.dataset.style === plan.style));
+    const refKrw = dailyRefLocal(d) * r;
+    const inp = $("#dailyMine");
+    if (document.activeElement !== inp) inp.value = plan.dailyMine != null ? Math.round(plan.dailyMine / rate(disp())) : "";
+    inp.placeholder = String(Math.round(refKrw / rate(disp())));
+    inp.step = disp() === "KRW" ? 1000 : "any";
+    $("#dailyUnit").textContent = unitLabel();
+    $("#dailyRef").innerHTML = t("daily.ref", { f: short(d.daily.food * r), t: short(d.daily.transport * r), s: short(refKrw) })
+      + (plan.dailyMine == null ? ` ${t("daily.usingRef")}` : ` <button type="button" class="link" id="dailyReset">${t("daily.reset")}</button>`);
+    const C = window.TMCrowd;
+    C?.wantSpend(d.countryId, onCrowd);
+    const st = C?.spendStats(d.id, d.countryId, plan.style, refKrw);
+    const box = $("#dailyCrowd");
+    if (!st || !st.n) box.innerHTML = t("daily.crowdNone");
+    else if (st.n < (C?.MIN_N || 3)) box.innerHTML = t("daily.crowdFew", { n: st.n });
+    else {
+      box.innerHTML = `${t(st.scope === "style" ? "daily.crowdStyle" : "daily.crowdAll", { s: t(`level.${plan.style === "comfort" ? "comfort" : plan.style}`), n: st.n, c: st.cnt, lo: short(st.lo), hi: short(st.hi) })}
+        <button type="button" class="chip-btn" id="useCrowdDaily" data-amt="${st.mid}">${t("daily.use", { p: short(st.mid) })}</button>
+        <span class="hint" style="display:block">${t("daily.crowdNote")}</span>`;
+    }
+    const logged = !!window.TMAuth?.user;
+    $("#spendShare").checked = C?.sharing() ?? true;
+    $("#spendShare").disabled = !logged;
+    $("#spendShareText").textContent = logged ? t("daily.share") : t("crowd.loginToShare");
   }
 
   function renderExtras() {
@@ -623,22 +678,27 @@
     const cs = crowd(d);
     if (cs && !cs.few && plan.flightPrice > cs.med * 1.15) add("warn", t("sg.crowd", { n: cs.n, p: short(cs.med), d: short(plan.flightPrice - cs.med) }));
 
-    const top = topHotelIdx(d);
-    const chosen = d.hotels[plan.hotelIdx];
-    if (plan.hotelIdx !== top) {
-      const tp = d.hotels[top];
-      const gap = (chosen.price - tp.price) * nightsOf(plan) * plan.rooms * rate(d.currency);
-      add("", t("sg.hotel", { h: esc(N.hotel(d, top)[0]), n: tp.share }) + (gap > 0 ? " " + t("sg.hotelSave", { p: short(gap) }) : ""));
-    }
+    const stc = stayLocal(d, tierOf(plan), plan).cnt;
+    if (stc.peak) add("warn", t("sg.stayPeak", { n: stc.peak }));
+    else if (nightsOf(plan) && stc.off === nightsOf(plan)) add("good", t("sg.stayOff"));
     if (plan.rooms * 3 < plan.people) add("warn", t("sg.rooms", { p: plan.people, r: plan.rooms }));
 
-    const used = new Set(plan.days.flat());
-    const unused = d.attractions.map((_, i) => i).filter((i) => !used.has(i));
-    const emptyDays = plan.days.map((l, i) => (l.length === 0 && i > 0 && i < plan.days.length - 1 ? i + 1 : null)).filter(Boolean);
-    if (emptyDays.length && unused.length) add("", t("sg.empty", { d: emptyDays.join(", "), a: unused.slice(0, 2).map((i) => esc(N.attr(d, i))).join(", ") }));
-    const packed = plan.days.map((l, i) => (l.length > 3 ? i + 1 : null)).filter(Boolean);
+    const filled = (l) => l.filter((e) => e.text.trim() || e.amt > 0 || e.from);
+    const emptyDays = plan.days.map((l, i) => (!filled(l).length && i > 0 && i < plan.days.length - 1 ? i + 1 : null)).filter(Boolean);
+    if (emptyDays.length && d.attractions.length) add("", t("sg.empty", { d: emptyDays.join(", "), a: d.attractions.slice(0, 2).map((_, i) => esc(N.attr(d, i))).join(", ") }));
+    const packed = plan.days.map((l, i) => (filled(l).length > 3 ? i + 1 : null)).filter(Boolean);
     if (packed.length) add("warn", t("sg.packed", { d: packed.join(", ") }));
-    if (plan.days.length > 1 && (plan.days[0].length > 2 || plan.days[plan.days.length - 1].length > 2)) add("warn", t("sg.edge"));
+    if (plan.days.length > 1 && (filled(plan.days[0]).length > 2 || filled(plan.days[plan.days.length - 1]).length > 2)) add("warn", t("sg.edge"));
+    // 시간 확인: 끝 시간이 더 빠른 줄, 겹치는 줄
+    const bad = [], over = [];
+    plan.days.forEach((l, i) => {
+      const timed = l.filter((e) => e.from && e.to);
+      if (timed.some((e) => e.to <= e.from)) bad.push(i + 1);
+      const ok = timed.filter((e) => e.to > e.from).sort((a, b) => (a.from < b.from ? -1 : 1));
+      if (ok.some((e, k) => k > 0 && e.from < ok[k - 1].to)) over.push(i + 1);
+    });
+    if (bad.length) add("warn", t("sg.timeBad", { d: bad.join(", ") }));
+    if (over.length) add("warn", t("sg.overlap", { d: over.join(", ") }));
 
     if (d.currency !== disp()) {
       const pos = ratePosition(d.currency);
@@ -778,10 +838,85 @@
   }
   function update() { syncDays(); renderForm(); renderSummary(); renderDestinations(); save(); }
 
+  // ---------- 날짜 선택 (큰 달력 창) ----------
+  // 출발일 → 귀국일 순서로 고르면 창이 닫혀요. 날마다 성수기·추천·비수기 색으로 보여 줘요.
+  const dateFull = (d) => new Intl.DateTimeFormat(LOC(), { year: "numeric", month: "short", day: "numeric", weekday: "short" }).format(d);
+  const cal = { mode: "start", view: null, start: null, end: null };
+  const MAX_AHEAD = 730;
+  const calMonths = () => (window.innerWidth >= 760 ? 2 : 1);
+  function openCal(mode) {
+    cal.mode = mode; cal.start = plan.start; cal.end = plan.end;
+    const base = parse(mode === "end" ? plan.end : plan.start);
+    cal.view = new Date(base.getFullYear(), base.getMonth(), 1);
+    renderCal();
+    const m = $("#dateModal"); m.hidden = false; document.body.classList.add("locked");
+    m.querySelector(".cal-wrap button:not(:disabled)")?.focus({ preventScroll: true });
+  }
+  function closeCal() {
+    $("#dateModal").hidden = true;
+    document.body.classList.toggle("locked", !$("#authScreen").hidden || !$("#welcome").hidden);
+  }
+  function renderCal() {
+    const d = destById(plan.destId);
+    $("#dateTitle").textContent = t(cal.mode === "start" ? "date.pickStart" : "date.pickEnd");
+    const wk = [...Array(7)].map((_, i) => new Intl.DateTimeFormat(LOC(), { weekday: "narrow" }).format(new Date(2024, 0, 7 + i)));
+    const max = addDays(TODAY, MAX_AHEAD);
+    const first = new Date(cal.view.getFullYear(), cal.view.getMonth(), 1);
+    $("#calPrev").disabled = first <= new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+    $("#calNext").disabled = new Date(first.getFullYear(), first.getMonth() + calMonths(), 1) > max;
+    const months = [];
+    for (let k = 0; k < calMonths(); k++) {
+      const m0 = new Date(first.getFullYear(), first.getMonth() + k, 1);
+      const label = new Intl.DateTimeFormat(LOC(), { year: "numeric", month: "long" }).format(m0);
+      const pad0 = m0.getDay(), dim = new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate();
+      let cells = "";
+      for (let i = 0; i < pad0; i++) cells += `<span class="cal-blank"></span>`;
+      for (let day = 1; day <= dim; day++) {
+        const dt = new Date(m0.getFullYear(), m0.getMonth(), day), v = iso(dt);
+        const kind = SEASON.kind(d, dt), tg = SEASON.tags(d, dt);
+        const off = dt < TODAY || dt > max;
+        const sel = v === cal.start ? " sel-start" : v === cal.end ? " sel-end" : (cal.start && cal.end && v > cal.start && v < cal.end ? " in-range" : "");
+        const why = tg.map((x) => t(`tag.${x}`)).join(", ") || (kind === "peak" ? t("tag.month") : "");
+        cells += `<button type="button" class="cal-day k-${kind}${sel}${v === iso(TODAY) ? " today" : ""}${tg.length ? " holi" : ""}" data-date="${v}" ${off ? "disabled" : ""}
+          title="${esc(why)}" aria-label="${esc(dateFull(dt))}${why ? ` · ${esc(why)}` : ""}">${day}</button>`;
+      }
+      months.push(`<div class="cal-month"><div class="cal-mlabel">${esc(label)}</div>
+        <div class="cal-grid">${wk.map((w) => `<span class="cal-wk">${w}</span>`).join("")}${cells}</div></div>`);
+    }
+    $("#calWrap").innerHTML = months.join("");
+    // 선택한 기간 요약 (밤마다 성수기·평소·비수기)
+    const s = parse(cal.start), e = parse(cal.end), n = Math.max(0, diffDays(s, e));
+    const cnt = { peak: 0, good: 0, off: 0 }, reasons = new Set();
+    for (let i = 0; i <= n; i++) { const dt = addDays(s, i); cnt[SEASON.kind(d, dt)]++; SEASON.tags(d, dt).forEach((x) => reasons.add(t(`tag.${x}`))); }
+    $("#dateSel").innerHTML = `<b>${esc(dateFull(s))}</b> ~ <b>${esc(dateFull(e))}</b> · ${tripLen(n)}<br />${t("date.sum", { p: cnt.peak, g: cnt.good, o: cnt.off })}${reasons.size ? ` · ${t("date.why", { w: esc([...reasons].join(", ")) })}` : ""}`;
+  }
+  function pickDate(v) {
+    if (cal.mode === "start" || v < cal.start) {
+      const n = Math.max(1, nightsOf(plan) || 3);
+      cal.start = v;
+      if (cal.end <= v) cal.end = iso(addDays(parse(v), n));
+      cal.mode = "end"; renderCal();
+      return;
+    }
+    cal.end = v === cal.start ? iso(addDays(parse(v), 1)) : v;
+    plan.start = cal.start; plan.end = cal.end;
+    closeCal(); update(); renderTips(); renderDestInfo();
+  }
+  function bindCal() {
+    const m = $("#dateModal");
+    $("#calWrap").addEventListener("click", (e) => { const b = e.target.closest("[data-date]"); if (b && !b.disabled) pickDate(b.dataset.date); });
+    $("#calPrev").addEventListener("click", () => { cal.view = new Date(cal.view.getFullYear(), cal.view.getMonth() - 1, 1); renderCal(); });
+    $("#calNext").addEventListener("click", () => { cal.view = new Date(cal.view.getFullYear(), cal.view.getMonth() + 1, 1); renderCal(); });
+    m.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeCal));
+    m.addEventListener("click", (e) => { if (e.target === m) closeCal(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !m.hidden) closeCal(); });
+    window.addEventListener("resize", () => { if (!m.hidden) renderCal(); });
+  }
+
   // ---------- 이벤트 ----------
   function bind() {
     const pickCity = (id) => {
-      const keep = { start: plan.start, end: plan.end, people: plan.people, rooms: plan.rooms, level: plan.level };
+      const keep = { start: plan.start, end: plan.end, people: plan.people, rooms: plan.rooms, style: plan.style, stayTier: plan.stayTier };
       plan = { ...defaultPlan(id, plan.dep), ...keep };
       const d = destById(id); ui.region = d.region; ui.country = d.countryId;
       renderAll();
@@ -806,18 +941,10 @@
     });
     $("#toggleRates").addEventListener("click", () => { ui.allRates = !ui.allRates; renderRates(); });
 
-    $("#startDate").addEventListener("change", (e) => {
-      if (!e.target.value) return;
-      const n = nightsOf(plan);
-      plan.start = e.target.value;
-      if (parse(plan.end) <= parse(plan.start)) plan.end = iso(addDays(parse(plan.start), n || 3));
-      update(); renderTips();
-    });
-    $("#endDate").addEventListener("change", (e) => {
-      if (!e.target.value) return;
-      plan.end = parse(e.target.value) < parse(plan.start) ? plan.start : e.target.value;
-      update();
-    });
+    // 날짜: 큰 달력 창
+    $("#startBtn").addEventListener("click", () => openCal("start"));
+    $("#endBtn").addEventListener("click", () => openCal("end"));
+    bindCal();
     $("#people").addEventListener("change", (e) => {
       plan.people = Math.max(1, Math.min(20, Number(e.target.value) || 1));
       if (plan.rooms * 2 < plan.people) plan.rooms = Math.ceil(plan.people / 2);
@@ -834,19 +961,58 @@
         .then((ok) => { if (ok) { toast(t("crowd.shared")); onCrowd(); } });
       update();
     });
-    $("#crowdShare").addEventListener("change", (e) => { window.TMCrowd?.setSharing(e.target.checked); });
-    $("#hotelList").addEventListener("change", (e) => { if (e.target.name === "hotel") { plan.hotelIdx = Number(e.target.value); update(); } });
+    $("#crowdShare").addEventListener("change", (e) => { window.TMCrowd?.setSharing(e.target.checked); renderDaily(); });
+    $("#hotelList").addEventListener("change", (e) => { if (e.target.name === "hotel") { plan.stayTier = Number(e.target.value); update(); } });
+    // 일자별 일정: 칸을 고치면 계획과 합계만 바꿔요 (입력 중인 칸이 다시 그려지지 않게)
     $("#dayList").addEventListener("change", (e) => {
-      if (e.target.tagName !== "SELECT" || e.target.value === "") return;
-      plan.days[Number(e.target.dataset.day)].push(Number(e.target.value));
-      update();
+      const row = e.target.closest(".sched-row"), f = e.target.dataset.f;
+      if (!row || !f) return;
+      const di = Number(row.dataset.day), ri = Number(row.dataset.row), en = plan.days[di]?.[ri];
+      if (!en) return;
+      if (f === "amt") en.amt = Math.round(Math.max(0, Number(e.target.value) || 0) * rate(disp()));
+      else if (f === "text") en.text = e.target.value.slice(0, 200);
+      else en[f] = e.target.value;
+      const sumEl = document.querySelector(`[data-sum="${di}"]`);
+      if (sumEl) sumEl.textContent = daySum(plan.days[di]) ? t("sched.daySum", { p: short(daySum(plan.days[di])) }) : "";
+      save(); renderSummary();
     });
     $("#dayList").addEventListener("click", (e) => {
-      const b = e.target.closest("button[data-chip]"); if (!b) return;
-      plan.days[Number(b.dataset.day)].splice(Number(b.dataset.chip), 1);
-      update();
+      const add = e.target.closest("[data-add-row]"), del = e.target.closest("[data-del-row]");
+      if (add) {
+        const di = Number(add.dataset.addRow);
+        if (plan.days[di].length >= 20) return;
+        plan.days[di].push(blankRow()); save(); renderDays();
+        document.querySelector(`[data-day="${di}"][data-row="${plan.days[di].length - 1}"] .sched-text`)?.focus();
+      } else if (del) {
+        const row = del.closest(".sched-row"), di = Number(row.dataset.day);
+        plan.days[di].splice(Number(row.dataset.row), 1);
+        if (!plan.days[di].length) plan.days[di].push(blankRow());
+        save(); renderDays(); renderSummary();
+      }
     });
-    $("#levelSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; plan.level = Number(b.dataset.level); update(); });
+    // 현지 생활비: 스타일은 계산에 쓰지 않고, 같은 스타일 여행자 금액을 보여 줄 때 써요
+    $("#styleSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-style]"); if (!b) return;
+      plan.style = b.dataset.style; save(); renderDaily();
+      if (plan.dailyMine != null) shareSpend();
+    });
+    const shareSpend = () => {
+      const d = destById(plan.destId);
+      window.TMCrowd?.submitSpend({ dest: d.id, country: d.countryId, style: plan.style, amount: plan.dailyMine })
+        .then((ok) => { if (ok) { toast(t("daily.shared")); onCrowd(); } });
+    };
+    $("#dailyMine").addEventListener("change", (e) => {
+      const v = e.target.value.trim();
+      plan.dailyMine = v === "" ? null : Math.min(5000000, Math.round(Math.max(0, Number(v) || 0) * rate(disp())));
+      save(); renderSummary(); renderDaily();
+      if (plan.dailyMine != null) shareSpend();
+    });
+    $("#dailyCrowd").addEventListener("click", (e) => {
+      const b = e.target.closest("#useCrowdDaily"); if (!b) return;
+      plan.dailyMine = Number(b.dataset.amt); save(); renderSummary(); renderDaily(); // 다른 사람 금액은 다시 공유하지 않아요
+    });
+    $("#dailyRef").addEventListener("click", (e) => { if (e.target.closest("#dailyReset")) { plan.dailyMine = null; save(); renderSummary(); renderDaily(); } });
+    $("#spendShare").addEventListener("change", (e) => { window.TMCrowd?.setSharing(e.target.checked); renderFlight(); });
     $("#addExtra").addEventListener("click", () => {
       const name = $("#extraName").value.trim();
       const amount = Number($("#extraAmount").value);
@@ -862,7 +1028,7 @@
       if (load) {
         const s = list.find((x) => String(x.id) === load.dataset.load);
         if (!s) return;
-        plan = JSON.parse(JSON.stringify(s.plan));
+        plan = migrate(JSON.parse(JSON.stringify(s.plan)));
         if (!DEPARTURES.some((x) => x.code === plan.dep)) plan.dep = "ICN";
         ui.region = destById(plan.destId).region; ui.country = destById(plan.destId).countryId;
         renderAll(); document.getElementById("planner").scrollIntoView(); toast(t("toast.loaded"));
