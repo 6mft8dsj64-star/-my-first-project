@@ -366,7 +366,7 @@
     { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
   ];
-  const VERSION = "20261122d";
+  const VERSION = "20261122e";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------

@@ -376,13 +376,28 @@
     }
     try {
       await loadScript(SDK + "firebase-app-compat.js");
-      await Promise.all([loadScript(SDK + "firebase-auth-compat.js"), loadScript(SDK + "firebase-firestore-compat.js")]);
+      await Promise.all([loadScript(SDK + "firebase-auth-compat.js"), loadScript(SDK + "firebase-firestore-compat.js"),
+        window.RECAPTCHA_SITE_KEY ? loadScript(SDK + "firebase-app-check-compat.js").catch(() => null) : null]);
     } catch {
       showAuth(true);
       msg(t("auth.sdkFail"));
       return;
     }
     firebase.initializeApp(cfg);
+    // App Check: 우리 사이트에서 온 요청인지 reCAPTCHA로 확인해서, 봇이 데이터베이스에 직접 보내는 스팸을 막아요
+    // (다른 Firebase 기능보다 먼저 켜야 해요)
+    // reCAPTCHA를 불러올 수 없는 환경(광고 차단, 구글 접속 제한 지역 등)에서 켜면 로그인이 30초 멈추므로,
+    // 먼저 5초 안에 reCAPTCHA가 불러와지는지 확인하고 될 때만 켜요.
+    if (window.RECAPTCHA_SITE_KEY && firebase.appCheck) {
+      const ok = await Promise.race([
+        loadScript(`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(window.RECAPTCHA_SITE_KEY)}`).then(() => true).catch(() => false),
+        new Promise((r) => setTimeout(() => r(false), 5000)),
+      ]);
+      if (ok) {
+        try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(window.RECAPTCHA_SITE_KEY), true); }
+        catch (e) { console.warn("App Check를 켜지 못했어요", e); }
+      } else console.warn("reCAPTCHA를 불러오지 못해 App Check 없이 진행해요");
+    }
     auth = firebase.auth();
     auth.languageCode = I18N.lang;
     try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch { /* 기본값 사용 */ }
