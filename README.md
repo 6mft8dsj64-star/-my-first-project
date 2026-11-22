@@ -4,6 +4,7 @@
 
 - **사이트 주소**: https://6mft8dsj64-star.github.io/tripnote/
 - **배포**: `main` 브랜치에 올리면 GitHub Pages가 1~5분 뒤 자동 반영
+- **Firestore 규칙 원본**: [`firestore-rules.txt`](firestore-rules.txt) (휴대폰에서 열어 전체 복사용)
 - **설정 안내**: 로그인·데이터베이스·스팸 방지 설정은 [`SETUP.md`](SETUP.md), 남은 할 일은 [`TODO.md`](TODO.md)
 
 ## 기능
