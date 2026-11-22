@@ -45,34 +45,41 @@
   // ---------- 이름 번역 ----------
   const regionNames = {};
   const countryCode = (id) => ({ ca_: "CA", sa_: "SA" }[id] || id.toUpperCase());
+  // 한국어가 아니면: 그 언어 데이터(lang/data/*.js) → 없으면 영어 데이터 순으로 써요
+  const LD = () => (I18N.lang === "ko" || I18N.lang === "en" ? null : I18N.data[I18N.lang]);
   const N = {
-    city: (d) => (EN() ? CITY_EN[d.id]?.[0] ?? d.name : d.name),
+    city: (d) => (EN() ? LD()?.cities?.[d.id]?.[0] || CITY_EN[d.id]?.[0] || d.name : d.name),
     country(id) {
       const c = COUNTRIES.find((x) => x.id === id);
       if (!EN()) return c.name;
       const code = countryCode(id);
       if (I18N.lang === "en" && code === "HK") return "Hong Kong";
       if (I18N.lang === "en" && code === "MO") return "Macau";
-      return intlName("region", code) || c.name;
+      return LD()?.countries?.[id] || intlName("region", code) || c.name;
     },
     region: (r) => (EN() ? (I18N.dict[I18N.lang]?.[`region.${r.id}`] || REGION_EN[r.id]) : r.name),
-    attr: (d, i) => (EN() ? CITY_EN[d.id]?.[1].split("|")[i] ?? d.attractions[i].name : d.attractions[i].name),
-    visa: (v) => (EN() ? VISA_EN[v] ?? v : v),
+    attr: (d, i) => (EN() ? LD()?.cities?.[d.id]?.[1]?.[i] || CITY_EN[d.id]?.[1].split("|")[i] || d.attractions[i].name : d.attractions[i].name),
+    visa(v) {
+      if (!EN()) return v;
+      const k = Object.keys(VISA_EN).indexOf(v);
+      return (k >= 0 && LD()?.visa?.[k]) || VISA_EN[v] || v;
+    },
     hotel(d, i) {
       const h = d.hotels[i];
       if (!EN()) return [h.name, h.note];
-      if (d.detailed) return DETAILED_EN[d.id]?.hotels[i] ?? [h.name, h.note];
-      const tpl = HOTEL_TPL_EN[h.tpl];
-      return tpl ? [tpl[0].replace("{c}", N.city(d).split(" (")[0]), tpl[1]] : [h.name, h.note];
+      if (d.detailed) return LD()?.detailed?.[d.id]?.hotels?.[i] || DETAILED_EN[d.id]?.hotels[i] || [h.name, h.note];
+      const tpl = LD()?.hotelTpl?.[h.tpl] || HOTEL_TPL_EN[h.tpl];
+      return tpl ? [tpl[0].replace("{c}", N.city(d).split(" (")[0].split("（")[0]), tpl[1]] : [h.name, h.note];
     },
-    type: (x) => (EN() ? HOTEL_TYPE_EN[x] ?? x : x),
+    type: (x) => (EN() ? LD()?.hotelType?.[x] || HOTEL_TYPE_EN[x] || x : x),
     airline: (c) => (EN() ? AIRLINE_EN[c] : AIRLINES[c]?.[0]) || c,
-    dep: (x) => (EN() ? DEP_EN[x.code]?.[0] : x.name) || x.name,
-    depShort: (x) => (EN() ? DEP_EN[x.code]?.[0].replace(/ International Airport| Airport/, "") : x.name.replace("국제공항", "")),
-    depCity: (x) => (EN() ? DEP_EN[x.code]?.[1] : x.city) || x.city,
-    toICN: (x) => (EN() ? DEP_EN[x.code]?.[2] : x.toICN) || x.toICN,
-    depNote: (x) => (EN() ? DEP_EN[x.code]?.[3] : x.note) || "",
-    hours: (s) => (EN() ? hoursEN(s) : s),
+    depF: (x, k) => LD()?.dep?.[x.code]?.[k] || DEP_EN[x.code]?.[k],
+    dep: (x) => (EN() ? N.depF(x, 0) : x.name) || x.name,
+    depShort: (x) => (EN() ? (LD()?.depShort?.[x.code] || DEP_EN[x.code]?.[0].replace(/ International Airport| Airport/, "")) : x.name.replace("국제공항", "")),
+    depCity: (x) => (EN() ? N.depF(x, 1) : x.city) || x.city,
+    toICN: (x) => (EN() ? N.depF(x, 2) : x.toICN) || x.toICN,
+    depNote: (x) => (EN() ? N.depF(x, 3) : x.note) || "",
+    hours: (s) => (EN() ? hoursFmt(s, LD()?.hours ? { ...H_EN, ...LD().hours } : H_EN) : s),
     cur(c) {
       if (!EN()) return c === "KRW" ? "대한민국 원" : CURRENCY_INFO[c]?.name || c;
       return intlName("currency", c) || c;
@@ -80,7 +87,12 @@
     tips(d) {
       const visa = `${t("visa.label")}: ${N.visa(d.visa)}`;
       if (!EN()) return d.detailed ? [visa, ...d.tips, ...(REGION_TIPS[d.region] || [])] : d.tips;
-      return [visa, ...(d.detailed ? DETAILED_EN[d.id]?.tips || [] : []), ...(REGION_TIPS_EN[d.region] || [])];
+      const local = d.detailed ? (LD()?.detailed?.[d.id]?.tips || DETAILED_EN[d.id]?.tips || []) : [];
+      return [visa, ...local, ...(LD()?.regionTips?.[d.region] || REGION_TIPS_EN[d.region] || [])];
+    },
+    general: (i) => {
+      const x = LD()?.generalTips?.[i];
+      return x ? { title: x[0], body: x[1] } : EN() ? GENERAL_TIPS_EN[i] : GENERAL_TIPS[i];
     },
   };
 
@@ -315,7 +327,7 @@
 
     const q = ui.query.trim().toLowerCase();
     if (q) {
-      const hits = DESTINATIONS.filter((d) => [d.name, d.country, regionOf(d.region).name, CITY_EN[d.id]?.[0] || "", REGION_EN[d.region], N.region(regionOf(d.region)), N.country(d.countryId), (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode(d.countryId)); } catch { return ""; } })()]
+      const hits = DESTINATIONS.filter((d) => [d.name, d.country, regionOf(d.region).name, CITY_EN[d.id]?.[0] || "", N.city(d), REGION_EN[d.region], N.region(regionOf(d.region)), N.country(d.countryId), (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode(d.countryId)); } catch { return ""; } })()]
         .join(" ").toLowerCase().includes(q));
       $("#regionTabs").hidden = $("#countryGrid").hidden = true;
       $("#cityHead").textContent = t("pick.results", { q: ui.query.trim(), n: hits.length });
@@ -680,7 +692,7 @@
     $("#destTips").innerHTML = `<div class="card dest-tips"><h3>${d.flag} ${t("tips.local", { c: esc(N.city(d)) })}</h3>
       <ul>${N.tips(d).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
     $("#generalTips").innerHTML = GENERAL_TIPS.map((g, i) => {
-      const x = EN() ? GENERAL_TIPS_EN[i] : g;
+      const x = N.general(i);
       return `<div class="tip"><div class="ti">${g.icon}</div><div class="tt">${esc(x.title)}</div><div class="tb">${esc(x.body)}</div></div>`;
     }).join("");
   }

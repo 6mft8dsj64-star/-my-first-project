@@ -367,6 +367,7 @@
     { code: "it", name: "Italiano", locale: "it-IT" }, { code: "pt", name: "Português", locale: "pt-BR" },
     { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
+    { code: "ar", name: "العربية", locale: "ar" },
   ];
   const VERSION = "20261122g";
   const isLang = (c) => LANGS.some((l) => l.code === c);
@@ -416,20 +417,36 @@
   applyTheme();
   document.documentElement.lang = settings.lang;
 
-  // 언어 파일 불러오기
+  // 언어 파일 불러오기: 화면 문구(lang/코드.js) + 도시·명소 데이터(lang/data/코드.js)
   const loading = {};
+  const DATA = {};
+  const RTL = ["ar"];
+  const script = (src) => new Promise((ok) => {
+    const el = document.createElement("script");
+    el.src = `${src}?v=${VERSION}`;
+    el.onload = () => ok(true); el.onerror = () => ok(false);
+    document.head.appendChild(el);
+  });
   function loadLang(code) {
-    if (S[code]) return Promise.resolve(true);
+    if (code === "ko" || code === "en") return Promise.resolve(true);
     if (!loading[code]) {
-      loading[code] = new Promise((ok) => {
-        const el = document.createElement("script");
-        el.src = `lang/${code}.js?v=${VERSION}`;
-        el.onload = () => ok(!!S[code]);
-        el.onerror = () => ok(false);
-        document.head.appendChild(el);
-      });
+      loading[code] = Promise.all([S[code] ? true : script(`lang/${code}.js`), DATA[code] ? true : script(`lang/data/${code}.js`)])
+        .then(() => !!S[code]);
     }
     return loading[code];
+  }
+  // 데이터 파일 형식: cities는 줄마다 "도시id=이름;명소1|명소2|…"
+  function addData(code, d) {
+    const cities = {};
+    String(d.cities || "").split("\n").forEach((line) => {
+      const m = line.match(/^\s*([\w]+)=([^;]*);(.*)$/);
+      if (m) cities[m[1]] = [m[2].trim(), m[3].split("|").map((x) => x.trim())];
+    });
+    DATA[code] = { ...d, cities };
+  }
+  function setDir() {
+    const rtl = RTL.includes(settings.lang);
+    document.documentElement.dir = rtl ? "rtl" : "ltr";
   }
 
   function t(k, v = {}) {
@@ -444,16 +461,17 @@
     document.title = t("doc.title");
   }
 
-  const ready = loadLang(settings.lang).then((ok) => { if (!ok) settings.lang = "en"; document.documentElement.lang = settings.lang; });
+  const ready = loadLang(settings.lang).then((ok) => { if (!ok) settings.lang = "en"; document.documentElement.lang = settings.lang; setDir(); });
 
   window.I18N = {
-    t, apply, settings, dict: S, LANGS, ready,
+    t, apply, settings, dict: S, LANGS, ready, data: DATA, addData,
+    get rtl() { return RTL.includes(settings.lang); },
     get lang() { return settings.lang; },
     locale: () => LANGS.find((l) => l.code === settings.lang)?.locale || "en-US",
     add(code, dict) { S[code] = dict; },
     async setLang(l) {
       if (!isLang(l) || !(await loadLang(l))) return false;
-      settings.lang = l; document.documentElement.lang = l; write(settings); apply(); return true;
+      settings.lang = l; document.documentElement.lang = l; setDir(); write(settings); apply(); return true;
     },
     setTheme(th) { settings.theme = th; write(settings); applyTheme(); },
     setCur(c) { settings.cur = c; write(settings); },

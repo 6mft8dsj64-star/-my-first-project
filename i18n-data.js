@@ -317,27 +317,29 @@ const DEP_EN = {
   KUV: ["Gunsan Airport", "Gunsan/Jeonbuk", "Domestic flight via Jeju, or airport bus ~3 h"],
 };
 
-// 비행시간 문구 번역
-function hoursEN(s) {
-  const places = { "방콕/싱가포르": "Bangkok/Singapore", "방콕": "Bangkok", "카트만두": "Kathmandu", "콜롬보": "Colombo", "타슈켄트": "Tashkent",
-    "이스탄불": "Istanbul", "파리 등": "Paris etc.", "취리히": "Zurich", "아테네": "Athens", "헬싱키": "Helsinki", "밴쿠버": "Vancouver",
-    "미국": "the US", "리마": "Lima", "오클랜드": "Auckland", "간사이": "Kansai" };
-  let t = s
-    .replace("직항(시즌) 또는 경유", "Direct (seasonal) or connecting")
-    .replace("직항 또는 경유", "Direct or connecting")
-    .replace(/^경유 약 /, "Connecting, ~")
-    .replace(/^경유 /, "Connecting, ")
-    .replace(/^경유$/, "Connecting")
-    .replace(/(\S+(?: 등)?) 경유 약 /, "via $1, ~")
-    .replace(/(\S+(?: 등)?) 경유/, "via $1")
-    .replace(/\+ 이동 /, "+ transfer ")
-    .replace(/\+ 기차 /, "+ train ")
-    .replace(/\+ 고속열차/, "+ high-speed train")
-    .replace(/\(시즌\)/, "(seasonal)")
-    .replace(/\(부정기\)/, "(charter)")
-    .replace(/약 /g, "~")
-    .replace(/(\d+)시간/g, "$1 h")
-    .replace(/(\d+)분/g, "$1 min");
-  Object.entries(places).forEach(([k, v]) => { t = t.replace(k, v); });
-  return t;
+// 비행시간 문구 번역: 언어별 틀(H)에 맞춰 바꿔요. 다른 언어는 lang/data/*.js의 hours를 씁니다.
+const H_EN = {
+  dso: "Direct (seasonal) or connecting", do: "Direct or connecting", c: "Connecting", cT: "Connecting, {t}",
+  via: "via {p}", viaT: "via {p}, {t}", transfer: "+ transfer", train: "+ train", hsr: "+ high-speed train",
+  seasonal: "(seasonal)", charter: "(charter)", h: "{n} h", m: "{n} min", approx: "~",
+};
+const HOURS_PLACES = { "방콕/싱가포르": "Bangkok/Singapore", "방콕": "Bangkok", "카트만두": "Kathmandu", "콜롬보": "Colombo", "타슈켄트": "Tashkent",
+  "이스탄불": "Istanbul", "파리 등": "Paris etc.", "취리히": "Zurich", "아테네": "Athens", "헬싱키": "Helsinki", "밴쿠버": "Vancouver",
+  "미국": "the US", "리마": "Lima", "오클랜드": "Auckland", "간사이": "Kansai" };
+function hoursFmt(s, H = H_EN) {
+  const place = (p) => { let x = p; Object.entries(HOURS_PLACES).forEach(([k, v]) => { x = x.replace(k, (H.places && H.places[v]) || v); }); return x; };
+  const time = (x) => x
+    .replace(/약 /g, H.approx)
+    .replace(/(\d+(?:~\d+)?)시간/g, (_, n) => H.h.replace("{n}", n))
+    .replace(/(\d+)분/g, (_, n) => H.m.replace("{n}", n));
+  if (s.includes("직항(시즌) 또는 경유")) return H.dso;
+  if (s.includes("직항 또는 경유")) return H.do;
+  let m = s.match(/^경유(?: (.+))?$/);
+  if (m) return m[1] ? H.cT.replace("{t}", time(m[1])) : H.c;
+  m = s.match(/^(.+?) 경유(?: (.+))?$/);
+  if (m) return m[2] ? H.viaT.replace("{p}", place(m[1])).replace("{t}", time(m[2])) : H.via.replace("{p}", place(m[1]));
+  const t = s.replace("+ 이동", H.transfer).replace("+ 기차", H.train).replace("+ 고속열차", H.hsr)
+    .replace("(시즌)", H.seasonal).replace("(부정기)", H.charter);
+  return place(time(t));
 }
+const hoursEN = (s) => hoursFmt(s, H_EN);
