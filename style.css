@@ -531,3 +531,21 @@ label.check input:disabled + span { opacity: .8; }
 }
 #styleSeg { margin: 6px 0 2px; }
 [dir="rtl"] .cal-nav .icon-btn { transform: scaleX(-1); }
+
+/* 외교부 여행경보 */
+.safe { margin: 10px 0; padding: 10px 12px; border-radius: 10px; border-inline-start: 4px solid var(--line); background: var(--surface-2); font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.safe .safe-d { color: var(--text); opacity: .9; }
+.safe .safe-src { font-size: .78rem; color: var(--muted); }
+.safe .safe-src a { color: var(--primary); }
+.safe .safe-lv { font-weight: 700; }
+.safe.l0 { border-color: var(--down); }
+.safe.l1 { border-color: #3b5bdb; }
+.safe.l2 { border-color: #f2c94c; }
+.safe.l25 { border-color: #ff922b; }
+.safe.l3 { border-color: var(--up); background: rgba(229, 72, 77, .08); }
+.safe.l4 { border-color: #111; background: rgba(229, 72, 77, .14); }
+.safe.unk { border-color: var(--muted); }
+.badge.safe-b { background: rgba(229, 72, 77, .14); color: var(--up); font-weight: 700; }
+.badge.safe-b.l25, .badge.safe-b.part { background: rgba(255, 146, 43, .16); color: #e8590c; }
+.badge.safe-b.l4 { background: #111; color: #fff; }
+.country .badge.safe-b { display: inline-block; margin-top: 4px; }

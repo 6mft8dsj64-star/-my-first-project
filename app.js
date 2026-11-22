@@ -306,6 +306,36 @@
     return { mode: "via", airlines: VIA[d.region].split(","), price: d.flight.avg + addKrw, dep: depCode !== "ICN" ? dep : null, sib };
   }
   const routeLabel = (r) => t(`route.${r.mode}`);
+  // ---------- 외교부 여행경보 (safety.js) ----------
+  const safetyOf = (d) => (d.countryId === "kr" ? null : SAFETY[d.countryId] || { main: null, max: null });
+  const lvKey = (l) => ({ 0: "l0", 1: "l1", 2: "l2", 2.5: "l25", 3: "l3", 4: "l4" }[l] || "unknown");
+  const lvCls = (l) => (l == null ? "unk" : l >= 4 ? "l4" : l >= 3 ? "l3" : l >= 2.5 ? "l25" : l >= 2 ? "l2" : l >= 1 ? "l1" : "l0");
+  const safeUrl = (sf) => (sf?.id ? `https://www.0404.go.kr/ntnSafetyInfo/${sf.id}/detail` : "https://www.0404.go.kr/ntnSafetyInfo/list");
+  // 카드에 붙이는 경고 (주요 도시가 특별여행주의보 이상이거나, 나라 안에 3단계 이상 지역이 있으면)
+  function safeBadge(d, forCountry) {
+    const sf = safetyOf(d);
+    if (!sf) return "";
+    if (sf.main != null && sf.main >= 2.5) return `<span class="badge safe-b ${lvCls(sf.main)}">${sf.main >= 4 ? "⛔" : "⚠️"} ${t(`safe.${lvKey(sf.main)}`)}</span>`;
+    if (forCountry && sf.max >= 3) return `<span class="badge safe-b part">⚠️ ${t("safe.partsBadge", { l: t(`safe.${lvKey(sf.max)}`) })}</span>`;
+    return "";
+  }
+  function safeBlock(d) {
+    const sf = safetyOf(d);
+    if (!sf) return `<div class="safe l0"><b>${t("safe.title")}</b> · ${t("safe.domestic")}</div>`;
+    const lang = I18N.lang;
+    // 더 높은 단계 지역이 있으면 "높은 단계 지역", 나라 전체 경보면 "참고"로 설명해요 (지역 설명은 한국어·영어만)
+    const higher = sf.max != null && sf.max > (sf.main ?? -1);
+    let parts = "";
+    if (sf.parts && (lang === "ko" || lang === "en")) parts = t(higher ? "safe.parts" : "safe.note", { p: esc(sf.parts[lang === "ko" ? 0 : 1]) });
+    else if (higher && sf.max >= 1) parts = t("safe.partsGen", { l: t(`safe.${lvKey(sf.max)}`) });
+    const date = new Intl.DateTimeFormat(LOC(), { year: "numeric", month: "short", day: "numeric" }).format(parse(SAFETY_CHECKED));
+    return `<div class="safe ${lvCls(sf.main)}">
+      <div><b>${t("safe.title")}</b> · <span class="safe-lv">${t(`safe.${sf.main == null ? "unknown" : lvKey(sf.main)}`)}</span></div>
+      <div class="safe-d">${t(`safe.d${sf.main == null ? "Unknown" : lvKey(sf.main).slice(1)}`)}</div>
+      ${parts ? `<div class="safe-d">${parts}</div>` : ""}
+      <div class="safe-src">${t("safe.src", { d: esc(date) })} <a href="${safeUrl(sf)}" target="_blank" rel="noopener">${t("safe.link")}</a></div>
+    </div>`;
+  }
   const isFlight = (r) => !["local", "ground"].includes(r.mode);
   const routeHours = (d, r) => (r.mode === "ground" && d.groundTime ? d.groundTime : r.mode === "local" ? "" : d.flight.hours);
 
@@ -385,7 +415,7 @@
     return `<button class="city ${d.id === plan.destId ? "on" : ""}" data-city="${d.id}">
       <div class="nm">${withCountry ? `${d.flag} ` : ""}${esc(N.city(d))}</div>
       <div class="ct">${withCountry ? `${esc(N.country(d.countryId))} · ` : ""}${routeLabel(r)}${r.mode === "direct" && r.airlines.length ? ` · ${t("city.airlines", { n: r.airlines.length })}` : ""}${routeHours(d, r) ? ` · ${esc(N.hours(routeHours(d, r)))}` : ""}</div>
-      <div class="pr">${r.mode === "local" ? t("route.localShort") : `${t(r.mode === "ground" ? "city.rtGround" : "city.rt")} <b>${short(r.price)}</b>`}</div>${cs && !cs.few ? `<div class="crowd-pr">👥 ${t("crowd.card", { p: `<b>${short(cs.med)}</b>`, n: cs.n })}</div>` : ""}${seasonBadge(d, m)}
+      <div class="pr">${r.mode === "local" ? t("route.localShort") : `${t(r.mode === "ground" ? "city.rtGround" : "city.rt")} <b>${short(r.price)}</b>`}</div>${safeBadge(d, false)}${cs && !cs.few ? `<div class="crowd-pr">👥 ${t("crowd.card", { p: `<b>${short(cs.med)}</b>`, n: cs.n })}</div>` : ""}${seasonBadge(d, m)}
     </button>`;
   }
 
@@ -418,7 +448,7 @@
       return `<button class="country ${c.id === ui.country ? "on" : ""}" data-country="${c.id}">
         <span class="flag">${c.flag}</span><span><span class="nm">${esc(N.country(c.id))}</span>
         <span class="ct">${t("country.cities", { n: cities.length })} · ${Number.isFinite(minP) ? t("country.from", { p: short(minP) }) : t("route.localShort")}</span>
-        ${direct ? `<span class="ct"><i class="dot"></i>${t("country.direct", { a: esc(N.depCity(DEP(plan.dep))) })}</span>` : ""}</span>
+        ${direct ? `<span class="ct"><i class="dot"></i>${t("country.direct", { a: esc(N.depCity(DEP(plan.dep))) })}</span>` : ""}${safeBadge(cities[0], true)}</span>
       </button>`;
     }).join("");
 
@@ -440,6 +470,7 @@
         <div><h3 style="margin:0">${esc(N.city(d))}, ${esc(N.country(d.countryId))}</h3>
         <div class="hint" style="margin:0">${N.region(regionOf(d.region))}${routeHours(d, r0) ? ` · ${t(isFlight(r0) ? "info.flight" : "info.move")} ${esc(N.hours(routeHours(d, r0)))}` : ""} · ${t("info.currency")} ${esc(N.cur(d.currency))}</div></div></div>
       <div class="visa">🛂 ${t("visa.label")}: ${esc(N.visa(d.visa))}${d.detailed ? "" : ` <span class="badge">${t("info.estimate")}</span>`}</div>
+      ${safeBlock(d)}
       <div class="info-stats">
         ${domestic ? `<div class="stat"><div class="k">${t("info.trans")}</div><div class="v">${r0.mode === "local" ? t("route.localShort") : short(r0.price)}</div></div>`
           : `<div class="stat"><div class="k">${t("info.fare")}</div><div class="v">${short(d.flight.low)}~${short(d.flight.high)}</div></div>`}
@@ -684,6 +715,12 @@
     if (d.peakMonths.includes(m)) add("warn", t("sg.peak", { m: monthName(m), c: city, alt: monthList(d.bestMonths.filter((x) => !d.peakMonths.includes(x)).slice(0, 3)) }));
     else if (d.bestMonths.includes(m)) add("good", t("sg.best", { m: monthName(m), c: city }));
     else add("", t("sg.off", { m: monthName(m) }));
+
+    const sf = safetyOf(d);
+    if (sf?.main >= 4) add("warn", t("sg.safe4", { c: city }));
+    else if (sf?.main >= 3) add("warn", t("sg.safe3", { c: city }));
+    else if (sf?.main >= 2.5) add("warn", t("sg.safe25", { c: city }));
+    else if (sf && sf.max >= 3) add("", t("sg.safeParts", { c: city, l: t(`safe.${lvKey(sf.max)}`) }));
 
     const lead = diffDays(TODAY, s);
     const long = d.flight.avg >= 800000;
