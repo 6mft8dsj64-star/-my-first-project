@@ -1,5 +1,7 @@
 # 나중에 할 작업
 
+> 마지막 정리: 2026-11-22
+
 ## 은행 환율 연동 (보류 — 다른 작업 완료 후 마지막에 진행)
 
 ### 조사 결과 (2026-11-21)
@@ -21,10 +23,11 @@
 - [ ] (선택) 신한 스크래핑 시도 여부 결정
 - [ ] (선택) BofA 환율 원하면 allratestoday 무료 키 발급
 
-## 로그인 서비스 연결 (사용자 작업 필요)
-- [ ] `SETUP.md` 순서대로 Firebase 프로젝트 생성 → `firebase-config.js`에 설정값 입력
-- [ ] GitHub Pages로 사이트 공개 후 Firebase 승인된 도메인에 추가
-- [ ] Apple 로그인은 Apple 개발자 프로그램(연 $99) 가입 필요
+## 로그인 서비스 연결
+- [x] Firebase 프로젝트 생성 → `firebase-config.js`에 설정값 입력
+- [x] GitHub Pages로 사이트 공개 (https://6mft8dsj64-star.github.io/tripnote/), Firebase 승인된 도메인 추가
+- [x] Firestore 보안 규칙 게시 (회원 데이터 본인만, 문의 관리자만)
+- [ ] Apple 로그인: Apple 개발자 프로그램(연 $99) 가입 후 설정
 - [x] 개인정보처리방침 페이지(`privacy.html`), 회원 탈퇴 기능 추가
 - [x] `privacy.html` 개인정보 보호책임자 이름·이메일 입력
 
@@ -37,4 +40,6 @@
 - [x] Fraud Defense(reCAPTCHA Enterprise) 사이트 키 등록, 사이트 코드에 연결 (2026-11-22)
 - [ ] 며칠 사용 후 Firebase 콘솔 App Check → API → Cloud Firestore에서 "확인된 요청" 비율 확인
 - [ ] 거의 100%면 **Cloud Firestore만** 적용(Enforce). Authentication은 적용하지 않기
-- [ ] 그래도 스팸이 오면: 로그인한 사람만 문의 가능 / 함정 칸 추가
+- [x] 로그인한 사람만 문의 가능 (사이트 + Firestore 규칙)
+- [x] 함정 칸·3초 규칙으로 봇 차단
+- [ ] 그래도 스팸이 오면: 같은 계정 1분에 1건 제한(규칙)

@@ -95,8 +95,20 @@ window.FIREBASE_CONFIG = {
 
 ### 5. 사이트 공개하고 도메인 승인
 로그인은 `index.html` 파일을 더블클릭해서 연 상태(file://)에서는 동작하지 않고, 인터넷 주소가 있어야 합니다.
-1. GitHub 저장소 → **Settings → Pages** → 배포할 브랜치 선택 → 주소 발급 (예: `https://아이디.github.io/-my-first-project/`)
-2. Firebase **Authentication → 설정 → 승인된 도메인**에 `아이디.github.io` 추가
+1. GitHub 저장소 → **Settings → Pages** → `main` 브랜치 선택 → 주소 발급 (현재: `https://6mft8dsj64-star.github.io/tripnote/`)
+2. Firebase **Authentication → 설정 → 승인된 도메인**에 `6mft8dsj64-star.github.io` 추가
+3. 구글 로그인 버튼용: Google Cloud → API 및 서비스 → 사용자 인증 정보 → 웹 클라이언트 → **승인된 JavaScript 원본**에 `https://6mft8dsj64-star.github.io` 추가
+
+### 6. 관리자 문의함
+1. 관리자로 쓸 계정으로 사이트에 한 번 로그인
+2. Firebase **Authentication → 사용자**에서 그 계정의 **사용자 UID** 복사
+3. 3번의 규칙에서 `관리자_UID`를 그 UID로 바꿔 게시 → 관리자로 로그인하면 📥 문의함이 보여요
+
+### 7. 스팸 방지 (App Check)
+1. reCAPTCHA 클래식은 App Check에서 지원이 끝났어요. **Fraud Defense(reCAPTCHA Enterprise)**를 사용합니다.
+2. Firebase 콘솔 → App Check(https://console.firebase.google.com/project/tripmate-b19b4/appcheck) → 앱 → 웹 앱 → **Fraud Defense**에 사이트 키 입력, 토큰 TTL은 1시간(기본값)
+3. 사이트 키는 `firebase-config.js`의 `RECAPTCHA_SITE_KEY`에 들어 있어요 (공개용 키)
+4. 며칠 뒤 App Check → API → **Cloud Firestore**의 확인된 요청 비율이 거의 100%면 **Cloud Firestore만 적용(Enforce)**. Authentication에는 적용하지 마세요.
 
 ## 비용 (무료 요금제 기준, 정책은 바뀔 수 있음)
 - 이메일·구글·애플 로그인: 일반적인 규모에서는 무료
@@ -105,8 +117,8 @@ window.FIREBASE_CONFIG = {
 
 ## 서비스로 공개할 때 챙길 것
 - **개인정보처리방침**: `privacy.html`에 만들어 두었어요. 책임자 정보가 바뀌면 11번 항목을 고쳐 주세요.
-- **회원 탈퇴**: 로그인 후 오른쪽 위 내 이름 → 회원 탈퇴. 본인 확인 후 계정과 저장 데이터가 함께 삭제돼요.
-- **회원 탈퇴 기능**: 탈퇴 시 계정과 데이터를 지울 수 있어야 합니다. (다음 작업 후보)
+- **회원 탈퇴**: 로그인 후 오른쪽 위 프로필 사진 → 회원 탈퇴. 본인 확인 후 계정과 저장 데이터가 함께 삭제돼요.
+- **문의**: 문의 내용·이메일은 처리 후 1년 안에 삭제한다고 개인정보처리방침에 적어 두었어요. 문의함에서 직접 삭제할 수 있어요.
 
 ## 다른 선택지
 | 서비스 | 특징 |
