@@ -1,5 +1,12 @@
 I18N.addData("de", {
 cities: `
+seoul=Seoul;Gyeongbokgung-Palast|N Seoul Tower|Lotte World
+busan=Busan;Haeundae Beach|Gamcheon Culture Village|Gwangalli bei Nacht
+jeju=Jeju;Seongsan Ilchulbong|Insel Udo|Hallasan
+gyeongju=Gyeongju;Bulguksa & Seokguram|Daereungwon & Cheomseongdae|Donggung-Palast & Wolji-Teich bei Nacht
+gangneung=Gangneung;Gyeongpo Beach|Anmok-Kaffeestraße|Sonnenaufgang in Jeongdongjin
+yeosu=Yeosu;Nachtmeer & Seilbahn übers Meer|Insel Odongdo|Einsiedelei Hyangiram
+jeonju=Jeonju;Hanok-Dorf Jeonju|Gyeonggijeon-Schrein|Nachtmarkt Nambu
 tokyo=Tokio;Aussichtsplattform Shibuya Sky|teamLab Planets|Disneyland / DisneySea|Senso-ji-Tempel (Asakusa)|Tagesausflug nach Hakone (Free Pass)
 osaka=Osaka;Universal Studios Japan|Hauptturm der Burg Osaka|Fahrt für Tagesausflug nach Kyoto|Umeda Sky Building|Hirschpark in Nara
 fukuoka=Fukuoka;Dazaifu Tenmangu|Bus nach Yufuin (hin und zurück)|Fukuoka Tower|Yatai-Tour in Nakasu
@@ -154,9 +161,10 @@ visa: [
   "Touristen-e-Visum erforderlich", "Kurzaufenthalt visumfrei (Dauer vorher prüfen)", "Schengen: visumfrei 90 Tage", "ETA erforderlich, Aufenthalt bis 6 Monate",
   "Visumfrei 90 Tage (nicht im Schengen-Raum)", "Visumfrei 1 Jahr", "ESTA erforderlich, 90 Tage", "eTA erforderlich, 6 Monate",
   "Visumfrei (Aufenthaltsdauer wird bei Einreise festgelegt)", "e-Visum erforderlich (aktuelle Regeln vorher prüfen)", "Visum erforderlich (vorher prüfen)", "NZeTA erforderlich",
-  "Visumbefreiung Guam–CNMI 45 Tage oder ESTA", "Visumfrei 4 Monate", "Visum bei Ankunft oder e-Visum", "eTA erforderlich",
+  "Visumbefreiung Guam–CNMI 45 Tage oder ESTA", "Visumfrei 4 Monate", "Visum bei Ankunft oder e-Visum", "eTA erforderlich", "Inlandsreise (Ausweis mitnehmen · Ausländer: K-ETA oder Visum prüfen)",
 ],
 regionTips: {
+  kr: ["KTX- und SRT-Tickets gibt es ab einem Monat vor Abfahrt. Wochenenden und Feiertage sind schnell ausverkauft – früh buchen.", "Auf Jeju, in Gangneung und Gyeongju sind viele Orte mit öffentlichen Verkehrsmitteln schwer erreichbar, daher sind Mietwagen beliebt. In der Hochsaison früh reservieren.", "Achte auf Rabattgutscheine für Unterkünfte von Staat und Kommunen, um zu sparen."],
   ea: ["In Japan, Taiwan und Hongkong lässt sich die Verkehrskarte meist in der Wallet des Handys hinterlegen.", "Verknüpfe in China deine Karte vorab mit Alipay oder WeChat Pay – das Bezahlen wird viel einfacher."],
   sea: ["In vielen Ländern erledigt die Grab-App Taxi, Essenslieferung und Bezahlen.", "In der Regenzeit (etwa Mai–Oktober) Aktivitäten im Freien vormittags planen und nachmittags mit Schauern rechnen."],
   sa: ["Indien, Sri Lanka und Nepal verlangen vorab ein e-Visum/ETA.", "Nur Wasser aus Flaschen trinken und frisch gekochtes Streetfood wählen."],

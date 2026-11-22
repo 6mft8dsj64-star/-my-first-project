@@ -1,5 +1,12 @@
 I18N.addData("vi", {
 cities: `
+seoul=Seoul;Cung Gyeongbokgung|Tháp N Seoul|Lotte World
+busan=Busan;Bãi biển Haeundae|Làng văn hóa Gamcheon|Cảnh đêm Gwangalli
+jeju=Jeju;Đỉnh Seongsan Ilchulbong|Đảo Udo|Núi Hallasan
+gyeongju=Gyeongju;Chùa Bulguksa & hang Seokguram|Daereungwon & đài Cheomseongdae|Cung Donggung & hồ Wolji về đêm
+gangneung=Gangneung;Bãi biển Gyeongpo|Phố cà phê Anmok|Bình minh Jeongdongjin
+yeosu=Yeosu;Biển đêm & cáp treo trên biển|Đảo Odongdo|Am Hyangiram
+jeonju=Jeonju;Làng Hanok Jeonju|Điện Gyeonggijeon|Chợ đêm Nambu
 tokyo=Tokyo;Đài quan sát Shibuya Sky|teamLab Planets|Disneyland / DisneySea|Chùa Senso-ji (Asakusa)|Đi Hakone trong ngày (Free Pass)
 osaka=Osaka;Universal Studios Japan|Tháp chính lâu đài Osaka|Đi lại cho chuyến Kyoto trong ngày|Tòa nhà Umeda Sky|Công viên hươu Nara
 fukuoka=Fukuoka;Đền Dazaifu Tenmangu|Xe buýt khứ hồi đi Yufuin|Tháp Fukuoka|Tour quán yatai Nakasu
@@ -154,9 +161,10 @@ visa: [
   "Cần e-Visa du lịch", "Miễn thị thực lưu trú ngắn (kiểm tra thời hạn trước khi đi)", "Miễn thị thực Schengen 90 ngày", "Cần ETA, lưu trú tối đa 6 tháng",
   "Miễn thị thực 90 ngày (ngoài Schengen)", "Miễn thị thực 1 năm", "Cần ESTA, 90 ngày", "Cần eTA, 6 tháng",
   "Miễn thị thực (thời gian lưu trú được cấp khi nhập cảnh)", "Cần e-Visa (kiểm tra chính sách mới nhất trước khi đi)", "Cần thị thực (kiểm tra trước khi đi)", "Cần NZeTA",
-  "Miễn thị thực Guam–CNMI 45 ngày hoặc ESTA", "Miễn thị thực 4 tháng", "Thị thực tại cửa khẩu hoặc e-Visa", "Cần eTA",
+  "Miễn thị thực Guam–CNMI 45 ngày hoặc ESTA", "Miễn thị thực 4 tháng", "Thị thực tại cửa khẩu hoặc e-Visa", "Cần eTA", "Du lịch trong nước (mang giấy tờ tùy thân · người nước ngoài kiểm tra K-ETA hoặc thị thực)",
 ],
 regionTips: {
+  kr: ["Vé KTX và SRT mở bán từ một tháng trước ngày đi. Cuối tuần và ngày lễ bán hết rất nhanh, hãy đặt sớm.", "Ở Jeju, Gangneung và Gyeongju nhiều nơi khó đi bằng phương tiện công cộng nên nhiều người thuê xe. Mùa cao điểm hãy đặt sớm.", "Theo dõi thời điểm phát phiếu giảm giá lưu trú của chính phủ và địa phương để tiết kiệm."],
   ea: ["Ở Nhật Bản, Đài Loan và Hồng Kông thường có thể thêm thẻ giao thông vào ví điện thoại.", "Ở Trung Quốc, hãy liên kết thẻ với Alipay hoặc WeChat Pay trước khi đi — thanh toán dễ hơn nhiều."],
   sea: ["Ở nhiều nước, chỉ một ứng dụng Grab là đủ để gọi xe, giao đồ ăn và thanh toán.", "Mùa mưa (khoảng tháng 5–10) nên đi chơi ngoài trời buổi sáng và chuẩn bị cho mưa rào buổi chiều."],
   sa: ["Ấn Độ, Sri Lanka và Nepal cần xin e-Visa/ETA trước.", "Chỉ uống nước đóng chai và chọn đồ ăn đường phố vừa nấu chín."],

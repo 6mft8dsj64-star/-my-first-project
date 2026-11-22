@@ -1,5 +1,12 @@
 I18N.addData("it", {
 cities: `
+seoul=Seul;Palazzo Gyeongbokgung|N Seoul Tower|Lotte World
+busan=Busan;Spiaggia di Haeundae|Villaggio culturale di Gamcheon|Vista notturna di Gwangalli
+jeju=Jeju;Seongsan Ilchulbong|Isola di Udo|Monte Hallasan
+gyeongju=Gyeongju;Bulguksa e Seokguram|Daereungwon e Cheomseongdae|Palazzo Donggung e stagno Wolji di notte
+gangneung=Gangneung;Spiaggia di Gyeongpo|Via del caffè di Anmok|Alba a Jeongdongjin
+yeosu=Yeosu;Mare di notte e funivia sul mare|Isola di Odongdo|Eremo Hyangiram
+jeonju=Jeonju;Villaggio Hanok di Jeonju|Santuario Gyeonggijeon|Mercato notturno di Nambu
 tokyo=Tokyo;Osservatorio Shibuya Sky|teamLab Planets|Disneyland / DisneySea|Tempio Senso-ji (Asakusa)|Gita a Hakone (Free Pass)
 osaka=Osaka;Universal Studios Japan|Torrione del castello di Osaka|Trasporti per la gita a Kyoto|Umeda Sky Building|Parco dei cervi di Nara
 fukuoka=Fukuoka;Dazaifu Tenmangu|Autobus andata e ritorno per Yufuin|Fukuoka Tower|Giro degli yatai di Nakasu
@@ -154,9 +161,10 @@ visa: [
   "Serve l'e-Visa turistico", "Soggiorni brevi senza visto (verifica la durata prima di partire)", "Senza visto 90 giorni (Schengen)", "Serve l'ETA, soggiorni fino a 6 mesi",
   "Senza visto 90 giorni (fuori Schengen)", "Senza visto 1 anno", "Serve l'ESTA, 90 giorni", "Serve l'eTA, 6 mesi",
   "Senza visto (durata concessa all'ingresso)", "Serve l'e-Visa (verifica le regole attuali prima di partire)", "Serve il visto (verifica prima di partire)", "Serve la NZeTA",
-  "Esenzione dal visto Guam–CNMI 45 giorni, oppure ESTA", "Senza visto 4 mesi", "Visto all'arrivo o e-Visa", "Serve l'eTA",
+  "Esenzione dal visto Guam–CNMI 45 giorni, oppure ESTA", "Senza visto 4 mesi", "Visto all'arrivo o e-Visa", "Serve l'eTA", "Viaggio interno (porta un documento · stranieri: verificate K-ETA o visto)",
 ],
 regionTips: {
+  kr: ["I biglietti KTX e SRT si aprono un mese prima della partenza. Weekend e festivi si esauriscono subito: prenota presto.", "A Jeju, Gangneung e Gyeongju molti luoghi sono difficili da raggiungere con i mezzi pubblici, quindi si usa molto l'auto a noleggio. Prenota presto in alta stagione.", "Controlla quando escono i buoni sconto per l'alloggio di governo ed enti locali per risparmiare."],
   ea: ["In Giappone, Taiwan e Hong Kong di solito puoi aggiungere la tessera dei trasporti al wallet del telefono.", "In Cina collega la carta ad Alipay o WeChat Pay prima di partire: pagare diventa molto più semplice."],
   sea: ["In molti paesi l'app Grab serve per taxi, consegne di cibo e pagamenti.", "Nella stagione delle piogge (circa maggio–ottobre) programma le attività all'aperto al mattino e aspettati acquazzoni nel pomeriggio."],
   sa: ["India, Sri Lanka e Nepal richiedono e-Visa/ETA in anticipo.", "Bevi solo acqua in bottiglia e scegli cibo di strada appena cotto."],

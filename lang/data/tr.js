@@ -1,5 +1,12 @@
 I18N.addData("tr", {
 cities: `
+seoul=Seul;Gyeongbokgung Sarayı|N Seoul Tower|Lotte World
+busan=Busan;Haeundae Plajı|Gamcheon Kültür Köyü|Gwangalli gece manzarası
+jeju=Jeju;Seongsan Ilchulbong|Udo Adası|Hallasan Dağı
+gyeongju=Gyeongju;Bulguksa ve Seokguram|Daereungwon ve Cheomseongdae|Gece Donggung Sarayı ve Wolji Göleti
+gangneung=Gangneung;Gyeongpo Plajı|Anmok Kahve Sokağı|Jeongdongjin gün doğumu
+yeosu=Yeosu;Gece denizi ve deniz teleferiği|Odongdo Adası|Hyangiram İnziva Yeri
+jeonju=Jeonju;Jeonju Hanok Köyü|Gyeonggijeon Tapınağı|Nambu gece pazarı
 tokyo=Tokyo;Shibuya Sky seyir terası|teamLab Planets|Disneyland / DisneySea|Senso-ji Tapınağı (Asakusa)|Hakone günübirlik gezi (Free Pass)
 osaka=Osaka;Universal Studios Japan|Osaka Kalesi ana kulesi|Kyoto günübirlik ulaşım|Umeda Sky Building|Nara Geyik Parkı
 fukuoka=Fukuoka;Dazaifu Tenmangu|Yufuin gidiş-dönüş otobüsü|Fukuoka Kulesi|Nakasu yatai turu
@@ -154,9 +161,10 @@ visa: [
   "Turist e-Vizesi gerekli", "Kısa kalışlar vizesiz (süreyi gitmeden kontrol et)", "Schengen: 90 gün vizesiz", "ETA gerekli, 6 aya kadar kalış",
   "90 gün vizesiz (Schengen dışında)", "1 yıl vizesiz", "ESTA gerekli, 90 gün", "eTA gerekli, 6 ay",
   "Vizesiz (kalış süresi girişte verilir)", "e-Vize gerekli (güncel kuralları gitmeden kontrol et)", "Vize gerekli (gitmeden kontrol et)", "NZeTA gerekli",
-  "Guam–CNMI vize muafiyeti 45 gün veya ESTA", "4 ay vizesiz", "Kapıda vize veya e-Vize", "eTA gerekli",
+  "Guam–CNMI vize muafiyeti 45 gün veya ESTA", "4 ay vizesiz", "Kapıda vize veya e-Vize", "eTA gerekli", "Yurt içi seyahat (kimlik yanında olsun · yabancılar K-ETA veya vizeyi kontrol etsin)",
 ],
 regionTips: {
+  kr: ["KTX ve SRT biletleri kalkıştan bir ay önce satışa açılır. Hafta sonları ve bayramlarda hemen tükenir, erken al.", "Jeju, Gangneung ve Gyeongju'da toplu taşımayla ulaşılması zor çok yer var, bu yüzden araç kiralama yaygın. Yoğun sezonda erken rezervasyon yap.", "Tasarruf için devletin ve belediyelerin konaklama indirim kuponlarının ne zaman çıktığını takip et."],
   ea: ["Japonya, Tayvan ve Hong Kong'da ulaşım kartını genelde telefon cüzdanına ekleyebilirsin.", "Çin'de kartını gitmeden Alipay veya WeChat Pay'e bağla — ödeme çok daha kolaylaşır."],
   sea: ["Birçok ülkede tek bir Grab uygulaması taksi, yemek siparişi ve ödemeyi halleder.", "Yağmur mevsiminde (yaklaşık mayıs–ekim) açık hava planlarını sabaha koy, öğleden sonra sağanağa hazırlıklı ol."],
   sa: ["Hindistan, Sri Lanka ve Nepal önceden e-Vize/ETA ister.", "Yalnızca şişe suyu iç ve sokak yemeklerinde taze pişmişleri seç."],

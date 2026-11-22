@@ -1,5 +1,12 @@
 I18N.addData("es", {
 cities: `
+seoul=Seúl;Palacio Gyeongbokgung|N Seoul Tower|Lotte World
+busan=Busan;Playa de Haeundae|Aldea cultural de Gamcheon|Vista nocturna de Gwangalli
+jeju=Jeju;Seongsan Ilchulbong|Isla Udo|Monte Hallasan
+gyeongju=Gyeongju;Bulguksa y Seokguram|Daereungwon y Cheomseongdae|Palacio Donggung y estanque Wolji de noche
+gangneung=Gangneung;Playa de Gyeongpo|Calle del café de Anmok|Amanecer en Jeongdongjin
+yeosu=Yeosu;Mar nocturno y teleférico marítimo|Isla Odongdo|Ermita Hyangiram
+jeonju=Jeonju;Aldea Hanok de Jeonju|Santuario Gyeonggijeon|Mercado nocturno de Nambu
 tokyo=Tokio;Mirador Shibuya Sky|teamLab Planets|Disneyland / DisneySea|Templo Senso-ji (Asakusa)|Excursión a Hakone (Free Pass)
 osaka=Osaka;Universal Studios Japan|Torre del castillo de Osaka|Transporte de excursión a Kioto|Umeda Sky Building|Parque de los ciervos de Nara
 fukuoka=Fukuoka;Dazaifu Tenmangu|Autobús de ida y vuelta a Yufuin|Torre de Fukuoka|Ruta de puestos yatai en Nakasu
@@ -154,9 +161,10 @@ visa: [
   "Se necesita e-Visa de turista", "Estancias cortas sin visado (comprueba el periodo antes de viajar)", "Sin visado 90 días (Schengen)", "Se necesita ETA, estancias de hasta 6 meses",
   "Sin visado 90 días (fuera de Schengen)", "Sin visado 1 año", "Se necesita ESTA, 90 días", "Se necesita eTA, 6 meses",
   "Sin visado (la estancia se concede al entrar)", "Se necesita e-Visa (comprueba la política actual antes de viajar)", "Se necesita visado (compruébalo antes de viajar)", "Se necesita NZeTA",
-  "Exención de visado Guam–CNMI 45 días, o ESTA", "Sin visado 4 meses", "Visado a la llegada o e-Visa", "Se necesita eTA",
+  "Exención de visado Guam–CNMI 45 días, o ESTA", "Sin visado 4 meses", "Visado a la llegada o e-Visa", "Se necesita eTA", "Viaje nacional (lleva tu documento · extranjeros: revisa K-ETA o visado)",
 ],
 regionTips: {
+  kr: ["Los billetes de KTX y SRT salen a la venta un mes antes. Fines de semana y festivos se agotan enseguida: reserva pronto.", "En Jeju, Gangneung y Gyeongju muchos lugares son difíciles de alcanzar en transporte público, así que se usa mucho el coche de alquiler. Resérvalo con antelación en temporada alta.", "Consulta cuándo salen los cupones de descuento de alojamiento del gobierno y los municipios para ahorrar."],
   ea: ["En Japón, Taiwán y Hong Kong normalmente puedes añadir la tarjeta de transporte a la cartera del móvil.", "En China, vincula tu tarjeta a Alipay o WeChat Pay antes de ir: pagar será mucho más fácil."],
   sea: ["En muchos países la app Grab sirve para taxis, comida a domicilio y pagos.", "En la estación de lluvias (aprox. mayo–octubre), planea lo exterior por la mañana y cuenta con chubascos por la tarde."],
   sa: ["India, Sri Lanka y Nepal exigen e-Visa/ETA por adelantado.", "Bebe solo agua embotellada y elige comida callejera recién cocinada."],

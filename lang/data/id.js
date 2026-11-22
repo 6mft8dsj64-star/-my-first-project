@@ -1,5 +1,12 @@
 I18N.addData("id", {
 cities: `
+seoul=Seoul;Istana Gyeongbokgung|N Seoul Tower|Lotte World
+busan=Busan;Pantai Haeundae|Desa Budaya Gamcheon|Pemandangan malam Gwangalli
+jeju=Jeju;Seongsan Ilchulbong|Pulau Udo|Gunung Hallasan
+gyeongju=Gyeongju;Bulguksa & Seokguram|Daereungwon & Cheomseongdae|Istana Donggung & Kolam Wolji di malam hari
+gangneung=Gangneung;Pantai Gyeongpo|Jalan Kopi Anmok|Matahari terbit Jeongdongjin
+yeosu=Yeosu;Laut malam & kereta gantung laut|Pulau Odongdo|Pertapaan Hyangiram
+jeonju=Jeonju;Desa Hanok Jeonju|Kuil Gyeonggijeon|Pasar malam Nambu
 tokyo=Tokyo;Observatorium Shibuya Sky|teamLab Planets|Disneyland / DisneySea|Kuil Senso-ji (Asakusa)|Wisata sehari ke Hakone (Free Pass)
 osaka=Osaka;Universal Studios Japan|Menara Kastil Osaka|Transportasi wisata sehari ke Kyoto|Umeda Sky Building|Taman Rusa Nara
 fukuoka=Fukuoka;Dazaifu Tenmangu|Bus pulang-pergi ke Yufuin|Fukuoka Tower|Tur kedai yatai Nakasu
@@ -154,9 +161,10 @@ visa: [
   "Perlu e-Visa turis", "Tinggal singkat bebas visa (cek jangka waktunya sebelum berangkat)", "Bebas visa Schengen 90 hari", "Perlu ETA, tinggal hingga 6 bulan",
   "Bebas visa 90 hari (di luar Schengen)", "Bebas visa 1 tahun", "Perlu ESTA, 90 hari", "Perlu eTA, 6 bulan",
   "Bebas visa (lama tinggal diberikan saat masuk)", "Perlu e-Visa (cek kebijakan terbaru sebelum berangkat)", "Perlu visa (cek sebelum berangkat)", "Perlu NZeTA",
-  "Bebas visa Guam–CNMI 45 hari, atau ESTA", "Bebas visa 4 bulan", "Visa on arrival atau e-Visa", "Perlu eTA",
+  "Bebas visa Guam–CNMI 45 hari, atau ESTA", "Bebas visa 4 bulan", "Visa on arrival atau e-Visa", "Perlu eTA", "Perjalanan domestik (bawa kartu identitas · warga asing cek K-ETA atau visa)",
 ],
 regionTips: {
+  kr: ["Tiket KTX dan SRT dibuka sebulan sebelum keberangkatan. Akhir pekan dan hari libur cepat habis, jadi pesan segera.", "Di Jeju, Gangneung, dan Gyeongju banyak tempat sulit dijangkau transportasi umum, jadi sewa mobil umum dipakai. Pesan lebih awal di musim ramai.", "Pantau kupon diskon penginapan dari pemerintah dan daerah untuk menghemat biaya menginap."],
   ea: ["Di Jepang, Taiwan, dan Hong Kong, kartu transportasi biasanya bisa ditambahkan ke dompet digital ponsel.", "Di Tiongkok, hubungkan kartumu ke Alipay atau WeChat Pay sebelum berangkat — membayar jadi jauh lebih mudah."],
   sea: ["Di banyak negara, satu aplikasi Grab cukup untuk taksi, pesan antar makanan, dan pembayaran.", "Saat musim hujan (sekitar Mei–Oktober), rencanakan kegiatan luar ruang di pagi hari dan bersiaplah untuk hujan sore."],
   sa: ["India, Sri Lanka, dan Nepal mewajibkan e-Visa/ETA sebelum berangkat.", "Minum hanya air kemasan dan pilih jajanan kaki lima yang baru dimasak."],

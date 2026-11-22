@@ -99,6 +99,7 @@ const VIA = {
 
 // 지역별 공통 팁
 const REGION_TIPS = {
+  kr: ["KTX·SRT 승차권은 출발 한 달 전부터 예매할 수 있어요. 주말·명절은 열리자마자 매진되니 서둘러 주세요.", "제주·강릉·경주는 대중교통으로 가기 어려운 곳이 많아 렌터카를 많이 써요. 성수기엔 미리 예약하세요.", "정부·지자체의 숙박 할인 쿠폰(숙박세일 페스타 등)이 열리는 시기를 확인하면 숙소비를 아낄 수 있어요."],
   ea: ["일본·대만·홍콩은 대부분 교통카드를 휴대폰 지갑에 등록해 쓸 수 있어요.", "중국은 알리페이/위챗페이에 한국 카드를 연결해 두면 결제가 훨씬 편해요."],
   sea: ["Grab 앱 하나로 택시·배달·결제까지 해결되는 나라가 많아요.", "우기(대체로 5~10월)에는 오전 일정 위주로 짜고 오후 스콜에 대비하세요."],
   sa: ["인도·스리랑카·네팔은 전자비자/ETA를 미리 받아야 해요.", "생수는 반드시 병입 생수로, 길거리 음식은 조리된 것 위주로 드세요."],
@@ -119,6 +120,17 @@ const REGION_TIPS = {
 // 문자열 하나만 있으면 data.js의 상세 데이터 도시. 노선: "공항:항공사,항공사|공항:..." (없으면 경유)
 const COUNTRIES = [
   // 동아시아
+  // 대한민국 (국내 여행): home = 같은 지역 공항(교통비 없음), ground = KTX 일반실 왕복(서울 기준, 2026년 9월 요금 인하 반영 추정)
+  //   노선의 항공사 칸이 비어 있으면 "국내선은 있지만 운항 항공사를 확인하지 못한 노선"이에요.
+  { id: "kr", name: "대한민국", flag: "🇰🇷", cur: "KRW", region: "ea", visa: "국내 여행 (신분증 지참 · 외국인은 K-ETA 또는 비자 확인)", tipKey: "kr", cities: [
+    ["seoul", "서울", 14, "1시간 5분", 1.0, "4,5,9,10", "7,8", "경복궁|N서울타워|롯데월드", 0, "PUS:KE,BX|CJU:KE,OZ,7C,LJ,TW,BX,ZE|KWJ:|USN:|RSU:|HIN:|KPO:LJ", { home: ["ICN", "GMP"], ground: 100000, groundTime: "KTX 약 2시간 30분" }],
+    ["busan", "부산", 14, "1시간", 0.9, "5,6,9,10", "7,8", "해운대|감천문화마을|광안리 야경", 1, "GMP:KE,BX|CJU:KE,7C,LJ,BX", { home: ["PUS"], ground: 108800, groundTime: "KTX 약 2시간 40분" }],
+    ["jeju", "제주", 12, "1시간 10분", 1.0, "4,5,9,10", "7,8", "성산일출봉|우도|한라산", 1, "GMP:KE,OZ,7C,LJ,TW,BX,ZE|PUS:KE,7C,LJ,BX|TAE:KE,OZ,TW,7C,LJ|CJJ:RF,KE,OZ,7C,LJ,TW|KWJ:|USN:|RSU:|HIN:|KPO:LJ|WJU:LJ|KUV:LJ|YNY:WE", { home: ["CJU"] }],
+    ["gyeongju", "경주", 15, "KTX 약 2시간 10분", 0.85, "4,5,10,11", "7,8", "불국사·석굴암|대릉원·첨성대|동궁과 월지 야경", 0, "GMP:LJ|CJU:LJ", { home: ["KPO"], ground: 88000, groundTime: "KTX 약 2시간 10분" }],
+    ["gangneung", "강릉", 15, "KTX 약 1시간 50분", 0.85, "6,9,10", "7,8", "경포해변|안목 커피거리|정동진 해돋이", 1, "CJU:WE", { home: ["YNY"], ground: 50000, groundTime: "KTX 약 1시간 50분" }],
+    ["yeosu", "여수", 15, "1시간", 0.85, "4,5,9,10", "7,8", "여수 밤바다·해상케이블카|오동도|향일암", 1, "GMP:|CJU:", { home: ["RSU"], ground: 85000, groundTime: "KTX 약 3시간" }],
+    ["jeonju", "전주", 15, "KTX 약 1시간 50분", 0.8, "4,5,9,10", "7,8", "전주 한옥마을|경기전|남부시장 야시장", 0, "CJU:LJ", { home: ["KUV"], ground: 62000, groundTime: "KTX 약 1시간 50분" }],
+  ]},
   { id: "jp", name: "일본", flag: "🇯🇵", cur: "JPY", region: "ea", visa: "무비자 90일 (Visit Japan Web 등록 권장)", cities: [
     "tokyo", "osaka", "fukuoka",
     ["sapporo", "삿포로", 32, "2시간 40분", 1.0, "6,7,8,12,1,2", "2,8", "오도리 공원|오타루 운하|비에이·후라노 투어", 0, "ICN:KE,OZ,7C,LJ,TW,ZE|PUS:KE,BX,LJ|TAE:TW"],
@@ -466,7 +478,7 @@ const DESTINATIONS = (() => {
   };
   const parseRoutes = (s) => {
     const r = {};
-    (s || "").split("|").filter(Boolean).forEach((part) => { const [ap, list] = part.split(":"); r[ap] = list.split(","); });
+    (s || "").split("|").filter(Boolean).forEach((part) => { const [ap, list] = part.split(":"); r[ap] = (list || "").split(",").filter(Boolean); });
     return r;
   };
   const months = (s) => s.split(",").map(Number);
@@ -480,7 +492,7 @@ const DESTINATIONS = (() => {
         out.push({ ...d, ...base, detailed: true, routes: parseRoutes(DETAILED_ROUTES[city]) });
         return;
       }
-      const [id, name, avgMan, hours, ci, best, peak, highlights, beach, routes] = city;
+      const [id, name, avgMan, hours, ci, best, peak, highlights, beach, routes, extra] = city;
       const avg = avgMan * 10000;
       const L = (krw) => krwToLocal(krw * ci, c.cur);
       const hotels = beach
@@ -500,12 +512,13 @@ const DESTINATIONS = (() => {
         ];
       const tierCost = [25000, 18000, 70000];
       out.push({
-        ...base, id, name, detailed: false, ci, beach: !!beach,
+        ...base, ...(extra || {}), id, name, detailed: false, ci, beach: !!beach,
         flight: { low: Math.round(avg * 0.7 / 10000) * 10000, avg, high: Math.round(avg * 1.6 / 10000) * 10000, hours },
         bestMonths: months(best), peakMonths: months(peak), hotels,
         daily: { food: L(40000), transport: L(10000), misc: L(20000) },
         attractions: highlights.split("|").map((n, i) => ({ name: n, cost: L(tierCost[i] ?? 20000) })),
-        tips: [`${c.name} 비자: ${c.visa}`, ...(REGION_TIPS[c.region] || [])],
+        tipKey: c.tipKey || c.region,
+        tips: [`${c.name} 비자: ${c.visa}`, ...(REGION_TIPS[c.tipKey || c.region] || [])],
         routes: parseRoutes(routes),
       });
     });

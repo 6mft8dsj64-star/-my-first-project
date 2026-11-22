@@ -103,7 +103,7 @@
       const visa = `${t("visa.label")}: ${N.visa(d.visa)}`;
       if (!EN()) return d.detailed ? [visa, ...d.tips, ...(REGION_TIPS[d.region] || [])] : d.tips;
       const local = d.detailed ? (LD()?.detailed?.[d.id]?.tips || DETAILED_EN[d.id]?.tips || []) : [];
-      return [visa, ...local, ...(LD()?.regionTips?.[d.region] || REGION_TIPS_EN[d.region] || [])];
+      return [visa, ...local, ...(LD()?.regionTips?.[d.tipKey || d.region] || REGION_TIPS_EN[d.tipKey || d.region] || [])];
     },
     general: (i) => {
       const x = LD()?.generalTips?.[i];
@@ -293,6 +293,12 @@
 
   function routeInfo(d, depCode) {
     const dep = DEP(depCode);
+    if (d.countryId === "kr") { // 국내 여행: 같은 지역 → 국내선 → KTX·버스 → 다른 공항에서 국내선
+      if ((d.home || []).includes(depCode)) return { mode: "local", airlines: [], price: 0 };
+      if (d.routes[depCode]) return { mode: "direct", airlines: d.routes[depCode], price: d.flight.avg };
+      if (d.ground) return { mode: "ground", airlines: [], price: d.ground };
+      return { mode: "domvia", airlines: [], price: d.flight.avg + 60000 };
+    }
     const addKrw = dep.add * 10000;
     if (d.routes[depCode]) return { mode: "direct", airlines: d.routes[depCode], price: d.flight.avg };
     if (depCode !== "ICN" && d.routes.ICN) return { mode: "transfer", airlines: d.routes.ICN, price: d.flight.avg + addKrw, dep };
@@ -300,6 +306,8 @@
     return { mode: "via", airlines: VIA[d.region].split(","), price: d.flight.avg + addKrw, dep: depCode !== "ICN" ? dep : null, sib };
   }
   const routeLabel = (r) => t(`route.${r.mode}`);
+  const isFlight = (r) => !["local", "ground"].includes(r.mode);
+  const routeHours = (d, r) => (r.mode === "ground" && d.groundTime ? d.groundTime : r.mode === "local" ? "" : d.flight.hours);
 
   function defaultPlan(destId = "tokyo", dep = "ICN") {
     const d = destById(destId);
@@ -339,7 +347,7 @@
     const st = stayLocal(d, tierOf(p), p);
     const rows = p.days.flat().filter((e) => e.amt > 0);
     const items = [
-      { key: "flight", krw: p.flightPrice * p.people, note: () => `${money(p.flightPrice)} × ${t("unit.people", { n: p.people })}` },
+      { key: "flight", lk: { ground: "ground", local: "ground" }[routeInfo(d, p.dep).mode], krw: p.flightPrice * p.people, note: () => `${money(p.flightPrice)} × ${t("unit.people", { n: p.people })}` },
       { key: "hotel", localAmt: st.sum * p.rooms, cur, note: () => t("note.hotel", { n: nights, r: p.rooms }) },
       { key: "attr", krw: rows.reduce((s, e) => s + e.amt, 0) * p.people, note: () => t("note.sched", { n: rows.length, p: p.people }) },
       p.dailyMine != null
@@ -376,8 +384,8 @@
     const cs = crowd(d);
     return `<button class="city ${d.id === plan.destId ? "on" : ""}" data-city="${d.id}">
       <div class="nm">${withCountry ? `${d.flag} ` : ""}${esc(N.city(d))}</div>
-      <div class="ct">${withCountry ? `${esc(N.country(d.countryId))} · ` : ""}${routeLabel(r)}${r.mode === "direct" ? ` · ${t("city.airlines", { n: r.airlines.length })}` : ""} · ${esc(N.hours(d.flight.hours))}</div>
-      <div class="pr">${t("city.rt")} <b>${short(r.price)}</b></div>${cs && !cs.few ? `<div class="crowd-pr">👥 ${t("crowd.card", { p: `<b>${short(cs.med)}</b>`, n: cs.n })}</div>` : ""}${seasonBadge(d, m)}
+      <div class="ct">${withCountry ? `${esc(N.country(d.countryId))} · ` : ""}${routeLabel(r)}${r.mode === "direct" && r.airlines.length ? ` · ${t("city.airlines", { n: r.airlines.length })}` : ""}${routeHours(d, r) ? ` · ${esc(N.hours(routeHours(d, r)))}` : ""}</div>
+      <div class="pr">${r.mode === "local" ? t("route.localShort") : `${t(r.mode === "ground" ? "city.rtGround" : "city.rt")} <b>${short(r.price)}</b>`}</div>${cs && !cs.few ? `<div class="crowd-pr">👥 ${t("crowd.card", { p: `<b>${short(cs.med)}</b>`, n: cs.n })}</div>` : ""}${seasonBadge(d, m)}
     </button>`;
   }
 
@@ -405,11 +413,11 @@
     if (!countries.some((c) => c.id === ui.country)) ui.country = countries[0].id;
     $("#countryGrid").innerHTML = countries.map((c) => {
       const cities = DESTINATIONS.filter((d) => d.countryId === c.id);
-      const minP = Math.min(...cities.map((d) => routeInfo(d, plan.dep).price));
+      const minP = Math.min(...cities.map((d) => routeInfo(d, plan.dep).price).filter((v) => v > 0), Infinity); // 교통비 0원(같은 지역)은 빼요
       const direct = cities.some((d) => d.routes[plan.dep]);
       return `<button class="country ${c.id === ui.country ? "on" : ""}" data-country="${c.id}">
         <span class="flag">${c.flag}</span><span><span class="nm">${esc(N.country(c.id))}</span>
-        <span class="ct">${t("country.cities", { n: cities.length })} · ${t("country.from", { p: short(minP) })}</span>
+        <span class="ct">${t("country.cities", { n: cities.length })} · ${Number.isFinite(minP) ? t("country.from", { p: short(minP) }) : t("route.localShort")}</span>
         ${direct ? `<span class="ct"><i class="dot"></i>${t("country.direct", { a: esc(N.depCity(DEP(plan.dep))) })}</span>` : ""}</span>
       </button>`;
     }).join("");
@@ -422,20 +430,23 @@
   function renderDestInfo() {
     const d = destById(plan.destId);
     const dayLocal = dailyRefLocal(d);
+    const r0 = routeInfo(d, plan.dep);
+    const domestic = d.countryId === "kr";
     const rl = rateLabel(d.currency);
     const cs = crowd(d);
     $("#plannerTitle").textContent = `${d.flag} ${N.city(d)}`;
     $("#destInfo").innerHTML = `
       <div class="info-head"><div class="flag">${d.flag}</div>
         <div><h3 style="margin:0">${esc(N.city(d))}, ${esc(N.country(d.countryId))}</h3>
-        <div class="hint" style="margin:0">${N.region(regionOf(d.region))} · ${t("info.flight")} ${esc(N.hours(d.flight.hours))} · ${t("info.currency")} ${esc(N.cur(d.currency))}</div></div></div>
+        <div class="hint" style="margin:0">${N.region(regionOf(d.region))}${routeHours(d, r0) ? ` · ${t(isFlight(r0) ? "info.flight" : "info.move")} ${esc(N.hours(routeHours(d, r0)))}` : ""} · ${t("info.currency")} ${esc(N.cur(d.currency))}</div></div></div>
       <div class="visa">🛂 ${t("visa.label")}: ${esc(N.visa(d.visa))}${d.detailed ? "" : ` <span class="badge">${t("info.estimate")}</span>`}</div>
       <div class="info-stats">
-        <div class="stat"><div class="k">${t("info.fare")}</div><div class="v">${short(d.flight.low)}~${short(d.flight.high)}</div></div>
+        ${domestic ? `<div class="stat"><div class="k">${t("info.trans")}</div><div class="v">${r0.mode === "local" ? t("route.localShort") : short(r0.price)}</div></div>`
+          : `<div class="stat"><div class="k">${t("info.fare")}</div><div class="v">${short(d.flight.low)}~${short(d.flight.high)}</div></div>`}
         ${cs && !cs.few ? `<div class="stat crowd"><div class="k">👥 ${t("crowd.title")}</div><div class="v">${short(cs.med)} <small>(${t("crowd.people", { n: cs.n })})</small></div></div>` : ""}
         <div class="stat"><div class="k">${t("info.stay3")}</div><div class="v">${t("approx")} ${short(d.stay.tiers[1].local * rate(d.currency))}</div></div>
         <div class="stat"><div class="k">${t("info.daily")}</div><div class="v">${t("approx")} ${short(dayLocal * rate(d.currency))}</div></div>
-        <div class="stat"><div class="k">${t("info.rate")}</div><div class="v">${rl.head} = ${rl.value}</div></div>
+        <div class="stat"><div class="k">${t("info.rate")}</div><div class="v">${d.currency === "KRW" && disp() === "KRW" ? t("info.noFx") : `${rl.head} = ${rl.value}`}</div></div>
       </div>
       <div class="months">${Array.from({ length: 12 }, (_, i) => i + 1).map((mm) =>
         `<span class="${d.bestMonths.includes(mm) ? "good" : d.peakMonths.includes(mm) ? "peak" : ""}">${monthName(mm)}</span>`).join("")}</div>
@@ -475,7 +486,10 @@
   function renderRoute() {
     const d = destById(plan.destId), dep = DEP(plan.dep), r = routeInfo(d, plan.dep);
     let html = `<div class="route-head"><b>${esc(N.dep(dep))}</b> → <b>${d.flag} ${esc(N.city(d))}</b> <span class="badge ${r.mode === "direct" ? "good" : ""}">${routeLabel(r)}</span></div>`;
-    if (r.mode === "direct") html += `<div class="route-row">${airlineChips(r.airlines)}</div>`;
+    if (r.mode === "local") html += `<div class="route-row">${t("route.localMsg", { a: esc(N.dep(dep)), c: esc(N.city(d)) })}</div>`;
+    else if (r.mode === "ground") html += `<div class="route-row">${t("route.groundMsg", { c: esc(N.city(d)), h: esc(N.hours(d.groundTime || "")) })}</div>`;
+    else if (r.mode === "domvia") html += `<div class="route-row">${t("route.domviaMsg", { a: esc(N.dep(dep)), c: esc(N.city(d)) })}</div>`;
+    else if (r.mode === "direct") html += `<div class="route-row">${r.airlines.length ? airlineChips(r.airlines) : t("route.noAirline")}</div>`;
     else if (r.mode === "transfer") html += `<div class="route-row">${t("route.transferMsg", { a: esc(N.dep(dep)), how: esc(N.toICN(dep)) })}<br/>${airlineChips(r.airlines)}</div>`;
     else {
       html += `<div class="route-row">${r.dep ? t("route.viaFrom", { how: esc(N.toICN(r.dep)) }) : t("route.viaMsg")}<br/>${airlineChips(r.airlines)}</div>`;
@@ -485,9 +499,9 @@
           <button class="chip-btn" data-city-jump="${r.sib.id}">${t("route.see", { c: esc(N.city(r.sib)) })}</button></div>`;
       }
     }
-    const others = DEPARTURES.filter((x) => x.code !== plan.dep && d.routes[x.code]);
+    const others = DEPARTURES.filter((x) => x.code !== plan.dep && (d.routes[x.code] || (d.home || []).includes(x.code)));
     if (others.length) html += `<div class="route-other">${t("route.others")}: ${others.map((x) =>
-      `<button class="chip-btn" data-dep="${x.code}">✈️ ${esc(N.depShort(x))} (${d.routes[x.code].length})</button>`).join("")}</div>`;
+      `<button class="chip-btn" data-dep="${x.code}">✈️ ${esc(N.depShort(x))}${d.routes[x.code]?.length ? ` (${d.routes[x.code].length})` : ""}</button>`).join("")}</div>`;
     html += `<p class="hint">${t("route.legend")}</p>`;
     $("#routeInfo").innerHTML = html;
 
@@ -497,6 +511,10 @@
 
   function renderFlight() {
     renderRoute();
+    // 국내 여행에서 같은 지역·KTX로 가는 경우에는 항공 시세 막대와 공유 시세를 숨겨요
+    const rr = routeInfo(destById(plan.destId), plan.dep), fl = isFlight(rr);
+    ["#flightBar", "#crowdStat", "#crowdShareRow"].forEach((s) => { const el = $(s); if (el) el.hidden = !fl; });
+    if (!fl) { const h = $("#flightHint"); h.className = "hint"; h.textContent = t(rr.mode === "local" ? "fare.localHint" : "fare.groundHint"); return; }
     const f = { ...destById(plan.destId).flight };
     const rp = routeInfo(destById(plan.destId), plan.dep).price;
     const shift = rp - f.avg;
@@ -638,7 +656,7 @@
            <div class="hint" style="margin:2px 0 0">${t("sum.sens", { p: money(now.localTotal * rate(d.currency) * 0.01) })}</div>`
         : t("sum.noY")}</div>
       <div class="breakdown">${now.items.map((it, i) => `
-        <div class="bd"><span>${t(`item.${it.key}`)} <span class="hint" style="margin:0;font-size:.78rem">${it.note()}</span></span>
+        <div class="bd"><span>${t(`item.${it.lk || it.key}`)} <span class="hint" style="margin:0;font-size:.78rem">${it.note()}</span></span>
           <span class="amt">${money(it.krw)}</span>
           <div class="bar"><i style="width:${(it.krw / max) * 100}%;background:${COLORS[i % COLORS.length]}"></i></div></div>`).join("")}
       </div>
@@ -660,7 +678,7 @@
 
     const wd = s.getDay();
     const dayName = EN() ? new Intl.DateTimeFormat(LOC(), { weekday: "long" }).format(s) : dow(s);
-    if ([5, 6, 0].includes(wd)) add("warn", t("sg.weekend", { d: dayName, p: short(plan.flightPrice * 0.12 * plan.people) }));
+    if ([5, 6, 0].includes(wd) && plan.flightPrice > 0) add("warn", t("sg.weekend", { d: dayName, p: short(plan.flightPrice * 0.12 * plan.people) }));
     else if ([2, 3, 4].includes(wd)) add("good", t("sg.weekday", { d: dayName }));
 
     if (d.peakMonths.includes(m)) add("warn", t("sg.peak", { m: monthName(m), c: city, alt: monthList(d.bestMonths.filter((x) => !d.peakMonths.includes(x)).slice(0, 3)) }));
@@ -674,7 +692,7 @@
     else if (lead > hi) add("", t("sg.early", { n: lead, hi }));
     else add("good", t("sg.ontime", { n: lead }));
 
-    if (plan.flightPrice > d.flight.avg * 1.15) add("warn", t("sg.fare", { n: Math.round((plan.flightPrice / d.flight.avg - 1) * 100) }));
+    if (isFlight(routeInfo(d, plan.dep)) && plan.flightPrice > d.flight.avg * 1.15) add("warn", t("sg.fare", { n: Math.round((plan.flightPrice / d.flight.avg - 1) * 100) }));
     const cs = crowd(d);
     if (cs && !cs.few && plan.flightPrice > cs.med * 1.15) add("warn", t("sg.crowd", { n: cs.n, p: short(cs.med), d: short(plan.flightPrice - cs.med) }));
 
@@ -933,7 +951,7 @@
     });
     $("#cityGrid").addEventListener("click", (e) => { const b = e.target.closest("[data-city]"); if (b) pickCity(b.dataset.city); });
     $("#destSearch").addEventListener("input", (e) => { ui.query = e.target.value; renderDestinations(); });
-    const setDep = (code) => { plan.dep = code; plan.flightPrice = routeInfo(destById(plan.destId), code).price; update(); };
+    const setDep = (code) => { plan.dep = code; plan.flightPrice = routeInfo(destById(plan.destId), code).price; update(); renderDestInfo(); };
     $("#dep").addEventListener("change", (e) => setDep(e.target.value));
     $("#routeInfo").addEventListener("click", (e) => {
       const b = e.target.closest("[data-dep]"); if (b) setDep(b.dataset.dep);
@@ -957,7 +975,7 @@
       log.push({ dest: plan.destId, dep: plan.dep, price: plan.flightPrice, date: iso(new Date()) });
       store.set("tm_price_log", log.slice(-200));
       const d = destById(plan.destId);
-      window.TMCrowd?.submit({ dest: d.id, country: d.countryId, dep: plan.dep, price: plan.flightPrice, month: parse(plan.start).getMonth() + 1 })
+      if (isFlight(routeInfo(d, plan.dep))) window.TMCrowd?.submit({ dest: d.id, country: d.countryId, dep: plan.dep, price: plan.flightPrice, month: parse(plan.start).getMonth() + 1 })
         .then((ok) => { if (ok) { toast(t("crowd.shared")); onCrowd(); } });
       update();
     });

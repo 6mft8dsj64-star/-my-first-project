@@ -3,6 +3,13 @@
 
 // 도시: [이름, "명소1|명소2|…" (world.js / data.js의 순서와 같음)]
 const CITY_EN = {
+  seoul: ["Seoul", "Gyeongbokgung Palace|N Seoul Tower|Lotte World"],
+  busan: ["Busan", "Haeundae Beach|Gamcheon Culture Village|Gwangalli night view"],
+  jeju: ["Jeju", "Seongsan Ilchulbong|Udo Island|Hallasan"],
+  gyeongju: ["Gyeongju", "Bulguksa & Seokguram|Daereungwon & Cheomseongdae|Donggung Palace & Wolji Pond at night"],
+  gangneung: ["Gangneung", "Gyeongpo Beach|Anmok Coffee Street|Jeongdongjin sunrise"],
+  yeosu: ["Yeosu", "Yeosu night sea & Maritime Cable Car|Odongdo Island|Hyangiram Hermitage"],
+  jeonju: ["Jeonju", "Jeonju Hanok Village|Gyeonggijeon Shrine|Nambu Market night market"],
   tokyo: ["Tokyo", "Shibuya Sky observatory|teamLab Planets|Disneyland / DisneySea|Senso-ji, Asakusa|Hakone day trip (Free Pass)"],
   osaka: ["Osaka", "Universal Studios Japan|Osaka Castle keep|Kyoto day-trip transport|Umeda Sky Building|Nara Deer Park"],
   fukuoka: ["Fukuoka", "Dazaifu Tenmangu|Yufuin round-trip bus|Fukuoka Tower|Nakasu yatai food tour"],
@@ -193,9 +200,11 @@ const VISA_EN = {
   "무비자 4개월": "Visa-free 4 months",
   "도착비자 또는 e-Visa": "Visa on arrival or e-Visa",
   "eTA(전자여행허가) 필요": "eTA required",
+  "국내 여행 (신분증 지참 · 외국인은 K-ETA 또는 비자 확인)": "Domestic trip (bring ID · foreign visitors: check K-ETA or visa)",
 };
 
 const REGION_TIPS_EN = {
+  kr: ["KTX and SRT tickets open one month before departure. Weekends and holidays sell out fast, so book right away.", "Jeju, Gangneung and Gyeongju have many spots that are hard to reach by public transport, so rental cars are popular. Book early in peak season.", "Watch for government and local lodging discount coupons (such as the lodging sale festival) to save on stays."],
   ea: ["In Japan, Taiwan and Hong Kong you can usually add the transit card to your phone wallet.", "In China, link your card to Alipay or WeChat Pay before you go — paying gets much easier."],
   sea: ["In many countries the Grab app covers taxis, food delivery and payments.", "In the rainy season (roughly May–October), plan mornings outdoors and expect afternoon showers."],
   sa: ["India, Sri Lanka and Nepal require an e-Visa/ETA in advance.", "Drink only bottled water and stick to freshly cooked street food."],
@@ -332,6 +341,7 @@ function hoursFmt(s, H = H_EN) {
     .replace(/약 /g, H.approx)
     .replace(/(\d+(?:~\d+)?)시간/g, (_, n) => H.h.replace("{n}", n))
     .replace(/(\d+)분/g, (_, n) => H.m.replace("{n}", n));
+  if (s.startsWith("KTX ")) return `${time(s.slice(4))} ${H.hsr}`.trim(); // 국내 고속철도
   if (s.includes("직항(시즌) 또는 경유")) return H.dso;
   if (s.includes("직항 또는 경유")) return H.do;
   let m = s.match(/^경유(?: (.+))?$/);
