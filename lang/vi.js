@@ -295,4 +295,8 @@ I18N.add("vi", {
   "sg.safe4": "⛔ {c} là khu vực <b>cấm du lịch</b>.",
   "sg.safe25": "⚠️ {c} đang có <b>khuyến cáo đặc biệt</b>. Hãy cân nhắc hủy hoặc hoãn.",
   "sg.safeParts": "Một số khu vực của quốc gia có {c} đang ở <b>{l}</b>. Hãy kiểm tra xem điểm đến của bạn có nằm trong đó không.",
+  "rates.bank": "🏦 Tỷ giá ngân hàng: {n} loại tiền dùng tỷ giá cơ sở do {s} công bố ngày {d} (cập nhật khoảng 11 giờ sáng ngày làm việc). Các loại tiền khác dùng tỷ giá thị trường công khai.",
+  "rates.bankCard": "Gửi {s} · Nhận {b}",
+  "rates.src.kexim": "Ngân hàng Xuất nhập khẩu Hàn Quốc",
+  "rates.src.hana": "Ngân hàng Hana",
 });

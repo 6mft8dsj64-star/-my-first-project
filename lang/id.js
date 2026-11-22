@@ -295,4 +295,8 @@ I18N.add("id", {
   "sg.safe4": "⛔ {c} adalah wilayah <b>dilarang bepergian</b>.",
   "sg.safe25": "⚠️ {c} sedang dalam <b>peringatan khusus</b>. Pertimbangkan membatalkan atau menunda.",
   "sg.safeParts": "Sebagian wilayah negara tempat {c} berada ada di <b>{l}</b>. Cek apakah tujuanmu termasuk.",
+  "rates.bank": "🏦 Kurs bank: {n} mata uang memakai kurs acuan yang diumumkan {s} pada {d} (diperbarui sekitar pukul 11 pada hari kerja). Mata uang lain memakai kurs pasar publik.",
+  "rates.bankCard": "Kirim {s} · Terima {b}",
+  "rates.src.kexim": "Bank Ekspor-Impor Korea",
+  "rates.src.hana": "Hana Bank",
 });

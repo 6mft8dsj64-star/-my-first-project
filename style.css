@@ -549,3 +549,7 @@ label.check input:disabled + span { opacity: .8; }
 .badge.safe-b.l25, .badge.safe-b.part { background: rgba(255, 146, 43, .16); color: #e8590c; }
 .badge.safe-b.l4 { background: #111; color: #fff; }
 .country .badge.safe-b { display: inline-block; margin-top: 4px; }
+
+/* 은행 기준 환율 */
+.rate-bank { margin: -4px 0 12px; font-size: .86rem; color: var(--text); background: var(--primary-soft); border-radius: 10px; padding: 8px 12px; }
+.rate .rbank { font-size: .76rem; color: var(--muted); margin-top: 4px; }

@@ -295,4 +295,8 @@ I18N.add("de", {
   "sg.safe4": "⛔ Für {c} gilt ein <b>Reiseverbot</b>.",
   "sg.safe25": "⚠️ Für {c} gibt es einen <b>besonderen Reisehinweis</b>. Erwäge Absage oder Verschiebung.",
   "sg.safeParts": "In Teilen des Landes von {c} gilt <b>{l}</b>. Prüfe, ob dein Ziel betroffen ist.",
+  "rates.bank": "🏦 Bankkurs: {n} Währungen nutzen den von {s} am {d} veröffentlichten Referenzkurs (an Werktagen gegen 11 Uhr aktualisiert). Andere Währungen nutzen öffentliche Marktkurse.",
+  "rates.bankCard": "Senden {s} · Empfangen {b}",
+  "rates.src.kexim": "der Export-Import-Bank Koreas",
+  "rates.src.hana": "der Hana Bank",
 });

@@ -295,4 +295,8 @@ I18N.add("tr", {
   "sg.safe4": "⛔ {c} için <b>seyahat yasağı</b> var.",
   "sg.safe25": "⚠️ {c} için <b>özel seyahat uyarısı</b> var. İptal veya ertelemeyi düşün.",
   "sg.safeParts": "{c} şehrinin bulunduğu ülkenin bazı bölgelerinde <b>{l}</b> var. Gideceğin yerin dahil olup olmadığını kontrol et.",
+  "rates.bank": "🏦 Banka kuru: {n} para birimi, {s} tarafından {d} tarihinde açıklanan referans kurla hesaplanır (iş günlerinde saat 11 civarı güncellenir). Diğerleri kamuya açık piyasa kurlarını kullanır.",
+  "rates.bankCard": "Gönderme {s} · Alma {b}",
+  "rates.src.kexim": "Kore İhracat-İthalat Bankası",
+  "rates.src.hana": "Hana Bank",
 });

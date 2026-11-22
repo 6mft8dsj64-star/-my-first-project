@@ -249,6 +249,10 @@
       "sg.safe4": "⛔ {c}은(는) 외교부 <b>여행금지</b> 지역이에요.",
       "sg.safe25": "⚠️ {c}에는 <b>특별여행주의보</b>가 내려져 있어요. 여행 취소·연기를 고려하세요.",
       "sg.safeParts": "{c}이(가) 있는 나라의 일부 지역에 <b>{l}</b>가 내려져 있어요. 가는 곳이 해당되는지 외교부에서 확인하세요.",
+      "rates.bank": "🏦 은행 기준 환율: {s} {d} 고시 매매기준율로 {n}개 통화를 계산해요 (영업일 오전 11시쯤 갱신). 나머지 통화는 공개 환율이에요.",
+      "rates.bankCard": "송금 보낼 때 {s} · 받을 때 {b}",
+      "rates.src.kexim": "한국수출입은행",
+      "rates.src.hana": "하나은행",
       "auth.lead": "로그인하면 내 여행 계획과 저장한 가격 기록이<br />어느 기기에서든 그대로 따라와요.",
       "auth.notice": "아직 로그인 서버가 연결되지 않았어요. 관리자가 Firebase 설정을 마치면 로그인할 수 있어요. 지금은 <b>로그인 없이 둘러보기</b>로 이용해 주세요.",
       "auth.google": "Google로 계속하기", "auth.apple": "Apple로 계속하기", "auth.or": "또는 이메일",
@@ -565,6 +569,10 @@
       "sg.safe4": "⛔ {c} is under a <b>travel ban</b>.",
       "sg.safe25": "⚠️ {c} has a <b>special travel advisory</b>. Consider cancelling or postponing.",
       "sg.safeParts": "Some areas of the country where {c} is have <b>{l}</b>. Check whether your destination is included.",
+      "rates.bank": "🏦 Bank rates: {n} currencies use the base rate published by {s} on {d} (updated around 11 a.m. on business days). Other currencies use public market rates.",
+      "rates.bankCard": "Send {s} · Receive {b}",
+      "rates.src.kexim": "the Export-Import Bank of Korea",
+      "rates.src.hana": "Hana Bank",
       "auth.lead": "Sign in and your plans and price history<br />follow you on every device.",
       "auth.notice": "Sign-in isn't connected yet. Once the site owner finishes the Firebase setup you can sign in. For now, use <b>Continue without signing in</b>.",
       "auth.google": "Continue with Google", "auth.apple": "Continue with Apple", "auth.or": "or use email",
@@ -659,7 +667,7 @@
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
     { code: "ar", name: "العربية", locale: "ar" },
   ];
-  const VERSION = "20261127b";
+  const VERSION = "20261127c";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------

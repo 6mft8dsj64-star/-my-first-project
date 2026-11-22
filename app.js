@@ -192,9 +192,18 @@
     return { name: "frankfurter", time: new Date(`${last}T15:00:00Z`), rates, dates, raw: r.rates, series };
   }
 
+  // 은행 기준 환율: GitHub Actions가 받아 둔 rates-bank.json (한국수출입은행 → 나중에 하나은행)
+  async function srcBank() {
+    try {
+      const j = await fetchJSON(`rates-bank.json?t=${Date.now()}`, 5000);
+      if (!j?.rates || !j.date || diffDays(parse(j.date), TODAY) > 7) return null; // 일주일 넘게 지난 자료는 안 써요
+      return j;
+    } catch { return null; }
+  }
+
   async function loadRates() {
     const todayIso = iso(TODAY);
-    const [er, ca, fr] = await Promise.all([srcErApi(), srcCurrencyApi(), srcFrankfurter(iso(addDays(TODAY, -35)))]);
+    const [er, ca, fr, bank] = await Promise.all([srcErApi(), srcCurrencyApi(), srcFrankfurter(iso(addDays(TODAY, -35))), srcBank()]);
     const srcs = [er, ca, fr].filter((x) => x && Object.keys(x.rates).length).sort((a, b) => b.time - a.time);
     let current = null;
     if (srcs.length) {
@@ -204,6 +213,15 @@
       Object.assign(current, srcs[0].rates);
       Rates.updated = srcs[0].time;
       Rates.source = srcs.map((x) => x.name).join(" · ");
+    }
+    // 은행이 고시한 통화는 은행 매매기준율로 계산해요
+    Rates.bank = null;
+    if (bank) {
+      current = current || {};
+      Object.entries(bank.rates).forEach(([c, v]) => { if (v?.base > 0 && FALLBACK_RATES[c] != null) current[c] = v.base; });
+      Rates.bank = bank;
+      Rates.source = [bank.name, Rates.source].filter(Boolean).join(" · ");
+      if (!Rates.updated) Rates.updated = new Date(`${bank.date}T${bank.time || "11:00"}:00+09:00`); // 다른 출처가 모두 실패했을 때
     }
 
     Rates.yesterday = {}; Rates.series = {};
@@ -218,6 +236,8 @@
       const y = await firstOk(caUrls(d.toISOString().slice(0, 10)));
       if (y?.krw) Object.assign(Rates.yesterday, caRates(y));
     }
+    // 은행 통화의 "어제 대비"는 은행의 이전 고시와 비교해요
+    if (bank?.prev?.rates) Object.entries(bank.prev.rates).forEach(([c, v]) => { if (v?.base > 0 && FALLBACK_RATES[c] != null) Rates.yesterday[c] = v.base; });
 
     // 브라우저에 매일 기록해서 추이가 없는 통화도 점점 그래프가 생겨요
     const hist = store.get("tm_rate_hist", {});
@@ -784,12 +804,25 @@
       <polyline fill="none" stroke="var(${up ? "--up" : "--down"})" stroke-width="2" points="${pts.join(" ")}"/></svg>`;
   }
 
+  // 은행 송금 환율 한 줄 (원화 기준, 100엔처럼 단위를 맞춰요)
+  function bankLine(c) {
+    const b = Rates.bank?.rates?.[c];
+    if (!b || c === "KRW" || !(b.tts > 0 && b.ttb > 0)) return "";
+    const unit = ["JPY", "VND", "IDR"].includes(c) ? 100 : 1;
+    const w = (v) => fmt(v * unit, "KRW", { narrow: true });
+    return `<div class="rbank">🏦 ${unit} ${c} · ${t("rates.bankCard", { s: w(b.tts), b: w(b.ttb) })}</div>`;
+  }
   function renderRates() {
     const dCur = destById(plan.destId).currency;
     const base = disp();
     const list = [dCur, ...(ui.allRates ? CODES : MAJOR), ...(base !== "KRW" ? ["KRW"] : [])].filter((c, i, a) => a.indexOf(c) === i && (c !== base || c === "KRW"));
     $("#toggleRates").textContent = ui.allRates ? t("rates.fewer") : t("rates.all", { n: CODES.length });
     $("#rateBase").textContent = t("rates.base", { c: base === "KRW" && !EN() ? "원화(KRW)" : `${N.cur(base)} (${base})` });
+    const rb = $("#rateBank");
+    if (rb) {
+      rb.hidden = !Rates.bank;
+      if (Rates.bank) rb.textContent = t("rates.bank", { s: t(`rates.src.${Rates.bank.provider}`), d: new Intl.DateTimeFormat(LOC(), { month: "long", day: "numeric", weekday: "short" }).format(parse(Rates.bank.date)), n: Object.keys(Rates.bank.rates).length });
+    }
     $("#rateGrid").innerHTML = list.map((c) => {
       let head, value, pct = null, series = [], pos = null;
       if (c === "KRW") { // 표시 통화가 외화일 때: 1 표시통화 = ?원
@@ -808,6 +841,7 @@
         <div class="rc ${cls(pct)}">${pct == null ? `<span class="hint" style="margin:0">${t("rates.noY")}</span>`
           : `${t("rates.vsY")} ${pct > 0 ? "▲" : pct < 0 ? "▼" : ""} ${Math.abs(pct).toFixed(2)}%`}</div>
         ${sparkline(series)}
+        ${bankLine(c)}
         <div class="rn">${c === "KRW" ? t("rates.krwNote") : pos == null ? t("rates.collect") : pos <= 0.3 ? t("rates.low") : pos >= 0.7 ? t("rates.high") : t("rates.mid")}</div>
       </div>`;
     }).join("");

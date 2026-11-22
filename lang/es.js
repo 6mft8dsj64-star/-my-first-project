@@ -295,4 +295,8 @@ I18N.add("es", {
   "sg.safe4": "⛔ {c} tiene <b>prohibido el viaje</b>.",
   "sg.safe25": "⚠️ {c} tiene una <b>alerta especial de viaje</b>. Plantéate cancelar o aplazar.",
   "sg.safeParts": "Algunas zonas del país de {c} tienen <b>{l}</b>. Comprueba si tu destino está incluido.",
+  "rates.bank": "🏦 Tipo bancario: {n} monedas usan el tipo de referencia publicado por {s} el {d} (se actualiza hacia las 11:00 en días hábiles). Las demás usan tipos públicos de mercado.",
+  "rates.bankCard": "Enviar {s} · Recibir {b}",
+  "rates.src.kexim": "el Banco de Exportación e Importación de Corea",
+  "rates.src.hana": "Hana Bank",
 });
