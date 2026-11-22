@@ -107,10 +107,15 @@
       if (compact && a >= 10000) return `${(amount / 10000).toFixed(a >= 1000000 ? 0 : 1)}만원`;
       return `${Math.round(amount).toLocaleString("ko-KR")}원`;
     }
+    // 아랍어(오른쪽→왼쪽): 가격은 왼쪽→오른쪽 숫자 표기로 묶어서 순서가 뒤집히지 않게 해요
+    if (I18N.rtl) return `\u2066${fmtIntl(amount, cur, { compact, narrow }, "en-US")}\u2069`;
+    return fmtIntl(amount, cur, { compact, narrow }, LOC());
+  }
+  function fmtIntl(amount, cur, { compact, narrow }, loc) {
     const small = Math.abs(amount) < 100 && !ZERO_DEC.includes(cur);
     const o = { style: "currency", currency: cur, currencyDisplay: narrow ? "narrowSymbol" : "symbol", maximumFractionDigits: small ? 2 : 0, minimumFractionDigits: 0 };
     if (compact && Math.abs(amount) >= 10000) { o.notation = "compact"; o.maximumFractionDigits = 1; }
-    try { return new Intl.NumberFormat(LOC(), o).format(amount); } catch { return `${Math.round(amount).toLocaleString(LOC())} ${cur}`; }
+    try { return new Intl.NumberFormat(loc, o).format(amount); } catch { return `${Math.round(amount).toLocaleString(loc)} ${cur}`; }
   }
   const money = (krw, set) => fmt(krw / rate(disp(), set), disp());          // 원화 금액 → 표시 통화
   const short = (krw, set) => fmt(krw / rate(disp(), set), disp(), { compact: true });
@@ -118,7 +123,7 @@
   const signed = (n, f) => (n > 0 ? "▲ " : n < 0 ? "▼ " : "") + f(Math.abs(n));
   const cls = (n) => (n > 0 ? "up" : n < 0 ? "down" : "");
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const num = (v, max = 2) => v.toLocaleString(LOC(), { maximumFractionDigits: v < 1 ? 4 : max });
+  const num = (v, max = 2) => v.toLocaleString(I18N.rtl ? "en-US" : LOC(), { maximumFractionDigits: v < 1 ? 4 : max });
 
   function toast(msg) {
     const el = $("#toast"); el.textContent = msg; el.classList.add("show");

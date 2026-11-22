@@ -269,7 +269,7 @@
       "saved.meta": "Saved {d} ({n} days ago) · {p} people", "saved.then": "When saved", "saved.now": "Today's rates", "saved.load": "Open", "saved.del": "Delete",
       "sec.tips": "5. Smart travel tips", "tips.local": "{c} local tips",
       "footer.note": "Fares, hotel and sight prices, popularity, routes and visa information are <b>estimates</b> based on public information and may differ from actual prices. Rates: open.er-api.com, frankfurter.app",
-      "footer.privacy": "Privacy Policy (Korean)",
+      "footer.privacy": "Privacy Policy",
       "toast.saved": "Plan saved. Check back to see how exchange rates change its price.", "toast.loaded": "Plan opened",
       "toast.extraNeed": "Enter a name and an amount", "toast.rates": "Today's rates applied", "toast.cur": "Showing prices in {c}",
       "set.title": "Settings", "set.theme": "Theme", "theme.system": "System", "theme.light": "Light", "theme.dark": "Dark",
@@ -284,7 +284,7 @@
       "auth.toSignup": "New here? Create an account", "auth.toLogin": "Have an account? Sign in", "auth.toReset": "Forgot password?",
       "auth.guest": "Continue without signing in →",
       "auth.fine1": "Plans you make as a guest stay in this browser and move to your account when you sign in.",
-      "auth.fine2": "Your information is handled under our <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a> (Korean). You must be 14 or older to sign up.",
+      "auth.fine2": "Your information is handled under our <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>. You must be 14 or older to sign up.",
       "auth.login": "Sign in", "auth.logout": "Sign out", "auth.traveler": "Traveler", "auth.myAccount": "My account",
       "auth.resetSent": "Password reset email sent. Check your inbox.", "auth.pwMismatch": "Passwords don't match.",
       "auth.welcome": "Welcome! We sent you a verification email.", "auth.sdkFail": "Couldn't load the sign-in service. Check your connection.",
@@ -303,7 +303,7 @@
       "err.auth/operation-not-allowed": "This sign-in method isn't enabled yet (enable it in the Firebase console).",
       "err.auth/unauthorized-domain": "Sign-in isn't allowed on this address (add it to Firebase authorized domains).",
       "err.auth/account-exists-with-different-credential": "This email is registered with a different method (Google/Apple/email). Sign in that way.",
-      "acc.title": "My account", "acc.privacy": "Privacy Policy (Korean)", "acc.delete": "Delete account",
+      "acc.title": "My account", "acc.privacy": "Privacy Policy", "acc.delete": "Delete account",
       "acc.with.google": "Signed in with Google", "acc.with.apple": "Signed in with Apple", "acc.with.email": "Signed in with email",
       "del.title": "Delete account", "del.warn": "Deleting your account <b>immediately and permanently removes</b> your account, saved plans and price history.",
       "del.pw": "Enter your password to confirm it's you", "del.socialHint": "A sign-in window will open once more to confirm it's you.",
@@ -330,7 +330,7 @@
       "contact.msg": "Message",
       "contact.msgPh": "Tell us which screen you were on, what you were doing and what went wrong.",
       "contact.email": "Email for a reply (optional)",
-      "contact.privacy": "We use your email only to reply and delete it within a year after handling your message. <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a> (Korean)",
+      "contact.privacy": "We use your email only to reply and delete it within a year after handling your message. <a href=\"privacy.html\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>",
       "contact.send": "Send",
       "contact.sending": "Sending…",
       "contact.sent": "Message sent. Thank you! We'll get back to you after reviewing it.",
@@ -369,7 +369,7 @@
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
     { code: "ar", name: "العربية", locale: "ar" },
   ];
-  const VERSION = "20261122g";
+  const VERSION = "20261123a";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------
@@ -459,6 +459,10 @@
     root.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
     root.querySelectorAll("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
     document.title = t("doc.title");
+    // 한국어가 아니면 개인정보처리방침 영어판으로 연결
+    root.querySelectorAll('a[href="privacy.html"], a[href="privacy-en.html"]').forEach((a) => {
+      a.setAttribute("href", settings.lang === "ko" ? "privacy.html" : "privacy-en.html");
+    });
   }
 
   const ready = loadLang(settings.lang).then((ok) => { if (!ok) settings.lang = "en"; document.documentElement.lang = settings.lang; setDir(); });
