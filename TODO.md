@@ -32,3 +32,9 @@
 - [ ] 도시·명소·숙소·팁·비자 데이터 번역: 지금은 한국어·영어만 있고, 나머지 12개 언어는 영어로 표시됨 (`i18n-data.js`)
 - [ ] 아랍어 등 오른쪽→왼쪽(RTL) 언어 지원
 - [ ] 개인정보처리방침 영어 번역본
+
+## 스팸 방지 (App Check) 마무리
+- [x] Fraud Defense(reCAPTCHA Enterprise) 사이트 키 등록, 사이트 코드에 연결 (2026-11-22)
+- [ ] 며칠 사용 후 Firebase 콘솔 App Check → API → Cloud Firestore에서 "확인된 요청" 비율 확인
+- [ ] 거의 100%면 **Cloud Firestore만** 적용(Enforce). Authentication은 적용하지 않기
+- [ ] 그래도 스팸이 오면: 로그인한 사람만 문의 가능 / 함정 칸 추가
