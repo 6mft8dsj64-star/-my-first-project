@@ -153,4 +153,5 @@ I18N.add("zh-TW", {
   "contact.fail": "送出失敗，請稍後再試。（{c}）",
   "contact.offline": "聯絡功能尚未連接。",
   "rates.checked": "{d} 已確認",
+  "contact.needLogin": "登入後才能送出訊息，這是為了防止垃圾訊息。",
 });

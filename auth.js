@@ -101,6 +101,7 @@
   }
 
   window.TMAuth = {
+    openLogin() { setMode("login"); msg(""); showAuth(true); },
     get db() { return db; },
     get user() { return user; },
     // 언어를 바꾸면 로그인 화면·헤더 문구를 다시 그려요

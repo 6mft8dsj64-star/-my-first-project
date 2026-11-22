@@ -53,9 +53,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
-    // 문의: 누구나 보낼 수 있고(형식 검사), 읽기·처리·삭제는 관리자만
+    // 문의: 로그인한 사람만 보낼 수 있고(형식 검사), 읽기·처리·삭제는 관리자만
     match /inquiries/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['category','message','email','uid','name','lang','page','createdAt','status'])
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['category','message','email','uid','name','lang','page','createdAt','status'])
         && request.resource.data.category in ['bug','inconv','idea','data','other']
         && request.resource.data.message is string
         && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
@@ -64,9 +66,7 @@ service cloud.firestore {
         && request.resource.data.lang is string && request.resource.data.lang.size() <= 10
         && request.resource.data.page is string && request.resource.data.page.size() <= 50
         && request.resource.data.status == 'new'
-        && request.resource.data.createdAt == request.time
-        && (request.resource.data.uid == null
-            || (request.auth != null && request.resource.data.uid == request.auth.uid));
+        && request.resource.data.createdAt == request.time;
       allow read, update, delete: if request.auth != null && request.auth.uid == '관리자_UID';
     }
   }

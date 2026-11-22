@@ -153,4 +153,5 @@ I18N.add("tr", {
   "contact.fail": "Gönderilemedi. Biraz sonra tekrar dene. ({c})",
   "contact.offline": "İletişim formu henüz bağlanmadı.",
   "rates.checked": "{d} kontrol edildi",
+  "contact.needLogin": "Mesaj göndermek için giriş yap. Bu, spamı engellememize yardımcı olur.",
 });

@@ -169,6 +169,7 @@
       "contact.wait": "방금 보냈어요. 30초 뒤에 다시 보내 주세요.",
       "contact.fail": "보내지 못했어요. 잠시 후 다시 시도해 주세요. ({c})",
       "contact.offline": "문의 기능이 아직 연결되지 않았어요.",
+      "contact.needLogin": "문의는 로그인한 뒤에 보낼 수 있어요. 스팸을 막기 위해서예요.",
       "inbox.btn": "📥 문의함",
       "inbox.title": "문의함",
       "inbox.empty": "아직 받은 문의가 없어요.",
@@ -338,6 +339,7 @@
       "contact.wait": "You just sent one. Please wait 30 seconds before sending again.",
       "contact.fail": "Couldn't send. Please try again shortly. ({c})",
       "contact.offline": "Contact isn't connected yet.",
+      "contact.needLogin": "Please sign in to send a message. This helps us block spam.",
       "inbox.btn": "📥 Inbox",
       "inbox.title": "Inbox",
       "inbox.empty": "No messages yet.",
@@ -366,7 +368,7 @@
     { code: "vi", name: "Tiếng Việt", locale: "vi-VN" }, { code: "th", name: "ไทย", locale: "th-TH" },
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
   ];
-  const VERSION = "20261122f";
+  const VERSION = "20261122g";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------

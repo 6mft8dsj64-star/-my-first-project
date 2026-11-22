@@ -153,4 +153,5 @@ I18N.add("fr", {
   "contact.fail": "Envoi impossible. Réessayez dans un instant. ({c})",
   "contact.offline": "Le formulaire de contact n'est pas encore connecté.",
   "rates.checked": "vérifié à {d}",
+  "contact.needLogin": "Connectez-vous pour envoyer un message. Cela nous aide à bloquer le spam.",
 });

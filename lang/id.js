@@ -153,4 +153,5 @@ I18N.add("id", {
   "contact.fail": "Gagal mengirim. Coba lagi sebentar lagi. ({c})",
   "contact.offline": "Fitur kontak belum terhubung.",
   "rates.checked": "dicek {d}",
+  "contact.needLogin": "Masuk dulu untuk mengirim pesan. Ini membantu kami memblokir spam.",
 });

@@ -8,8 +8,8 @@
   <meta name="description" content="여행지 정보, 실시간 환율, 총 경비 계산과 절약 팁까지 한 번에 짜는 여행 플래너" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20261122f" />
-  <script src="i18n.js?v=20261122f"></script>
+  <link rel="stylesheet" href="style.css?v=20261122g" />
+  <script src="i18n.js?v=20261122g"></script>
 </head>
 <body>
   <!-- 로그인 화면 -->
@@ -121,6 +121,14 @@
       <form id="contactForm" novalidate>
         <h3 id="contactTitle" data-i18n="contact.title">문의하기</h3>
         <p class="hint" data-i18n="contact.lead"></p>
+        <div class="ct-login" id="ctLogin" hidden>
+          <p data-i18n="contact.needLogin"></p>
+          <button class="btn block" type="button" id="ctLoginBtn" data-i18n="auth.login">로그인</button>
+        </div>
+        <!-- 스팸 봇용 함정 칸: 사람에게는 보이지 않아요 -->
+        <div class="hp-field" aria-hidden="true">
+          <label>Website<input type="text" id="ctWebsite" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
         <label><span data-i18n="contact.cat">종류</span><select id="ctCat"></select></label>
         <label><span data-i18n="contact.msg">내용</span>
           <textarea id="ctMsg" rows="6" maxlength="2000" dir="auto" spellcheck="true" data-i18n-ph="contact.msgPh"></textarea>
@@ -292,12 +300,12 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="data.js?v=20261122f"></script>
-  <script src="world.js?v=20261122f"></script>
-  <script src="i18n-data.js?v=20261122f"></script>
-  <script src="app.js?v=20261122f"></script>
-  <script src="firebase-config.js?v=20261122f"></script>
-  <script src="auth.js?v=20261122f"></script>
-  <script src="contact.js?v=20261122f"></script>
+  <script src="data.js?v=20261122g"></script>
+  <script src="world.js?v=20261122g"></script>
+  <script src="i18n-data.js?v=20261122g"></script>
+  <script src="app.js?v=20261122g"></script>
+  <script src="firebase-config.js?v=20261122g"></script>
+  <script src="auth.js?v=20261122g"></script>
+  <script src="contact.js?v=20261122g"></script>
 </body>
 </html>

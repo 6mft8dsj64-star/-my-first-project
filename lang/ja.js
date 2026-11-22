@@ -153,4 +153,5 @@ I18N.add("ja", {
   "contact.fail": "送信できませんでした。しばらくしてからお試しください。（{c}）",
   "contact.offline": "お問い合わせ機能はまだ接続されていません。",
   "rates.checked": "{d} 確認",
+  "contact.needLogin": "お問い合わせはログイン後に送れます。スパム防止のためです。",
 });

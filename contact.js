@@ -9,13 +9,19 @@
   const CATS = ["bug", "inconv", "idea", "data", "other"];
   const MAX = 2000;
   const contact = $("#contactModal"), inbox = $("#inboxModal");
-  let isAdmin = false, items = [], confirmDel = null;
+  let isAdmin = false, items = [], confirmDel = null, openedAt = 0;
 
   const lockBody = () => document.body.classList.toggle("locked", !contact.hidden || !inbox.hidden || !$("#authScreen").hidden || !$("#settingsModal").hidden);
   const show = (m, v) => { m.hidden = !v; lockBody(); };
   const msg = (text, ok = false) => { const el = $("#ctStatus"); el.textContent = text; el.className = "auth-msg" + (text ? (ok ? " ok" : " err") : ""); };
 
   // ---------- 문의하기 ----------
+  // 로그인한 사람만 문의할 수 있어요 (스팸 방지). 로그인 안 했으면 로그인 안내를 보여줘요.
+  function renderLoginGate() {
+    const loggedIn = !!window.TMAuth?.user;
+    $("#ctLogin").hidden = loggedIn;
+    $("#contactForm").querySelectorAll("select, textarea, input:not(#ctWebsite), #ctSend").forEach((el) => { el.disabled = !loggedIn; });
+  }
   function renderForm() {
     const cur = $("#ctCat").value || "inconv";
     $("#ctCat").innerHTML = CATS.map((c) => `<option value="${c}" ${c === cur ? "selected" : ""}>${esc(t(`contact.cat.${c}`))}</option>`).join("");
@@ -25,15 +31,23 @@
     e?.preventDefault();
     const u = window.TMAuth?.user;
     if (u?.email && !$("#ctEmail").value) $("#ctEmail").value = u.email;
-    renderForm(); msg("");
+    renderForm(); renderLoginGate(); msg("");
+    openedAt = Date.now();
     show(contact, true);
-    $("#ctMsg").focus();
+    if (window.TMAuth?.user) $("#ctMsg").focus();
   }
 
   async function send(e) {
     e.preventDefault();
     const message = $("#ctMsg").value.trim();
     const email = $("#ctEmail").value.trim();
+    if (!window.TMAuth?.user) { renderLoginGate(); msg(t("contact.needLogin")); return; }
+    // 함정 칸이 채워졌거나 창을 연 지 3초 안에 보내면 봇으로 보고, 보낸 것처럼만 보여줘요
+    if ($("#ctWebsite").value || Date.now() - openedAt < 3000) {
+      $("#ctMsg").value = ""; renderForm(); show(contact, false);
+      window.TripApp?.toast(t("contact.sent"));
+      return;
+    }
     if (!message) { msg(t("contact.needMsg")); return; }
     if (message.length > MAX) { msg(t("contact.tooLong")); return; }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg(t("err.auth/invalid-email")); return; }
@@ -66,6 +80,7 @@
   // 로그인할 때 문의함 읽기를 한 번 시도해서, 규칙이 허락하는 계정(관리자)에게만 버튼을 보여줘요.
   async function onUser(u) {
     isAdmin = false;
+    if (!contact.hidden) renderLoginGate();
     $("#inboxBtn").hidden = true;
     if (!u || !window.TMAuth?.db) return;
     try {
@@ -140,6 +155,7 @@
   }
 
   // ---------- 연결 ----------
+  $("#ctLoginBtn").addEventListener("click", () => { show(contact, false); window.TMAuth?.openLogin?.(); });
   document.querySelectorAll("[data-open-contact]").forEach((el) => el.addEventListener("click", openContact));
   $("#contactForm").addEventListener("submit", send);
   $("#ctMsg").addEventListener("input", renderForm);

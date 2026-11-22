@@ -153,4 +153,5 @@ I18N.add("de", {
   "contact.fail": "Senden fehlgeschlagen. Versuche es gleich noch einmal. ({c})",
   "contact.offline": "Das Kontaktformular ist noch nicht verbunden.",
   "rates.checked": "geprüft {d}",
+  "contact.needLogin": "Bitte melde dich an, um eine Nachricht zu senden. So halten wir Spam fern.",
 });

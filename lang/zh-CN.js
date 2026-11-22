@@ -153,4 +153,5 @@ I18N.add("zh-CN", {
   "contact.fail": "发送失败，请稍后再试。（{c}）",
   "contact.offline": "联系功能尚未连接。",
   "rates.checked": "{d} 已检查",
+  "contact.needLogin": "登录后才能发送留言，这是为了防止垃圾信息。",
 });
