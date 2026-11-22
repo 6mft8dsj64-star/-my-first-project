@@ -226,7 +226,10 @@ label.inline input { width: 140px; }
 .search { width: 100%; padding: 12px 14px; font-size: 1rem; }
 .crumb { margin: 10px 0 4px; font-size: .88rem; color: var(--muted); }
 .crumb b { color: var(--primary); }
-.step-label { font-size: .78rem; font-weight: 700; color: var(--muted); margin: 14px 0 6px; letter-spacing: .02em; }
+/* 지역 · 나라 · 도시 사이 간격 (번호 제목 없이) */
+#regionTabs { margin-top: 14px; }
+#countryGrid { margin-top: 14px; }
+#cityHead { margin-top: 18px; }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .tab { border: 1.5px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 99px; cursor: pointer; font-size: .88rem; }
 .tab small { color: var(--muted); margin-inline-start: 2px; }
