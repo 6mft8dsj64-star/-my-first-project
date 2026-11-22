@@ -1154,11 +1154,7 @@
   bind();
   I18N.ready.then(() => {
     renderAll();
+    // 환율은 사이트를 열 때 한 번만 받아요 (은행 기준 환율은 GitHub Actions가 평일 매시간 갱신)
     loadRates().then(() => { renderAll(); if (Rates.live) toast(t("toast.rates")); });
-    setInterval(() => loadRates().then(renderAll), 30 * 60 * 1000);
-    // 앱을 다시 열었을 때(다른 탭에서 돌아올 때) 10분이 지났으면 환율을 새로 받아요
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && (!Rates.checked || Date.now() - Rates.checked > 10 * 60 * 1000)) loadRates().then(renderAll);
-    });
   });
 })();

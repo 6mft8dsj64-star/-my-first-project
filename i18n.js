@@ -667,7 +667,7 @@
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
     { code: "ar", name: "العربية", locale: "ar" },
   ];
-  const VERSION = "20261127c";
+  const VERSION = "20261127d";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------
