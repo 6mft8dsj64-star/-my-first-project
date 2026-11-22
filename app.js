@@ -220,7 +220,7 @@
       current = current || {};
       Object.entries(bank.rates).forEach(([c, v]) => { if (v?.base > 0 && FALLBACK_RATES[c] != null) current[c] = v.base; });
       Rates.bank = bank;
-      Rates.source = [bank.name, Rates.source].filter(Boolean).join(" · ");
+      // 은행 이름은 화면에 그릴 때 언어에 맞게 붙여요 (rateSource)
       if (!Rates.updated) Rates.updated = new Date(`${bank.date}T${bank.time || "11:00"}:00+09:00`); // 다른 출처가 모두 실패했을 때
     }
 
@@ -713,7 +713,7 @@
       </div>
       <label class="plan-name">${t("sum.planName")}<input type="text" id="planName" placeholder="${esc(defaultPlanName())}" /></label>
       <button class="btn block" id="savePlan">${t("sum.save")}</button>
-      <p class="hint">${Rates.live ? t("sum.source", { s: Rates.source }) : t("sum.offline")}</p>`;
+      <p class="hint">${Rates.live ? t("sum.source", { s: esc(rateSource()) }) : t("sum.offline")}</p>`;
     $("#savePlan").onclick = savePlan;
     renderSuggestions(now);
   }
@@ -804,6 +804,8 @@
       <polyline fill="none" stroke="var(${up ? "--up" : "--down"})" stroke-width="2" points="${pts.join(" ")}"/></svg>`;
   }
 
+  // 환율 출처 이름 (은행 이름은 선택한 언어로)
+  const rateSource = () => [Rates.bank ? t(`rates.src.${Rates.bank.provider}`) : "", Rates.source].filter(Boolean).join(" · ");
   // 은행 송금 환율 한 줄 (원화 기준, 100엔처럼 단위를 맞춰요)
   function bankLine(c) {
     const b = Rates.bank?.rates?.[c];
