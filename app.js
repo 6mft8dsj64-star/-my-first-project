@@ -18,14 +18,23 @@
   // ---------- 저장소 ----------
   // 계정별 데이터(계획·저장 목록·가격 기록)는 로그인한 사용자마다 따로 저장되고, auth.js가 클라우드와 동기화해요.
   const USER_KEYS = ["tm_plan", "tm_saved", "tm_price_log"];
+  // 로그인 없이 하기(게스트)는 이 탭에만 잠깐 보관해요(sessionStorage) → 브라우저를 닫으면 사라져요.
   const keyOf = (k) => (USER_KEYS.includes(k) ? (window.TM_USER_PREFIX || "") + k : k);
+  const areaOf = (k) => (USER_KEYS.includes(k) && !window.TM_USER_PREFIX ? sessionStorage : localStorage);
   const store = {
-    get(k, d) { try { const v = localStorage.getItem(keyOf(k)); return v ? JSON.parse(v) : d; } catch { return d; } },
+    get(k, d) { try { const v = areaOf(k).getItem(keyOf(k)); return v ? JSON.parse(v) : d; } catch { return d; } },
     set(k, v) {
-      try { localStorage.setItem(keyOf(k), JSON.stringify(v)); } catch { /* 저장 불가 환경 */ }
+      try { areaOf(k).setItem(keyOf(k), JSON.stringify(v)); } catch { /* 저장 불가 환경 */ }
       if (USER_KEYS.includes(k)) window.TMAuth?.onLocalChange?.(k, v);
     },
   };
+  // 예전 방식으로 브라우저에 남아 있던 게스트 데이터는 이 탭으로 옮겨요 (로그인하면 계정으로 옮겨짐)
+  try {
+    USER_KEYS.forEach((k) => {
+      const v = localStorage.getItem(k);
+      if (v !== null) { if (sessionStorage.getItem(k) === null) sessionStorage.setItem(k, v); localStorage.removeItem(k); }
+    });
+  } catch { /* 무시 */ }
 
   // ---------- 날짜 ----------
   const pad = (n) => String(n).padStart(2, "0");
@@ -704,6 +713,8 @@
 
   // ---------- 저장한 계획 ----------
   function savePlan() {
+    // 로그인 없이 하기에서는 계획을 저장하지 않아요 → 로그인 창을 열어요
+    if (!window.TMAuth?.user) { toast(t("save.needLogin")); window.TMAuth?.openLogin?.(); return; }
     const d = destById(plan.destId);
     const list = store.get("tm_saved", []);
     const c = costItems(plan);
@@ -862,7 +873,7 @@
 
     // 설정
     const modal = $("#settingsModal");
-    const open = (v) => { modal.hidden = !v; document.body.classList.toggle("locked", v || !$("#authScreen").hidden); };
+    const open = (v) => { modal.hidden = !v; document.body.classList.toggle("locked", v || !$("#authScreen").hidden || !$("#welcome").hidden); };
     $("#settingsBtn").addEventListener("click", () => { renderSettings(); open(true); });
     modal.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => open(false)));
     modal.addEventListener("click", (e) => { if (e.target === modal) open(false); });

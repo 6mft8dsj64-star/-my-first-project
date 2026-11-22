@@ -11,7 +11,7 @@
   const contact = $("#contactModal"), inbox = $("#inboxModal");
   let isAdmin = false, items = [], confirmDel = null, openedAt = 0;
 
-  const lockBody = () => document.body.classList.toggle("locked", !contact.hidden || !inbox.hidden || !$("#authScreen").hidden || !$("#settingsModal").hidden);
+  const lockBody = () => document.body.classList.toggle("locked", !contact.hidden || !inbox.hidden || !$("#authScreen").hidden || !$("#welcome").hidden || !$("#settingsModal").hidden);
   const show = (m, v) => { m.hidden = !v; lockBody(); };
   const msg = (text, ok = false) => { const el = $("#ctStatus"); el.textContent = text; el.className = "auth-msg" + (text ? (ok ? " ok" : " err") : ""); };
 

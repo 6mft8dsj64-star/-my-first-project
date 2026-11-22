@@ -13,18 +13,37 @@
   const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   // ---------- 화면 ----------
-  const screen = $("#authScreen");
-  const showAuth = (v) => { screen.hidden = !v; document.body.classList.toggle("locked", v); };
+  const screen = $("#authScreen");   // 로그인 창 (사이트 위에 어둡게 띄움)
+  const welcome = $("#welcome");      // 로그인 전 첫 화면
+  const lock = () => document.body.classList.toggle("locked",
+    !welcome.hidden || !screen.hidden || [...document.querySelectorAll(".modal")].some((m) => !m.hidden));
+  const showWelcome = (v) => { welcome.hidden = !v; if (v) welcome.scrollTop = 0; lock(); };
+  const showLogin = (v) => {
+    screen.hidden = !v; lock();
+    if (v) {
+      // 창이 보일 때 구글 버튼 폭을 창에 맞춰 다시 그려요
+      if (gisReady && !$("#gisBtn").hidden) gisReady.then((ok) => ok && renderGis($("#gisBtn")));
+      setTimeout(() => (screen.querySelector("#authEmail"))?.focus({ preventScroll: true }), 50);
+    }
+  };
+  const showAuth = (v) => { if (!v) { showLogin(false); showWelcome(false); } else showWelcome(true); };
+  let fatal = ""; // 로그인 서비스를 못 불러왔을 때 로그인 창에 계속 보여 줄 안내
+  const openLogin = (m = "login") => { setMode(m); msg(fatal); showLogin(true); };
   const msg = (text, ok = false) => { const m = $("#authMsg"); m.textContent = text; m.className = "auth-msg" + (ok ? " ok" : text ? " err" : ""); };
   const busy = (v) => screen.querySelectorAll("button, input").forEach((el) => { if (!el.dataset.keep) el.disabled = v || (!cfg && !el.dataset.guest); });
 
   function setMode(m, keepMsg = false) {
     mode = m;
     $("#authTitle").textContent = t(`auth.title.${m}`);
+    $("#authBig").textContent = t(`login.big.${m}`);
+    $("#authLead").innerHTML = t("auth.lead").replace(/\s*<br\s*\/?>\s*/g, /^(ja|zh)/.test(I18N.lang) ? "" : " ");
+    $("#keepRow").hidden = m === "reset";
+    $("#linkSep").hidden = m !== "login";
+    $("#authPw").placeholder = m === "signup" ? `${t("auth.pw")} (${t("auth.pwPh")})` : t("auth.pw");
     $("#nameRow").hidden = m !== "signup";
     $("#pwRow").hidden = m === "reset";
     $("#pw2Row").hidden = m !== "signup";
-    $("#emailSubmit").textContent = t(`auth.submit.${m}`);
+    $("#emailSubmit").textContent = m === "login" ? t("auth.login") : t(`auth.submit.${m}`);
     $("#toSignup").hidden = m === "signup";
     $("#toLogin").hidden = m === "login";
     $("#toReset").hidden = m !== "login";
@@ -44,7 +63,7 @@
       $("#accountBtn").onclick = openAccount;
     } else {
       area.innerHTML = `<button class="btn sm" id="loginBtn">${t("auth.login")}</button>`;
-      $("#loginBtn").onclick = () => { setMode("login"); showAuth(true); };
+      $("#loginBtn").onclick = () => openLogin();
     }
   }
 
@@ -77,11 +96,13 @@
       if (doc[field] !== undefined) local.set(prefix + k, doc[field]);
       else {
         // 처음 로그인: 둘러보기 중 만든 데이터가 있으면 계정으로 옮겨요
-        const guest = local.get(k);
+        // (로그인 없이 하기 데이터는 이 탭에만 있어요: sessionStorage)
+        let guest; try { const v = sessionStorage.getItem(k); guest = v ? JSON.parse(v) : undefined; } catch { /* 무시 */ }
+        if (guest === undefined) guest = local.get(k); // 예전 방식(브라우저에 남은 데이터)
         if (guest !== undefined && local.get(prefix + k) === undefined) {
           local.set(prefix + k, guest); needPush = true;
-          try { localStorage.removeItem(k); } catch { /* 무시 */ } // 다른 계정에 또 옮겨지지 않게
         }
+        try { sessionStorage.removeItem(k); localStorage.removeItem(k); } catch { /* 무시 */ } // 다른 계정에 또 옮겨지지 않게
       }
     });
     if (needPush || !doc.profile) pushNow();
@@ -101,7 +122,7 @@
   }
 
   window.TMAuth = {
-    openLogin() { setMode("login"); msg(""); showAuth(true); },
+    openLogin() { openLogin(); },
     get db() { return db; },
     get user() { return user; },
     // 언어를 바꾸면 로그인 화면·헤더 문구를 다시 그려요
@@ -119,6 +140,12 @@
       pushTimer = setTimeout(pushNow, 1200);
     },
   };
+
+  // ---------- 로그인 유지 ----------
+  // 체크하면 브라우저를 닫아도 로그인이 유지되고, 끄면 브라우저(탭)를 닫을 때 로그아웃돼요
+  const KEEP = "tm_keep_login";
+  const keepOn = () => { try { return localStorage.getItem(KEEP) !== "0"; } catch { return true; } };
+  const applyKeep = () => auth?.setPersistence(keepOn() ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION).catch(() => {});
 
   // ---------- 로그인 동작 ----------
   async function social(kind) {
@@ -303,6 +330,12 @@
     $("#googleBtn").onclick = () => social("google");
     $("#appleBtn").onclick = () => social("apple");
     $("#emailForm").addEventListener("submit", emailSubmit);
+    $("#authKeep").checked = keepOn();
+    $("#authKeep").onchange = (e) => { try { localStorage.setItem(KEEP, e.target.checked ? "1" : "0"); } catch { /* 무시 */ } applyKeep(); };
+    $("#welLogin").onclick = () => openLogin();
+    $("#authClose").onclick = () => showLogin(false);
+    screen.addEventListener("click", (e) => { if (e.target === screen) showLogin(false); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !screen.hidden) showLogin(false); });
     $("#toSignup").onclick = () => setMode("signup");
     $("#toLogin").onclick = () => setMode("login");
     $("#toReset").onclick = () => setMode("reset");
@@ -311,6 +344,7 @@
     $("#guestBtn").onclick = () => {
       try { sessionStorage.setItem("tm_guest", "1"); } catch { /* 무시 */ }
       showAuth(false);
+      window.scrollTo(0, 0);
     };
     setMode("login");
   }
@@ -333,7 +367,7 @@
     if (u) {
       had.set(true);
       // 로그인되면 바로 로그인 화면을 닫고 맨 위(여행지 고르기)부터 보여줘요. 내 데이터는 뒤에서 불러와요.
-      const wasShown = !screen.hidden;
+      const wasShown = !screen.hidden || !welcome.hidden;
       showAuth(false);
       if (wasShown) window.scrollTo(0, 0);
       $("#syncState").textContent = t("sync.loading");
@@ -345,7 +379,8 @@
     } else {
       window.TMContact?.onUser?.(null);
       // 로그아웃했거나, 로그인했던 기기인데 로그인이 풀려 있으면 로그인 화면을 보여줘요
-      if (wasUser || (initial && had.get() && !guestMode())) { showAuth(true); setMode("login"); }
+      // → 첫 화면을 보여줘요 (로그인 창은 닫아요)
+      if (wasUser || (initial && had.get() && !guestMode())) { showLogin(false); showWelcome(true); setMode("login"); }
       if (wasUser) had.set(false);
       window.TM_USER_PREFIX = "";
       $("#syncState").textContent = "";
@@ -381,8 +416,8 @@
       await Promise.all([loadScript(SDK + "firebase-auth-compat.js"), loadScript(SDK + "firebase-firestore-compat.js"),
         window.RECAPTCHA_SITE_KEY ? loadScript(SDK + "firebase-app-check-compat.js").catch(() => null) : null]);
     } catch {
-      showAuth(true);
-      msg(t("auth.sdkFail"));
+      showAuth(!guestMode());
+      fatal = t("auth.sdkFail"); msg(fatal);
       return;
     }
     firebase.initializeApp(cfg);
@@ -402,7 +437,7 @@
     }
     auth = firebase.auth();
     auth.languageCode = I18N.lang;
-    try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch { /* 기본값 사용 */ }
+    await applyKeep();
     db = firebase.firestore();
     try { db.settings({ experimentalAutoDetectLongPolling: true }); } catch { /* 이미 설정됨 */ }
 
