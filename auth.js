@@ -390,11 +390,11 @@
     // 먼저 5초 안에 reCAPTCHA가 불러와지는지 확인하고 될 때만 켜요.
     if (window.RECAPTCHA_SITE_KEY && firebase.appCheck) {
       const ok = await Promise.race([
-        loadScript(`https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(window.RECAPTCHA_SITE_KEY)}`).then(() => true).catch(() => false),
+        loadScript(`https://www.google.com/recaptcha/enterprise.js?render=${encodeURIComponent(window.RECAPTCHA_SITE_KEY)}`).then(() => true).catch(() => false),
         new Promise((r) => setTimeout(() => r(false), 5000)),
       ]);
       if (ok) {
-        try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(window.RECAPTCHA_SITE_KEY), true); }
+        try { firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(window.RECAPTCHA_SITE_KEY), true); }
         catch (e) { console.warn("App Check를 켜지 못했어요", e); }
       } else console.warn("reCAPTCHA를 불러오지 못해 App Check 없이 진행해요");
     }
