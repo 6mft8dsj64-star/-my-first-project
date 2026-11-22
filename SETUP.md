@@ -69,6 +69,28 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow read, update, delete: if request.auth != null && request.auth.uid == '관리자_UID';
     }
+    // 여행자 공유 시세: 누구나 읽기(한 번에 300개까지), 로그인한 사람은 노선마다 본인 가격 1개만 쓰기
+    match /fares/{id} {
+      allow get: if true;
+      allow list: if request.query.limit <= 300;
+      allow create: if validFare(id);
+      allow update: if validFare(id) && request.time > resource.data.updatedAt + duration.value(10, 's');
+      allow delete: if request.auth != null
+        && (id.matches(request.auth.uid + '_.*') || request.auth.uid == '관리자_UID');
+    }
+    function validFare(id) {
+      let d = request.resource.data;
+      return request.auth != null
+        && id == request.auth.uid + '_' + d.dest + '_' + d.dep
+        && d.keys().hasOnly(['dest','country','dep','price','month','updatedAt'])
+        && d.keys().hasAll(['dest','country','dep','price','month','updatedAt'])
+        && d.dest is string && d.dest.size() > 0 && d.dest.size() <= 40
+        && d.country is string && d.country.size() > 0 && d.country.size() <= 10
+        && d.dep is string && d.dep.size() == 3
+        && d.price is int && d.price >= 30000 && d.price <= 20000000
+        && d.month is int && d.month >= 1 && d.month <= 12
+        && d.updatedAt == request.time;
+    }
   }
 }
 ```
@@ -110,6 +132,15 @@ window.FIREBASE_CONFIG = {
 3. 사이트 키는 `firebase-config.js`의 `RECAPTCHA_SITE_KEY`에 들어 있어요 (공개용 키)
 4. 며칠 뒤 App Check → API → **Cloud Firestore**의 확인된 요청 비율이 거의 100%면 **Cloud Firestore만 적용(Enforce)**. Authentication에는 적용하지 마세요.
 
+### 8. 여행자 공유 시세 (fares)
+- 로그인한 사용자가 **내가 찾은 가격**을 입력하면(“이름 없이 공유” 체크 시) `fares/{uid}_{도시}_{출발공항}` 문서에 저장돼요. 한 사람은 노선마다 가격 1개만 가지므로 여러 번 입력해도 평균이 쏠리지 않아요.
+- 저장 내용: 도시, 나라, 출발 공항, 가격(원화, 1인 왕복), 출발 월, 저장 시각. **이름·이메일은 저장하지 않아요.**
+- 화면에는 3명 이상 모인 노선만 **중간값**(보통 가격)과 대부분의 범위(25~75%)로 보여 줘요. 평소 시세의 1/4 미만·4배 초과 값과 중간값에서 크게 벗어난 값은 자동으로 빼요.
+- 같은 출발 공항 기록이 3개 미만이면 모든 출발 공항 기록을 합쳐서 보여 줘요.
+- 읽기 비용: 나라를 처음 열 때 한 번(최대 300개) 읽고 30분 동안 그 탭에 저장해 둬요. 무료 한도(하루 5만 회)를 넘으면 그날은 공유 시세만 안 보이고 나머지는 정상 동작해요.
+- 잘못된 값 지우기: Firestore 콘솔 → `fares`에서 문서를 삭제하면 돼요(관리자 UID는 규칙에서 삭제 가능).
+- 회원 탈퇴하면 그 사람이 공유한 가격도 함께 지워져요.
+
 ## 비용 (무료 요금제 기준, 정책은 바뀔 수 있음)
 - 이메일·구글·애플 로그인: 일반적인 규모에서는 무료
 - Firestore: 저장 1GB, 하루 읽기 5만 회·쓰기 2만 회까지 무료
@@ -119,6 +150,7 @@ window.FIREBASE_CONFIG = {
 - **개인정보처리방침**: `privacy.html`에 만들어 두었어요. 책임자 정보가 바뀌면 11번 항목을 고쳐 주세요.
 - **회원 탈퇴**: 로그인 후 오른쪽 위 프로필 사진 → 회원 탈퇴. 본인 확인 후 계정과 저장 데이터가 함께 삭제돼요.
 - **문의**: 문의 내용·이메일은 처리 후 1년 안에 삭제한다고 개인정보처리방침에 적어 두었어요. 문의함에서 직접 삭제할 수 있어요.
+- **공유 시세**: 이름 없는 통계로 공개된다고 개인정보처리방침에 적어 두었어요. 설정은 가격 입력칸 아래 체크박스로 끌 수 있어요.
 
 ## 다른 선택지
 | 서비스 | 특징 |

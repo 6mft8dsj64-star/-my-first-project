@@ -40,6 +40,17 @@
       "route.others": "다른 곳에서 바로 가기",
       "route.legend": "🟦 국내 대형항공사 🟩 국내 저비용항공사 ⬜ 외국 항공사 · 노선은 시즌별로 바뀌니 예약 전 확인하세요.",
       "route.myPrices": "내가 기록한 가격",
+      "crowd.title": "여행자들이 찾은 가격",
+      "crowd.card": "여행자 {p}",
+      "crowd.people": "{n}명",
+      "crowd.none": "아직 여행자들이 공유한 가격이 없어요. 찾은 가격을 입력하면 다음 여행자에게 도움이 돼요.",
+      "crowd.few": "여행자 {n}명이 가격을 공유했어요. 3명 이상 모이면 평균을 보여 드려요.",
+      "crowd.stat": "{a} 출발 여행자 {n}명이 찾은 가격: 보통 {p} (대부분 {lo}~{hi})",
+      "crowd.statAll": "여행자 {n}명이 찾은 가격(전체 출발지): 보통 {p} (대부분 {lo}~{hi})",
+      "crowd.share": "내가 찾은 가격을 이름 없이 다른 여행자와 공유",
+      "crowd.loginToShare": "로그인하면 찾은 가격을 다른 여행자와 공유할 수 있어요",
+      "crowd.shared": "가격을 공유했어요. 고마워요!",
+      "sg.crowd": "여행자 {n}명은 보통 {p}에 찾았어요. 지금 가격보다 {d} 싸요 — 날짜나 항공사를 바꿔 보세요.",
       "fare.my": "내가 찾은 가격(1인)", "fare.low": "최저", "fare.avg": "평균", "fare.high": "성수기", "fare.mine": "내 가격",
       "fare.isAvg": "평균 시세로 계산 중입니다. 실제로 찾은 가격을 입력하면 더 정확해져요.",
       "fare.cheaper": "평균보다 1인 {p} 저렴해요 👍", "fare.pricier": "평균보다 1인 {p} 비싸요. 날짜를 바꾸거나 경유편을 비교해 보세요.",
@@ -219,6 +230,17 @@
       "route.others": "Direct from other airports",
       "route.legend": "🟦 Korean full-service · 🟩 Korean low-cost · ⬜ Foreign airline · Routes change by season, so check before booking.",
       "route.myPrices": "Prices you recorded",
+      "crowd.title": "Fares travelers found",
+      "crowd.card": "Travelers {p}",
+      "crowd.people": "{n} people",
+      "crowd.none": "No traveler fares shared yet. Enter the fare you found to help the next traveler.",
+      "crowd.few": "{n} traveler(s) shared a fare. We'll show the typical price once 3 or more do.",
+      "crowd.stat": "Fares {n} travelers found from {a}: typically {p} (most {lo}–{hi})",
+      "crowd.statAll": "Fares {n} travelers found (all airports): typically {p} (most {lo}–{hi})",
+      "crowd.share": "Share my fare anonymously with other travelers",
+      "crowd.loginToShare": "Log in to share the fare you found with other travelers",
+      "crowd.shared": "Fare shared. Thank you!",
+      "sg.crowd": "{n} travelers typically found {p} — {d} less than yours. Try other dates or airlines.",
       "fare.my": "Price you found (1 person)", "fare.low": "Low", "fare.avg": "Average", "fare.high": "Peak", "fare.mine": "Yours",
       "fare.isAvg": "Using the average fare. Enter a price you actually found for a more accurate total.",
       "fare.cheaper": "{p} per person below average 👍", "fare.pricier": "{p} per person above average. Try other dates or compare connecting flights.",
@@ -369,7 +391,7 @@
     { code: "id", name: "Bahasa Indonesia", locale: "id-ID" }, { code: "tr", name: "Türkçe", locale: "tr-TR" },
     { code: "ar", name: "العربية", locale: "ar" },
   ];
-  const VERSION = "20261123a";
+  const VERSION = "20261124a";
   const isLang = (c) => LANGS.some((l) => l.code === c);
 
   // ---------- 설정 ----------

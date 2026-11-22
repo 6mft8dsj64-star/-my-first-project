@@ -75,7 +75,13 @@
     airline: (c) => (EN() ? AIRLINE_EN[c] : AIRLINES[c]?.[0]) || c,
     depF: (x, k) => LD()?.dep?.[x.code]?.[k] || DEP_EN[x.code]?.[k],
     dep: (x) => (EN() ? N.depF(x, 0) : x.name) || x.name,
-    depShort: (x) => (EN() ? (LD()?.depShort?.[x.code] || DEP_EN[x.code]?.[0].replace(/ International Airport| Airport/, "")) : x.name.replace("국제공항", "")),
+    // 짧은 공항 이름: 각 언어의 "국제공항" 같은 말을 떼어 내요
+    depShort: (x) => {
+      if (!EN()) return x.name.replace("국제공항", "");
+      const full = LD()?.dep?.[x.code]?.[0];
+      if (!full) return DEP_EN[x.code]?.[0].replace(/ International Airport| Airport/, "") || x.code;
+      return full.replace(/ International Airport| Airport|Aeropuerto Internacional de |Aeropuerto de |Aéroport international d'|Aéroport international de |Aéroport d'|Aéroport de |Internationaler Flughafen |Flughafen |Aeroporto internazionale di |Aeroporto di |Aeroporto Internacional de |Aeroporto de |Bandara Internasional |Bandara | Uluslararası Havalimanı| Havalimanı|Sân bay quốc tế |Sân bay |ท่าอากาศยานนานาชาติ|ท่าอากาศยาน|^مطار | الدولي$|国際空港|空港|国际机场|机场|國際機場|機場/g, "").trim() || full;
+    },
     depCity: (x) => (EN() ? N.depF(x, 1) : x.city) || x.city,
     toICN: (x) => (EN() ? N.depF(x, 2) : x.toICN) || x.toICN,
     depNote: (x) => (EN() ? N.depF(x, 3) : x.note) || "",
@@ -316,12 +322,26 @@
     const k = d.bestMonths.includes(m) ? "good" : d.peakMonths.includes(m) ? "peak" : "";
     return `<span class="badge ${k}">${t(k === "good" ? "season.best" : k === "peak" ? "season.peak" : "season.off", { m: monthName(m) })}</span>`;
   }
+  // ---------- 여행자 공유 시세 ----------
+  function crowd(d) {
+    const C = window.TMCrowd;
+    if (!C) return null;
+    C.want(d.countryId, onCrowd);
+    const st = C.stats(d.id, d.countryId, plan.dep, routeInfo(d, plan.dep).price);
+    return st && st.n >= C.MIN_N ? st : st ? { ...st, few: true } : null;
+  }
+  let crowdTimer = null;
+  function onCrowd() { // 불러오기가 끝나면 시세가 보이는 곳만 다시 그려요 (입력칸은 건드리지 않음)
+    clearTimeout(crowdTimer);
+    crowdTimer = setTimeout(() => { renderDestinations(); renderDestInfo(); renderFlight(); renderSuggestions(costItems(plan)); }, 50);
+  }
   function cityButton(d, m, withCountry) {
     const r = routeInfo(d, plan.dep);
+    const cs = crowd(d);
     return `<button class="city ${d.id === plan.destId ? "on" : ""}" data-city="${d.id}">
       <div class="nm">${withCountry ? `${d.flag} ` : ""}${esc(N.city(d))}</div>
       <div class="ct">${withCountry ? `${esc(N.country(d.countryId))} · ` : ""}${routeLabel(r)}${r.mode === "direct" ? ` · ${t("city.airlines", { n: r.airlines.length })}` : ""} · ${esc(N.hours(d.flight.hours))}</div>
-      <div class="pr">${t("city.rt")} <b>${short(r.price)}</b></div>${seasonBadge(d, m)}
+      <div class="pr">${t("city.rt")} <b>${short(r.price)}</b></div>${cs && !cs.few ? `<div class="crowd-pr">👥 ${t("crowd.card", { p: `<b>${short(cs.med)}</b>`, n: cs.n })}</div>` : ""}${seasonBadge(d, m)}
     </button>`;
   }
 
@@ -368,6 +388,7 @@
     const top = d.hotels[topHotelIdx(d)];
     const dayLocal = d.daily.food + d.daily.transport + d.daily.misc;
     const rl = rateLabel(d.currency);
+    const cs = crowd(d);
     $("#plannerTitle").textContent = `${d.flag} ${N.city(d)}`;
     $("#destInfo").innerHTML = `
       <div class="info-head"><div class="flag">${d.flag}</div>
@@ -376,6 +397,7 @@
       <div class="visa">🛂 ${t("visa.label")}: ${esc(N.visa(d.visa))}${d.detailed ? "" : ` <span class="badge">${t("info.estimate")}</span>`}</div>
       <div class="info-stats">
         <div class="stat"><div class="k">${t("info.fare")}</div><div class="v">${short(d.flight.low)}~${short(d.flight.high)}</div></div>
+        ${cs && !cs.few ? `<div class="stat crowd"><div class="k">👥 ${t("crowd.title")}</div><div class="v">${short(cs.med)} <small>(${t("crowd.people", { n: cs.n })})</small></div></div>` : ""}
         <div class="stat"><div class="k">${t("info.topHotel")}</div><div class="v">${esc(N.type(top.type))} · ${top.share}%</div></div>
         <div class="stat"><div class="k">${t("info.daily")}</div><div class="v">${t("approx")} ${short(dayLocal * rate(d.currency))}</div></div>
         <div class="stat"><div class="k">${t("info.rate")}</div><div class="v">${rl.head} = ${rl.value}</div></div>
@@ -454,6 +476,25 @@
       <div class="mark tick" style="left:${pos(f.high)}%">${t("fare.high")} ${short(f.high)}</div>
       <div class="pin" style="left:${pos(plan.flightPrice)}%"></div>
       <div class="mark" style="left:${pos(plan.flightPrice)}%">${t("fare.mine")}</div>`;
+    const d0 = destById(plan.destId), cs = crowd(d0);
+    $("#flightBar").classList.toggle("has-crowd", !!(cs && !cs.few));
+    if (cs && !cs.few) {
+      const x = pos(cs.med), edge = x < 12 ? " start" : x > 88 ? " end" : "";
+      $("#flightBar").insertAdjacentHTML("beforeend", `<div class="pin crowd" style="left:${x}%"></div><div class="mark tick crowd${edge}" style="left:${x}%">👥 ${short(cs.med)}</div>`);
+    }
+    const ce = $("#crowdStat");
+    if (ce) {
+      ce.innerHTML = !cs || !cs.n ? `👥 ${t("crowd.none")}`
+        : cs.few ? `👥 ${t("crowd.few", { n: cs.n })}`
+        : `👥 ${t(cs.scope === "dep" ? "crowd.stat" : "crowd.statAll", { p: `<b>${short(cs.med)}</b>`, n: cs.n, lo: short(cs.lo), hi: short(cs.hi), a: esc(N.depShort(DEP(plan.dep))) })}`;
+    }
+    const sh = $("#crowdShareRow");
+    if (sh) {
+      const logged = !!window.TMAuth?.user;
+      $("#crowdShare").checked = window.TMCrowd?.sharing() ?? true;
+      $("#crowdShare").disabled = !logged;
+      $("#crowdShareText").textContent = logged ? t("crowd.share") : t("crowd.loginToShare");
+    }
     const diff = plan.flightPrice - f.avg;
     const h = $("#flightHint");
     h.className = "hint" + (diff > f.avg * 0.15 ? " warn" : "");
@@ -570,6 +611,8 @@
     else add("good", t("sg.ontime", { n: lead }));
 
     if (plan.flightPrice > d.flight.avg * 1.15) add("warn", t("sg.fare", { n: Math.round((plan.flightPrice / d.flight.avg - 1) * 100) }));
+    const cs = crowd(d);
+    if (cs && !cs.few && plan.flightPrice > cs.med * 1.15) add("warn", t("sg.crowd", { n: cs.n, p: short(cs.med), d: short(plan.flightPrice - cs.med) }));
 
     const top = topHotelIdx(d);
     const chosen = d.hotels[plan.hotelIdx];
@@ -775,8 +818,12 @@
       const log = store.get("tm_price_log", []);
       log.push({ dest: plan.destId, dep: plan.dep, price: plan.flightPrice, date: iso(new Date()) });
       store.set("tm_price_log", log.slice(-200));
+      const d = destById(plan.destId);
+      window.TMCrowd?.submit({ dest: d.id, country: d.countryId, dep: plan.dep, price: plan.flightPrice, month: parse(plan.start).getMonth() + 1 })
+        .then((ok) => { if (ok) { toast(t("crowd.shared")); onCrowd(); } });
       update();
     });
+    $("#crowdShare").addEventListener("change", (e) => { window.TMCrowd?.setSharing(e.target.checked); });
     $("#hotelList").addEventListener("change", (e) => { if (e.target.name === "hotel") { plan.hotelIdx = Number(e.target.value); update(); } });
     $("#dayList").addEventListener("change", (e) => {
       if (e.target.tagName !== "SELECT" || e.target.value === "") return;

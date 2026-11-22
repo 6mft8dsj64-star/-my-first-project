@@ -225,6 +225,7 @@
       await reauth();                       // 1) 본인 확인
       deleting = true; clearTimeout(pushTimer);
       await db.collection("users").doc(uid).delete();  // 2) 저장된 데이터 삭제
+      try { await window.TMCrowd?.deleteMine(uid); } catch (e) { console.warn("공유 가격 삭제 실패", e); } // 공유한 가격도 삭제
       await user.delete();                  // 3) 로그인 계정 삭제
       try {                                  // 4) 이 브라우저에 남은 계정 데이터 삭제
         Object.keys(localStorage).filter((k) => k.startsWith(`u:${uid}:`)).forEach((k) => localStorage.removeItem(k));

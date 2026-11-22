@@ -99,7 +99,7 @@ label.inline input { width: 140px; }
 
 .info-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
 .info-head .flag { font-size: 2.2rem; }
-.info-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.info-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; }
 .stat { background: var(--surface-2); border-radius: 10px; padding: 10px; }
 .stat .k { font-size: .75rem; color: var(--muted); }
 .stat .v { font-weight: 700; font-size: .98rem; }
@@ -402,3 +402,17 @@ button.user-chip:hover { background: var(--surface-2); }
 [dir="rtl"] .chip { padding: 4px 10px 4px 6px; }
 [dir="rtl"] input[type="email"], [dir="rtl"] input[type="number"], [dir="rtl"] #ctEmail { direction: ltr; text-align: end; }
 .policy-note { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: .9rem; color: var(--muted); }
+
+/* 여행자 공유 시세 */
+.city .crowd-pr, .dest .crowd-pr { font-size: .78rem; color: var(--primary); margin-top: 2px; }
+.stat.crowd { background: var(--primary-soft); }
+.flight-bar.has-crowd { height: 72px; }
+.flight-bar .mark.tick.crowd { top: 50px; color: var(--primary); font-weight: 600; }
+.crowd-stat { font-size: .86rem; margin: 10px 0 0; color: var(--text); }
+.crowd-stat b { color: var(--primary); }
+label.check { flex-direction: row; align-items: center; gap: 6px; margin-top: 8px; cursor: pointer; }
+label.check input { width: auto; margin: 0; }
+label.check input:disabled + span { opacity: .8; }
+.flight-bar .pin.crowd { background: var(--primary); width: 3px; top: 14px; height: 16px; }
+.flight-bar .mark.tick.crowd.start { transform: none; }
+.flight-bar .mark.tick.crowd.end { transform: translateX(-100%); }
