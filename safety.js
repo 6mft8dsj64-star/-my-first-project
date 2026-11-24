@@ -5,7 +5,7 @@
    parts = 높은 단계가 걸린 지역 (한국어, 영어) / id = 0404.go.kr 국가 페이지 번호
    근거: 외교부 보도자료(2026 상반기 정기조정, 중동 7개국 3단계 상향 2026-03-08, 사우디 3단계 2026-10-11 등)와
         0404.go.kr 국가별 페이지 검색 결과 */
-const SAFETY_CHECKED = "2026-11-22";
+const SAFETY_CHECKED = "2026-11-25";
 const SAFETY = {
   jp: { main: 0, max: 0, id: 183 },
   cn: { main: null, max: 2.5, parts: ["티베트·신장위구르 자치구 특별여행주의보", "Special advisory for Tibet and Xinjiang"] },
@@ -16,7 +16,7 @@ const SAFETY = {
   vn: { main: 1, max: 1, id: 86 },
   th: { main: 1, max: 3, id: 260, parts: ["남부 송클라(말레이시아 접경)·파타니·나라티왓·얄라주, 캄보디아 국경 50km 이내 3단계 · 딱주 2단계", "Level 3: southern Songkhla (Malaysian border), Pattani, Narathiwat, Yala and within 50 km of the Cambodian border · Level 2: Tak"] },
   ph: { main: null, max: 4, parts: ["민다나오 잠보앙가 반도, 술루·바실란·타위타위 군도 4단계(여행금지)", "Level 4 (travel ban): Zamboanga Peninsula and the Sulu, Basilan and Tawi-Tawi islands (Mindanao)"] },
-  id: { main: 1, max: 2.5, parts: ["중부칼리만탄주 특별여행주의보(2026-10-24 발령, 들불 연무) · 서파푸아·파푸아·말루쿠·아체주 2단계 · 발리 등 나머지 1단계", "Special advisory for Central Kalimantan (from 2026-10-24, wildfire haze) · level 2: West Papua, Papua, Maluku, Aceh · level 1 elsewhere incl. Bali"] },
+  id: { main: 1, max: 2, parts: ["서파푸아·파푸아·말루쿠·아체주 2단계 · 발리 등 나머지 1단계 · 중부칼리만탄주 특별여행주의보는 2026-11-17 해제", "Level 2: West Papua, Papua, Maluku, Aceh · level 1 elsewhere incl. Bali · Central Kalimantan special advisory lifted 2026-11-17"] },
   kh: { main: 1, max: 3, id: 259, parts: ["시하누크빌시·캄폿주 보코산·바벳시·포이펫시, 태국 국경 50km 이내 3단계 · 시하누크빌주 2단계", "Level 3: Sihanoukville city, Bokor (Kampot), Bavet, Poipet and within 50 km of the Thai border · Level 2: Preah Sihanouk province"] },
   la: { main: null, max: 4, parts: ["골든트라이앵글 경제특구 여행금지(취업 사기 피해)", "Travel ban: Golden Triangle Special Economic Zone (job-scam victims)"] },
   np: { main: 1, max: 1 },
