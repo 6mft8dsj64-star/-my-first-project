@@ -16,7 +16,7 @@ const SAFETY = {
   vn: { main: 1, max: 1, id: 86 },
   th: { main: 1, max: 3, id: 260, parts: ["남부 송클라(말레이시아 접경)·파타니·나라티왓·얄라주, 캄보디아 국경 50km 이내 3단계 · 딱주 2단계", "Level 3: southern Songkhla (Malaysian border), Pattani, Narathiwat, Yala and within 50 km of the Cambodian border · Level 2: Tak"] },
   ph: { main: null, max: 4, parts: ["민다나오 잠보앙가 반도, 술루·바실란·타위타위 군도 4단계(여행금지)", "Level 4 (travel ban): Zamboanga Peninsula and the Sulu, Basilan and Tawi-Tawi islands (Mindanao)"] },
-  id: { main: null, max: 2.5, parts: ["중부칼리만탄주 특별여행주의보 (2026-10-23)", "Special advisory for Central Kalimantan (2026-10-23)"] },
+  id: { main: 1, max: 2.5, parts: ["중부칼리만탄주 특별여행주의보(2026-10-24 발령, 들불 연무) · 서파푸아·파푸아·말루쿠·아체주 2단계 · 발리 등 나머지 1단계", "Special advisory for Central Kalimantan (from 2026-10-24, wildfire haze) · level 2: West Papua, Papua, Maluku, Aceh · level 1 elsewhere incl. Bali"] },
   kh: { main: 1, max: 3, id: 259, parts: ["시하누크빌시·캄폿주 보코산·바벳시·포이펫시, 태국 국경 50km 이내 3단계 · 시하누크빌주 2단계", "Level 3: Sihanoukville city, Bokor (Kampot), Bavet, Poipet and within 50 km of the Thai border · Level 2: Preah Sihanouk province"] },
   la: { main: null, max: 4, parts: ["골든트라이앵글 경제특구 여행금지(취업 사기 피해)", "Travel ban: Golden Triangle Special Economic Zone (job-scam victims)"] },
   np: { main: 1, max: 1 },
