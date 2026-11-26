@@ -5,7 +5,7 @@
    parts = 높은 단계가 걸린 지역 (한국어, 영어) / id = 0404.go.kr 국가 페이지 번호
    근거: 외교부 보도자료(2026 상반기 정기조정, 중동 7개국 3단계 상향 2026-03-08, 사우디 3단계 2026-10-11 등)와
         0404.go.kr 국가별 페이지 검색 결과 */
-const SAFETY_CHECKED = "2026-11-26";
+const SAFETY_CHECKED = "2026-11-27";
 const SAFETY = {
   jp: { main: 0, max: 0, id: 183 },
   cn: { main: null, max: 2.5, parts: ["티베트·신장위구르 자치구 특별여행주의보", "Special advisory for Tibet and Xinjiang"] },
